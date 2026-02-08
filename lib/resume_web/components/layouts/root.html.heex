@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <.live_title default="Resume" suffix=" · Phoenix Framework">
+    <.live_title default="Spiel">
       {assigns[:page_title]}
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
@@ -31,26 +31,24 @@
     </script>
   </head>
   <body>
-    <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <%= if @current_scope do %>
-        <li>
-          {@current_scope.user.email}
-        </li>
-        <li>
-          <.link href={~p"/users/settings"}>Settings</.link>
-        </li>
-        <li>
-          <.link href={~p"/users/log-out"} method="delete">Log out</.link>
-        </li>
-      <% else %>
-        <li>
-          <.link href={~p"/users/register"}>Register</.link>
-        </li>
-        <li>
-          <.link href={~p"/users/log-in"}>Log in</.link>
-        </li>
-      <% end %>
-    </ul>
+    <nav class="navbar bg-base-200 px-4 sm:px-6 lg:px-8">
+      <div class="flex-1">
+        <a href="/" class="btn btn-ghost text-xl font-bold">Spiel</a>
+      </div>
+      <div class="flex-none flex items-center gap-2">
+        <Layouts.theme_toggle />
+        <%= if @current_scope do %>
+          <span class="text-sm hidden sm:inline">{@current_scope.user.email}</span>
+          <.link href={~p"/users/settings"} class="btn btn-ghost btn-sm">Settings</.link>
+          <.link href={~p"/users/log-out"} method="delete" class="btn btn-ghost btn-sm">
+            Log out
+          </.link>
+        <% else %>
+          <.link href={~p"/users/register"} class="btn btn-ghost btn-sm">Register</.link>
+          <.link href={~p"/users/log-in"} class="btn btn-primary btn-sm">Log in</.link>
+        <% end %>
+      </div>
+    </nav>
     {@inner_content}
   </body>
 </html>

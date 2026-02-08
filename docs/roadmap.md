@@ -70,8 +70,8 @@ Guided flow produces better LLM output because each chunk is scoped narrowly rat
 
 ### Phase 1: Foundation
 
-- [ ] Run `mix phx.gen.auth` to scaffold user authentication (email/password)
-- [ ] Set up basic app layout and navigation with authenticated/unauthenticated states
+- [x] Run `mix phx.gen.auth` to scaffold user authentication (email/password)
+- [x] Set up basic app layout and navigation with authenticated/unauthenticated states
 - [ ] Set up Docker Compose file with PostgreSQL (and placeholder services for Whisper, WeasyPrint)
 - [ ] Design and implement the resume schema as Ecto embedded schemas
   - [ ] Contact info fields (name, email, phone, location, website, LinkedIn, GitHub)
