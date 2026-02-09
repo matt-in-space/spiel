@@ -5,9 +5,41 @@
       Voice-first resume builder. Talk about your experience — get a polished resume.
     </p>
     <%= if @current_scope do %>
-      <p class="text-base-content/60">
-        Welcome back, {@current_scope.user.email}.
-      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl mx-auto mt-4">
+        <.link
+          href={~p"/record"}
+          class="card bg-base-200 shadow hover:shadow-md transition-shadow"
+        >
+          <div class="card-body items-center text-center">
+            <.icon name="hero-microphone" class="size-10 text-primary" />
+            <h2 class="card-title">Record</h2>
+            <p class="text-sm text-base-content/60">Record audio about your experience</p>
+          </div>
+        </.link>
+        <.link
+          href={~p"/upload"}
+          class="card bg-base-200 shadow hover:shadow-md transition-shadow"
+        >
+          <div class="card-body items-center text-center">
+            <.icon name="hero-document-arrow-up" class="size-10 text-primary" />
+            <h2 class="card-title">Upload</h2>
+            <p class="text-sm text-base-content/60">Upload a resume or paste text</p>
+          </div>
+        </.link>
+        <.link
+          href={~p"/profile"}
+          class="card bg-base-200 shadow hover:shadow-md transition-shadow"
+        >
+          <div class="card-body items-center text-center">
+            <.icon name="hero-user" class="size-10 text-primary" />
+            <h2 class="card-title">Profile</h2>
+            <p class="text-sm text-base-content/60">View and edit your profile</p>
+          </div>
+        </.link>
+      </div>
+      <.link href={~p"/users/settings"} class="link link-hover text-sm text-base-content/50 mt-2">
+        Settings
+      </.link>
     <% else %>
       <div class="flex justify-center gap-4 mt-8">
         <.link href={~p"/users/register"} class="btn btn-primary">Get Started</.link>
