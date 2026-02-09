@@ -35,6 +35,9 @@ config :resume, ResumeWeb.Endpoint,
   pubsub_server: Resume.PubSub,
   live_view: [signing_salt: "ELKGAWv0"]
 
+# LLM adapter
+config :resume, llm_adapter: Resume.LLM.Anthropic
+
 # Configure the mailer
 #
 # By default it uses the "Local" adapter which stores the emails

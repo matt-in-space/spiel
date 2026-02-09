@@ -16,6 +16,11 @@ import Config
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
+# Anthropic API key for LLM calls
+if api_key = System.get_env("ANTHROPIC_API_KEY") do
+  config :resume, anthropic_api_key: api_key
+end
+
 if System.get_env("PHX_SERVER") do
   config :resume, ResumeWeb.Endpoint, server: true
 end

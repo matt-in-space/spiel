@@ -9,5 +9,18 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  whisper:
+    image: docker.io/onerahmet/openai-whisper-asr-webservice:latest
+    environment:
+      ASR_ENGINE: faster_whisper
+      ASR_MODEL: base
+    ports:
+      - "9000:9000"
+
+  weasyprint:
+    image: ghcr.io/bcgov/weasyprint:latest
+    ports:
+      - "8080:8080"
+
 volumes:
   pgdata:
