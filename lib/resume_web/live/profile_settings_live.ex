@@ -12,6 +12,10 @@ defmodule ResumeWeb.ProfileSettingsLive do
      assign(socket,
        user: user,
        profile_form: to_form(profile_data, as: "profile"),
+       facts: user.facts || [],
+       editing_index: nil,
+       edit_form: to_form(%{"text" => ""}, as: "edit"),
+       new_fact_form: to_form(%{"text" => ""}, as: "new_fact"),
        page_title: "Profile"
      )}
   end
@@ -55,9 +59,146 @@ defmodule ResumeWeb.ProfileSettingsLive do
             <button type="submit" class="btn btn-primary">Save Changes</button>
           </div>
         </.form>
+
+        <div class="divider"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl font-bold">Your Facts</h2>
+            <span class="badge badge-neutral">{length(@facts)}</span>
+          </div>
+
+          <div :if={@facts == []} class="text-sm opacity-50">
+            No facts yet. Add some below, or record yourself talking about your experience.
+          </div>
+
+          <ul :if={@facts != []} class="space-y-2">
+            <li
+              :for={{fact, index} <- Enum.with_index(@facts)}
+              class="card bg-base-200 p-3 flex flex-row items-center gap-3"
+            >
+              <div :if={@editing_index != index} class="flex-1">{fact}</div>
+              <div :if={@editing_index != index} class="flex gap-1">
+                <button
+                  type="button"
+                  phx-click="edit_fact"
+                  phx-value-index={index}
+                  class="btn btn-ghost btn-xs"
+                  aria-label="Edit fact"
+                >
+                  <.icon name="hero-pencil-square" class="size-4" />
+                </button>
+                <button
+                  type="button"
+                  phx-click="delete_fact"
+                  phx-value-index={index}
+                  class="btn btn-ghost btn-xs"
+                  aria-label="Delete fact"
+                >
+                  <.icon name="hero-x-mark" class="size-4" />
+                </button>
+              </div>
+
+              <.form
+                :if={@editing_index == index}
+                for={@edit_form}
+                phx-change="update_edit"
+                phx-submit="save_edit"
+                class="flex-1 flex items-center gap-2"
+              >
+                <.input field={@edit_form[:text]} class="flex-1" />
+                <button type="submit" class="btn btn-ghost btn-xs" aria-label="Save edit">
+                  <.icon name="hero-check" class="size-4" />
+                </button>
+                <button
+                  type="button"
+                  phx-click="cancel_edit"
+                  class="btn btn-ghost btn-xs"
+                  aria-label="Cancel edit"
+                >
+                  <.icon name="hero-x-mark" class="size-4" />
+                </button>
+              </.form>
+            </li>
+          </ul>
+
+          <.form
+            for={@new_fact_form}
+            phx-change="validate_new_fact"
+            phx-submit="add_fact"
+            class="flex items-center gap-2"
+          >
+            <.input field={@new_fact_form[:text]} placeholder="Add a new fact..." class="flex-1" />
+            <button type="submit" class="btn btn-primary btn-sm">Add</button>
+          </.form>
+        </div>
       </div>
     </Layouts.app>
     """
+  end
+
+  @impl true
+  def handle_event("edit_fact", %{"index" => index}, socket) do
+    index = String.to_integer(index)
+    text = Enum.at(socket.assigns.facts, index)
+
+    {:noreply,
+     assign(socket, editing_index: index, edit_form: to_form(%{"text" => text}, as: "edit"))}
+  end
+
+  @impl true
+  def handle_event("cancel_edit", _params, socket) do
+    {:noreply, assign(socket, editing_index: nil)}
+  end
+
+  @impl true
+  def handle_event("update_edit", %{"edit" => params}, socket) do
+    {:noreply, assign(socket, edit_form: to_form(params, as: "edit"))}
+  end
+
+  @impl true
+  def handle_event("save_edit", %{"edit" => %{"text" => text}}, socket) do
+    text = String.trim(text)
+
+    if text == "" do
+      {:noreply, socket}
+    else
+      facts = List.replace_at(socket.assigns.facts, socket.assigns.editing_index, text)
+      {:ok, user} = Accounts.update_user_facts(socket.assigns.user, facts)
+      {:noreply, assign(socket, facts: user.facts, editing_index: nil, user: user)}
+    end
+  end
+
+  @impl true
+  def handle_event("delete_fact", %{"index" => index}, socket) do
+    index = String.to_integer(index)
+    facts = List.delete_at(socket.assigns.facts, index)
+    {:ok, user} = Accounts.update_user_facts(socket.assigns.user, facts)
+    {:noreply, assign(socket, facts: user.facts, user: user)}
+  end
+
+  @impl true
+  def handle_event("validate_new_fact", %{"new_fact" => params}, socket) do
+    {:noreply, assign(socket, new_fact_form: to_form(params, as: "new_fact"))}
+  end
+
+  @impl true
+  def handle_event("add_fact", %{"new_fact" => %{"text" => text}}, socket) do
+    text = String.trim(text)
+
+    if text == "" do
+      {:noreply, socket}
+    else
+      facts = socket.assigns.facts ++ [text]
+      {:ok, user} = Accounts.update_user_facts(socket.assigns.user, facts)
+
+      {:noreply,
+       assign(socket,
+         facts: user.facts,
+         user: user,
+         new_fact_form: to_form(%{"text" => ""}, as: "new_fact")
+       )}
+    end
   end
 
   @impl true

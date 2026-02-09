@@ -376,7 +376,7 @@ defmodule ResumeWeb.OnboardingLive do
 
       task =
         Task.async(fn ->
-          extract_facts(transcripts, step)
+          Resume.Facts.extract(transcripts, step_context(step))
         end)
 
       socket =
@@ -531,48 +531,9 @@ defmodule ResumeWeb.OnboardingLive do
 
   defp format_timestamp(dt), do: Calendar.strftime(dt, "%H:%M:%S")
 
-  # LLM fact extraction
-
-  defp extract_facts(transcripts, step) do
-    combined = Enum.join(transcripts, "\n\n")
-
-    prompt = """
-    You are extracting career facts from a voice transcript. The user was asked about: #{step_context(step)}
-
-    Transcript:
-    #{combined}
-
-    Extract atomic, standalone career fact statements from this transcript. Each fact should be a single, specific statement that could appear on a resume. Return ONLY a JSON array of strings, no other text.
-
-    Example output: ["Managed a team of 5 engineers at Acme Corp", "Built a real-time data pipeline using Apache Kafka"]
-    """
-
-    case Resume.LLM.complete(prompt,
-           system:
-             "You are a career fact extraction assistant. Return only valid JSON arrays of strings."
-         ) do
-      {:ok, response} -> {:ok, parse_facts(response)}
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
   defp step_context(:current_role), do: "their current or most recent role"
   defp step_context(:previous_roles), do: "their previous work experience"
   defp step_context(:education), do: "their education background"
   defp step_context(:skills), do: "their skills, certifications, and other qualifications"
   defp step_context(_), do: "their career background"
-
-  defp parse_facts(response) do
-    case Jason.decode(response) do
-      {:ok, facts} when is_list(facts) ->
-        Enum.filter(facts, &is_binary/1)
-
-      _ ->
-        response
-        |> String.split("\n")
-        |> Enum.map(&String.trim/1)
-        |> Enum.reject(&(&1 == ""))
-        |> Enum.map(&String.replace_leading(&1, ~r/^[-*•]\s*/, ""))
-    end
-  end
 end
