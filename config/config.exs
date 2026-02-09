@@ -38,6 +38,11 @@ config :resume, ResumeWeb.Endpoint,
 # LLM adapter
 config :resume, llm_adapter: Resume.LLM.Anthropic
 
+# Transcription adapter
+config :resume,
+  transcription_adapter: Resume.Transcription.Whisper,
+  whisper_url: "http://localhost:9000"
+
 # Configure the mailer
 #
 # By default it uses the "Local" adapter which stores the emails

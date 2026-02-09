@@ -38,6 +38,7 @@
       <div class="flex-none flex items-center gap-2">
         <Layouts.theme_toggle />
         <%= if @current_scope do %>
+          <.link href={~p"/record"} class="btn btn-ghost btn-sm">Record</.link>
           <span class="text-sm hidden sm:inline">{@current_scope.user.email}</span>
           <.link href={~p"/users/settings"} class="btn btn-ghost btn-sm">Settings</.link>
           <.link href={~p"/users/log-out"} method="delete" class="btn btn-ghost btn-sm">

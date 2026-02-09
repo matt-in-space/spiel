@@ -42,3 +42,6 @@ config :phoenix_live_view,
 # Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
+
+# Use mock transcription adapter in tests
+config :resume, transcription_adapter: Resume.Transcription.Mock

@@ -89,8 +89,8 @@ Two modes:
 
 ### Phase 2: Voice Input Pipeline
 
-- [ ] Build a LiveView page with browser-based audio recording (MediaRecorder API via JS hook)
-- [ ] Integrate self-hosted Whisper service — send audio via HTTP, receive transcript
+- [x] Build a LiveView page with browser-based audio recording (MediaRecorder API via JS hook)
+- [x] Integrate self-hosted Whisper service — send audio via HTTP, receive transcript
 - [ ] Build the guided onboarding flow as a LiveView state machine
   - [ ] Step: "Tell me about yourself" — name, contact info, background
   - [ ] Step: "Tell me about your current/most recent role" — what you did, accomplishments

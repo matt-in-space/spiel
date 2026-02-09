@@ -57,6 +57,8 @@ defmodule ResumeWeb.Router do
   scope "/", ResumeWeb do
     pipe_through [:browser, :require_authenticated_user]
 
+    live "/record", RecordingLive
+
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update
     get "/users/settings/confirm-email/:token", UserSettingsController, :confirm_email
