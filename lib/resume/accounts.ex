@@ -80,6 +80,54 @@ defmodule Resume.Accounts do
     |> Repo.insert()
   end
 
+  ## Profile & Onboarding
+
+  @doc """
+  Updates the user's profile data in `default_resume_data`.
+  """
+  def update_user_profile(user, attrs) do
+    user
+    |> User.profile_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Replaces the user's facts list.
+  """
+  def update_user_facts(user, facts) when is_list(facts) do
+    user
+    |> User.facts_changeset(%{facts: facts})
+    |> Repo.update()
+  end
+
+  @doc """
+  Appends new facts to the user's existing facts list.
+  """
+  def append_user_facts(user, new_facts) when is_list(new_facts) do
+    update_user_facts(user, user.facts ++ new_facts)
+  end
+
+  @doc """
+  Completes onboarding in a transaction: updates profile, sets facts,
+  and marks onboarding as completed.
+  """
+  def complete_onboarding(user, profile_attrs, facts) do
+    Repo.transact(fn ->
+      with {:ok, user} <- update_user_profile(user, profile_attrs),
+           {:ok, user} <- update_user_facts(user, facts) do
+        user
+        |> User.onboarding_changeset()
+        |> Repo.update()
+      end
+    end)
+  end
+
+  @doc """
+  Returns true if the user has completed onboarding.
+  """
+  def onboarding_completed?(%User{onboarding_completed_at: nil}), do: false
+  def onboarding_completed?(%User{onboarding_completed_at: _}), do: true
+
   ## Settings
 
   @doc """

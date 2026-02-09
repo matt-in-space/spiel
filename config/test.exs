@@ -45,3 +45,6 @@ config :phoenix,
 
 # Use mock transcription adapter in tests
 config :resume, transcription_adapter: Resume.Transcription.Mock
+
+# Use mock LLM adapter in tests
+config :resume, llm_adapter: Resume.LLM.Mock

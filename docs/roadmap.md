@@ -91,19 +91,24 @@ Two modes:
 
 - [x] Build a LiveView page with browser-based audio recording (MediaRecorder API via JS hook)
 - [x] Integrate self-hosted Whisper service — send audio via HTTP, receive transcript
-- [ ] Build the guided onboarding flow as a LiveView state machine
-  - [ ] Step: "Tell me about yourself" — name, contact info, background
-  - [ ] Step: "Tell me about your current/most recent role" — what you did, accomplishments
-  - [ ] Loop: "Any previous roles?" → repeat or skip
-  - [ ] Step: Education background
-  - [ ] Step: Skills, certifications, anything else
-  - [ ] Review: Show extracted facts, allow user to remove any before saving
+- [x] Build the guided onboarding flow as a LiveView state machine
+  - [x] Step: "Tell me about yourself" — name, contact info, background
+  - [x] Step: "Tell me about your current/most recent role" — what you did, accomplishments
+  - [x] Loop: "Any previous roles?" → repeat or skip
+  - [x] Step: Education background
+  - [x] Step: Skills, certifications, anything else
+  - [x] Review: Show extracted facts, allow user to remove any before saving
 - [ ] Build the incremental addition flow
   - [ ] Focused prompt → record → transcribe → extract facts → append to user's facts
-- [ ] Anthropic API integration for fact extraction
-  - [ ] Build prompt templates that extract atomic facts from transcripts
-  - [ ] Parse and validate LLM output before saving
+- [x] Anthropic API integration for fact extraction
+  - [x] Build prompt templates that extract atomic facts from transcripts
+  - [x] Parse and validate LLM output before saving
   - [ ] Handle errors and retry logic
+- [ ] Document upload for fact extraction
+  - [ ] LiveView page for uploading documents (PDF, DOCX, plain text) — previous resumes, cover letters, LinkedIn exports, etc.
+  - [ ] Extract text content from uploaded files (PDF text extraction, DOCX parsing)
+  - [ ] Send extracted text through the same LLM fact-extraction pipeline used for voice transcripts
+  - [ ] Review extracted facts before saving, same flow as voice-based extraction
 
 ### Phase 3: Resume Generation
 

@@ -37,7 +37,7 @@ defmodule ResumeWeb.UserAuth do
 
     conn
     |> create_or_extend_session(user, params)
-    |> redirect(to: user_return_to || signed_in_path(conn))
+    |> redirect(to: user_return_to || signed_in_path(user))
   end
 
   @doc """
@@ -187,14 +187,15 @@ defmodule ResumeWeb.UserAuth do
   def redirect_if_user_is_authenticated(conn, _opts) do
     if conn.assigns.current_scope do
       conn
-      |> redirect(to: signed_in_path(conn))
+      |> redirect(to: signed_in_path(conn.assigns.current_scope.user))
       |> halt()
     else
       conn
     end
   end
 
-  defp signed_in_path(_conn), do: ~p"/"
+  defp signed_in_path(%{onboarding_completed_at: nil}), do: ~p"/onboarding"
+  defp signed_in_path(_user), do: ~p"/"
 
   @doc """
   Plug for routes that require the user to be authenticated.

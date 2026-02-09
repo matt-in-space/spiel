@@ -9,8 +9,60 @@ defmodule Resume.Accounts.User do
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
     field :facts, {:array, :string}, default: []
+    field :default_resume_data, :map, default: %{}
+    field :onboarding_completed_at, :utc_datetime
 
     timestamps(type: :utc_datetime)
+  end
+
+  @profile_keys ~w(name email phone location website linkedin github)
+
+  @doc """
+  A changeset for updating profile data stored in `default_resume_data`.
+
+  Takes flat attrs like `%{"name" => "...", "phone" => "..."}`, filters to
+  allowed keys, merges into existing `default_resume_data`, and validates
+  that name is present.
+  """
+  def profile_changeset(user, attrs) do
+    filtered =
+      attrs
+      |> Map.new(fn {k, v} -> {to_string(k), v} end)
+      |> Map.take(@profile_keys)
+
+    merged = Map.merge(user.default_resume_data, filtered)
+
+    user
+    |> change(default_resume_data: merged)
+    |> validate_required_name(merged)
+  end
+
+  defp validate_required_name(changeset, data) do
+    if blank?(data["name"]) do
+      add_error(changeset, :default_resume_data, "name is required")
+    else
+      changeset
+    end
+  end
+
+  defp blank?(nil), do: true
+  defp blank?(str) when is_binary(str), do: String.trim(str) == ""
+  defp blank?(_), do: false
+
+  @doc """
+  A changeset for updating the facts list.
+  """
+  def facts_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:facts])
+  end
+
+  @doc """
+  A changeset that sets `onboarding_completed_at` to now.
+  """
+  def onboarding_changeset(user) do
+    now = DateTime.utc_now(:second)
+    change(user, onboarding_completed_at: now)
   end
 
   @doc """
