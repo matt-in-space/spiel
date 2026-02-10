@@ -65,6 +65,8 @@ defmodule ResumeWeb.Router do
     live "/resumes/new", ResumesLive.New
     live "/resumes/:id", ResumesLive.Show
 
+    get "/resumes/:id/pdf", ResumePDFController, :show
+
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update
     get "/users/settings/confirm-email/:token", UserSettingsController, :confirm_email

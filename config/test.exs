@@ -48,3 +48,6 @@ config :resume, transcription_adapter: Resume.Transcription.Mock
 
 # Use mock LLM adapter in tests
 config :resume, llm_adapter: Resume.LLM.Mock
+
+# Use mock PDF adapter in tests
+config :resume, pdf_adapter: Resume.PDF.Mock

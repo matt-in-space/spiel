@@ -126,14 +126,14 @@ Two modes:
 
 ### Phase 4: PDF Rendering
 
-- [ ] Verify WeasyPrint service runs via HTTP
-- [ ] Build the first resume template as an HEEx component + CSS
-  - [ ] Clean, professional single-column layout
-  - [ ] Proper CSS paged media rules: `break-inside: avoid` on experience/education sections, sensible margins, page numbering if multi-page
-  - [ ] Handle flexible dates (render "March 2021 – Present" or "2019 – 2023" depending on available data)
-- [ ] Build the rendering pipeline: structured data → HEEx → HTML string → WeasyPrint HTTP → PDF bytes
-- [ ] Add PDF download endpoint
-- [ ] Build a live preview in the browser using the same HEEx template (rendered inline in LiveView)
+- [x] Verify WeasyPrint service runs via HTTP
+- [x] Build the first resume template as an HEEx component + CSS
+  - [x] Clean, professional single-column layout
+  - [x] Proper CSS paged media rules: `break-inside: avoid` on experience/education sections, sensible margins, page numbering if multi-page
+  - [x] Handle flexible dates (render "March 2021 – Present" or "2019 – 2023" depending on available data)
+- [x] Build the rendering pipeline: structured data → HEEx → HTML string → WeasyPrint HTTP → PDF bytes
+- [x] Add PDF download endpoint
+- [x] Build a live preview in the browser using the same HEEx template (rendered inline in LiveView)
 
 ### Phase 5: Job Posting Tailoring
 

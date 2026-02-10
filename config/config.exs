@@ -43,6 +43,9 @@ config :resume,
   transcription_adapter: Resume.Transcription.Whisper,
   whisper_url: "http://localhost:9000"
 
+# PDF adapter
+config :resume, pdf_adapter: Resume.PDF.WeasyPrint
+
 # Configure the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
