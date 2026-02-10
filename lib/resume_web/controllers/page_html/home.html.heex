@@ -5,7 +5,7 @@
       Voice-first resume builder. Talk about your experience — get a polished resume.
     </p>
     <%= if @current_scope do %>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl mx-auto mt-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-4xl mx-auto mt-4">
         <.link
           href={~p"/record"}
           class="card bg-base-200 shadow hover:shadow-md transition-shadow"
@@ -34,6 +34,16 @@
             <.icon name="hero-user" class="size-10 text-primary" />
             <h2 class="card-title">Profile</h2>
             <p class="text-sm text-base-content/60">View and edit your profile</p>
+          </div>
+        </.link>
+        <.link
+          href={~p"/resumes"}
+          class="card bg-base-200 shadow hover:shadow-md transition-shadow"
+        >
+          <div class="card-body items-center text-center">
+            <.icon name="hero-document-text" class="size-10 text-primary" />
+            <h2 class="card-title">Resumes</h2>
+            <p class="text-sm text-base-content/60">View and manage your resumes</p>
           </div>
         </.link>
       </div>

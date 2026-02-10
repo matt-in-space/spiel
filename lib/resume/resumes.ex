@@ -4,8 +4,9 @@ defmodule Resume.Resumes do
   """
 
   import Ecto.Query
+  require Logger
   alias Resume.Repo
-  alias Resume.Resumes.Resume
+  alias Resume.Resumes.{Generator, Resume}
 
   @doc """
   Returns all resumes for a given user.
@@ -41,6 +42,15 @@ defmodule Resume.Resumes do
   end
 
   @doc """
+  Updates a resume.
+  """
+  def update_resume(%Resume{} = resume, attrs) do
+    resume
+    |> Resume.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
   Deletes a resume.
   """
   def delete_resume(%Resume{} = resume) do
@@ -52,5 +62,64 @@ defmodule Resume.Resumes do
   """
   def change_resume(%Resume{} = resume, attrs \\ %{}) do
     Resume.changeset(resume, attrs)
+  end
+
+  @doc """
+  Regenerates a resume's data in place using the LLM.
+
+  Re-uses the resume's existing job_posting_text for context.
+  """
+  def regenerate_resume(%Resume{} = resume, user) do
+    opts =
+      if resume.job_posting_text,
+        do: [job_posting_text: resume.job_posting_text],
+        else: []
+
+    case Generator.generate(user, opts) do
+      {:ok, data} ->
+        case update_resume(resume, %{data: data}) do
+          {:ok, resume} ->
+            {:ok, resume}
+
+          {:error, changeset} ->
+            Logger.error("Failed to save regenerated resume: #{inspect(changeset.errors)}")
+            {:error, changeset}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Generates a resume using the LLM and creates a Resume record.
+
+  ## Options
+
+    * `:job_posting_text` - Optional job posting text to tailor the resume to
+    * `:job_posting_url` - Optional URL of the job posting
+
+  """
+  def generate_resume(user, title, opts \\ []) do
+    case Generator.generate(user, opts) do
+      {:ok, data} ->
+        case create_resume(%{
+               title: title,
+               user_id: user.id,
+               data: data,
+               job_posting_text: Keyword.get(opts, :job_posting_text),
+               job_posting_url: Keyword.get(opts, :job_posting_url)
+             }) do
+          {:ok, resume} ->
+            {:ok, resume}
+
+          {:error, changeset} ->
+            Logger.error("Failed to save generated resume: #{inspect(changeset.errors)}")
+            {:error, changeset}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 end
