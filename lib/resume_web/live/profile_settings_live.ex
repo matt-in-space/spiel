@@ -54,6 +54,12 @@ defmodule ResumeWeb.ProfileSettingsLive do
             placeholder="https://linkedin.com/in/..."
           />
           <.input field={@profile_form[:github]} label="GitHub" placeholder="https://github.com/..." />
+          <.input
+            field={@profile_form[:career_goal]}
+            type="textarea"
+            label="Career Goal"
+            placeholder="e.g. I'm looking for a senior engineering role focused on system design"
+          />
 
           <div class="mt-6">
             <button type="submit" class="btn btn-primary">Save Changes</button>
