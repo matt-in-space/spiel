@@ -1,7 +1,7 @@
 defmodule ResumeWeb.ResumesLive.Show do
   use ResumeWeb, :live_view
 
-  alias Resume.{Accounts, Resumes}
+  alias Resume.{Accounts, JobPostings, Resumes}
   alias ResumeWeb.ResumeTemplates.Default
 
   @templates %{
@@ -21,6 +21,8 @@ defmodule ResumeWeb.ResumesLive.Show do
        template_mod: template_mod,
        template_css: template_mod.css(),
        template_form: to_form(%{"template" => resume.template}, as: "template"),
+       targeting_form: build_targeting_form(resume),
+       fetching_url: false,
        regenerating: false,
        task_refs: %{}
      )}
@@ -90,6 +92,62 @@ defmodule ResumeWeb.ResumesLive.Show do
           </.form>
         </div>
 
+        <details class="collapse collapse-arrow bg-base-200">
+          <summary class="collapse-title text-sm font-medium">
+            Job Targeting
+            <span
+              :if={@resume.job_posting_text || @resume.job_posting_url}
+              class="badge badge-accent badge-xs ml-2"
+            >
+              Active
+            </span>
+          </summary>
+          <div class="collapse-content">
+            <.form for={@targeting_form} phx-submit="save_targeting" phx-change="validate_targeting">
+              <div class="space-y-3">
+                <div class="flex gap-2 items-end">
+                  <div class="flex-1">
+                    <.input
+                      field={@targeting_form[:job_posting_url]}
+                      label="Job Posting URL"
+                      type="url"
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    phx-click="fetch_url"
+                    disabled={@fetching_url}
+                    class="btn btn-sm btn-outline mb-2"
+                  >
+                    <span :if={@fetching_url} class="loading loading-spinner loading-xs"></span>
+                    <.icon :if={!@fetching_url} name="hero-arrow-down-tray-micro" class="size-4" />
+                    Fetch
+                  </button>
+                </div>
+                <.input
+                  field={@targeting_form[:job_posting_text]}
+                  label="Job Posting Text"
+                  type="textarea"
+                  placeholder="Paste the job description here, or fetch from URL above..."
+                  rows="4"
+                />
+                <div class="flex gap-2">
+                  <button type="submit" class="btn btn-sm btn-primary">Save Targeting</button>
+                  <button
+                    :if={@resume.job_posting_text || @resume.job_posting_url}
+                    type="button"
+                    phx-click="clear_targeting"
+                    class="btn btn-sm btn-ghost"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </.form>
+          </div>
+        </details>
+
         <div
           :if={@resume.data}
           class="mx-auto max-w-[8.5in] bg-white shadow-lg rounded-sm p-[0.85in] print:shadow-none print:p-0"
@@ -115,6 +173,66 @@ defmodule ResumeWeb.ResumesLive.Show do
        template_css: template_mod.css(),
        template_form: to_form(%{"template" => template}, as: "template")
      )}
+  end
+
+  @impl true
+  def handle_event("validate_targeting", %{"targeting" => params}, socket) do
+    {:noreply, assign(socket, targeting_form: to_form(params, as: "targeting"))}
+  end
+
+  @impl true
+  def handle_event("save_targeting", %{"targeting" => params}, socket) do
+    url = non_blank(params["job_posting_url"])
+    text = non_blank(params["job_posting_text"])
+
+    case Resumes.update_resume(socket.assigns.resume, %{
+           job_posting_url: url,
+           job_posting_text: text
+         }) do
+      {:ok, resume} ->
+        {:noreply,
+         socket
+         |> assign(resume: resume, targeting_form: build_targeting_form(resume))
+         |> put_flash(:info, "Job targeting saved.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to save targeting.")}
+    end
+  end
+
+  @impl true
+  def handle_event("fetch_url", _params, socket) do
+    url =
+      socket.assigns.targeting_form.params["job_posting_url"]
+      |> non_blank()
+
+    if url do
+      task = Task.async(fn -> JobPostings.fetch_text(url) end)
+
+      {:noreply,
+       socket
+       |> assign(fetching_url: true)
+       |> update(:task_refs, &Map.put(&1, task.ref, :fetch_url))}
+    else
+      {:noreply, put_flash(socket, :error, "Enter a URL first.")}
+    end
+  end
+
+  @impl true
+  def handle_event("clear_targeting", _params, socket) do
+    case Resumes.update_resume(socket.assigns.resume, %{
+           job_posting_url: nil,
+           job_posting_text: nil
+         }) do
+      {:ok, resume} ->
+        {:noreply,
+         socket
+         |> assign(resume: resume, targeting_form: build_targeting_form(resume))
+         |> put_flash(:info, "Job targeting cleared.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to clear targeting.")}
+    end
   end
 
   @impl true
@@ -159,6 +277,20 @@ defmodule ResumeWeb.ResumesLive.Show do
          |> assign(regenerating: false)
          |> put_flash(:error, "Failed to regenerate resume. Please try again.")}
 
+      {:fetch_url, {:ok, text}} ->
+        params = Map.put(socket.assigns.targeting_form.params, "job_posting_text", text)
+
+        {:noreply,
+         socket
+         |> assign(fetching_url: false, targeting_form: to_form(params, as: "targeting"))
+         |> put_flash(:info, "Job posting content fetched.")}
+
+      {:fetch_url, {:error, _reason}} ->
+        {:noreply,
+         socket
+         |> assign(fetching_url: false)
+         |> put_flash(:error, "Failed to fetch job posting. Try pasting the text instead.")}
+
       _ ->
         {:noreply, socket}
     end
@@ -167,5 +299,24 @@ defmodule ResumeWeb.ResumesLive.Show do
   @impl true
   def handle_info({:DOWN, _ref, :process, _pid, _reason}, socket) do
     {:noreply, socket}
+  end
+
+  defp build_targeting_form(resume) do
+    to_form(
+      %{
+        "job_posting_url" => resume.job_posting_url || "",
+        "job_posting_text" => resume.job_posting_text || ""
+      },
+      as: "targeting"
+    )
+  end
+
+  defp non_blank(nil), do: nil
+
+  defp non_blank(str) when is_binary(str) do
+    case String.trim(str) do
+      "" -> nil
+      trimmed -> trimmed
+    end
   end
 end

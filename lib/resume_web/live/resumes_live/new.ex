@@ -1,7 +1,7 @@
 defmodule ResumeWeb.ResumesLive.New do
   use ResumeWeb, :live_view
 
-  alias Resume.{Accounts, Resumes}
+  alias Resume.{Accounts, JobPostings, Resumes}
 
   @impl true
   def mount(_params, session, socket) do
@@ -43,7 +43,7 @@ defmodule ResumeWeb.ResumesLive.New do
 
         <div :if={@generating} class="flex flex-col items-center gap-3 py-12">
           <span class="loading loading-spinner loading-lg"></span>
-          <p class="text-sm opacity-70">Generating your resume...</p>
+          <p class="text-sm opacity-70">Fetching job posting and generating your resume...</p>
         </div>
 
         <.form :if={!@generating} for={@form} phx-change="validate" phx-submit="generate">
@@ -95,12 +95,20 @@ defmodule ResumeWeb.ResumesLive.New do
     else
       user = Accounts.get_user!(socket.assigns.user.id)
 
-      opts =
-        []
-        |> maybe_add_opt(:job_posting_text, params["job_posting_text"])
-        |> maybe_add_opt(:job_posting_url, params["job_posting_url"])
+      url = non_blank(params["job_posting_url"])
+      text = non_blank(params["job_posting_text"])
 
-      task = Task.async(fn -> Resumes.generate_resume(user, title, opts) end)
+      task =
+        Task.async(fn ->
+          job_posting_text = resolve_job_posting_text(url, text)
+
+          opts =
+            []
+            |> maybe_add_opt(:job_posting_text, job_posting_text)
+            |> maybe_add_opt(:job_posting_url, url)
+
+          Resumes.generate_resume(user, title, opts)
+        end)
 
       {:noreply,
        socket
@@ -109,9 +117,27 @@ defmodule ResumeWeb.ResumesLive.New do
     end
   end
 
+  defp resolve_job_posting_text(nil, nil), do: nil
+  defp resolve_job_posting_text(_url, text) when is_binary(text), do: text
+
+  defp resolve_job_posting_text(url, nil) do
+    case JobPostings.fetch_text(url) do
+      {:ok, text} -> text
+      {:error, _reason} -> nil
+    end
+  end
+
+  defp non_blank(nil), do: nil
+
+  defp non_blank(str) when is_binary(str) do
+    case String.trim(str) do
+      "" -> nil
+      trimmed -> trimmed
+    end
+  end
+
   defp maybe_add_opt(opts, _key, nil), do: opts
-  defp maybe_add_opt(opts, _key, ""), do: opts
-  defp maybe_add_opt(opts, key, value), do: Keyword.put(opts, key, String.trim(value))
+  defp maybe_add_opt(opts, key, value), do: Keyword.put(opts, key, value)
 
   @impl true
   def handle_info({ref, result}, socket) do

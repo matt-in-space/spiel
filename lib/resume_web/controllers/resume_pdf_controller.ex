@@ -30,7 +30,13 @@ defmodule ResumeWeb.ResumePDFController do
     </html>
     """
 
-    filename = sanitize_filename(resume.title) <> ".pdf"
+    name =
+      case resume.data do
+        %{contact_info: %{name: name}} when is_binary(name) and name != "" -> name
+        _ -> "Resume"
+      end
+
+    filename = sanitize_filename(name) <> " Resume.pdf"
 
     case PDF.render(full_html, css, filename: filename) do
       {:ok, pdf_binary} ->

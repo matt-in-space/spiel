@@ -20,7 +20,7 @@ services:
   weasyprint:
     image: ghcr.io/bcgov/weasyprint:latest
     ports:
-      - "8080:8080"
+      - "8080:5001"
 
 volumes:
   pgdata:

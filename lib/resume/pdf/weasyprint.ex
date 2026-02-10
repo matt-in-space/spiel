@@ -10,11 +10,10 @@ defmodule Resume.PDF.WeasyPrint do
   @behaviour Resume.PDF
 
   @impl true
-  def render(html, css, opts \\ []) do
-    filename = Keyword.get(opts, :filename, "resume.pdf")
+  def render(html, _css, _opts \\ []) do
     url = "#{weasyprint_url()}/pdf"
 
-    case Req.post(url, json: %{html: html, css: css, filename: filename}) do
+    case Req.post(url, body: html, headers: [{"content-type", "text/html"}]) do
       {:ok, %Req.Response{status: 200, body: body}} when is_binary(body) ->
         {:ok, body}
 

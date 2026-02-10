@@ -137,10 +137,10 @@ Two modes:
 
 ### Phase 5: Job Posting Tailoring
 
-- [ ] Fetch and extract job posting content from URL (Req + LLM extraction)
-- [ ] Build the tailoring prompt: facts + job requirements → structured resume optimized for the posting
-- [ ] Save the tailored result as a new resume entity
-- [ ] Preview and export the tailored resume using the same rendering pipeline
+- [x] Fetch and extract job posting content from URL (Req + HTML text extraction)
+- [x] Build the tailoring prompt: facts + job requirements → structured resume optimized for the posting
+- [x] Save the tailored result as a new resume entity
+- [x] Preview and export the tailored resume using the same rendering pipeline
 
 ### Phase 6: Polish and QA
 
