@@ -1,11 +1,17 @@
 defmodule ResumeWeb.ResumesLive.Show do
   use ResumeWeb, :live_view
 
+  require Logger
+
   alias Resume.{Accounts, JobPostings, Resumes}
   alias ResumeWeb.ResumeTemplates.Default
+  alias ResumeWeb.ResumesLive.EditPanel
 
   @templates %{
-    "default" => ResumeWeb.ResumeTemplates.Default
+    "default" => ResumeWeb.ResumeTemplates.Default,
+    "mono" => ResumeWeb.ResumeTemplates.Mono,
+    "fresh" => ResumeWeb.ResumeTemplates.Fresh,
+    "executive" => ResumeWeb.ResumeTemplates.Executive
   }
 
   @impl true
@@ -22,6 +28,10 @@ defmodule ResumeWeb.ResumesLive.Show do
        template_css: template_mod.css(),
        template_form: to_form(%{"template" => resume.template}, as: "template"),
        targeting_form: build_targeting_form(resume),
+       targeting_params: nil,
+       editing: false,
+       data_form: build_data_form(resume),
+       data_params: nil,
        fetching_url: false,
        regenerating: false,
        task_refs: %{}
@@ -64,6 +74,29 @@ defmodule ResumeWeb.ResumesLive.Show do
               <.icon name="hero-arrow-down-tray-micro" class="size-4" /> Download PDF
             </.link>
             <button
+              :if={@resume.data && !@editing}
+              phx-click="toggle_edit"
+              class="btn btn-sm"
+            >
+              <.icon name="hero-pencil-square-micro" class="size-4" /> Edit
+            </button>
+            <button
+              :if={@editing}
+              type="submit"
+              form="data-edit-form"
+              class="btn btn-sm btn-primary"
+            >
+              <.icon name="hero-check-micro" class="size-4" /> Save
+            </button>
+            <button
+              :if={@editing}
+              type="button"
+              phx-click="toggle_edit"
+              class="btn btn-ghost btn-sm"
+            >
+              Cancel
+            </button>
+            <button
               phx-click="regenerate"
               disabled={@regenerating}
               class="btn btn-sm"
@@ -87,7 +120,12 @@ defmodule ResumeWeb.ResumesLive.Show do
             <.input
               field={@template_form[:template]}
               type="select"
-              options={[{"Default", "default"}]}
+              options={[
+                {"Default", "default"},
+                {"Mono", "mono"},
+                {"Fresh", "fresh"},
+                {"Executive", "executive"}
+              ]}
             />
           </.form>
         </div>
@@ -148,15 +186,43 @@ defmodule ResumeWeb.ResumesLive.Show do
           </div>
         </details>
 
+        <div :if={@editing && @resume.data} id="edit-panel-wrapper" phx-hook=".DetailsState">
+          <.form
+            for={@data_form}
+            id="data-edit-form"
+            phx-change="validate_data"
+            phx-submit="save_data"
+          >
+            <EditPanel.edit_panel data_form={@data_form} />
+          </.form>
+        </div>
+
         <div
           :if={@resume.data}
           class="mx-auto max-w-[8.5in] bg-white shadow-lg rounded-sm p-[0.85in] print:shadow-none print:p-0"
         >
           {raw("<style>" <> @template_css <> "</style>")}
-          <Default.render data={@resume.data} />
+          {raw(render_template(@template_mod, @resume.data))}
         </div>
       </div>
     </Layouts.app>
+
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".DetailsState">
+      export default {
+        beforeUpdate() {
+          this._openStates = {};
+          this.el.querySelectorAll('details[id]').forEach(d => {
+            this._openStates[d.id] = d.open;
+          });
+        },
+        updated() {
+          for (const [id, open] of Object.entries(this._openStates || {})) {
+            const el = document.getElementById(id);
+            if (el) el.open = open;
+          }
+        }
+      }
+    </script>
     """
   end
 
@@ -176,8 +242,91 @@ defmodule ResumeWeb.ResumesLive.Show do
   end
 
   @impl true
+  def handle_event("toggle_edit", _params, socket) do
+    editing = !socket.assigns.editing
+    # Rebuild form from current resume data when entering edit mode
+    socket =
+      if editing do
+        assign(socket,
+          editing: true,
+          data_form: build_data_form(socket.assigns.resume),
+          data_params: nil
+        )
+      else
+        assign(socket, editing: false)
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("validate_data", %{"data" => params}, socket) do
+    {:noreply, assign(socket, data_params: params)}
+  end
+
+  @impl true
+  def handle_event("save_data", %{"data" => params}, socket) do
+    params = process_data_params(params)
+
+    case Resumes.update_resume_data(socket.assigns.resume, params) do
+      {:ok, resume} ->
+        {:noreply,
+         socket
+         |> assign(
+           resume: resume,
+           data_form: build_data_form(resume),
+           data_params: nil,
+           editing: false
+         )
+         |> put_flash(:info, "Resume data saved.")}
+
+      {:error, resume_changeset} ->
+        Logger.warning("Resume data save failed: #{inspect(resume_changeset.errors)}")
+
+        case resume_changeset.changes[:data] do
+          %Ecto.Changeset{} = data_changeset ->
+            {:noreply,
+             socket
+             |> assign(
+               data_form: to_form(%{data_changeset | action: :validate}, as: "data"),
+               data_params: nil
+             )
+             |> put_flash(:error, "Please fix the errors highlighted below.")}
+
+          _ ->
+            {:noreply, put_flash(socket, :error, "Failed to save.")}
+        end
+    end
+  end
+
+  @impl true
+  def handle_event("add_item", %{"section" => section}, socket) do
+    section_atom = String.to_existing_atom(section)
+    changeset = changeset_from_params(socket)
+    current = Ecto.Changeset.get_field(changeset, section_atom) || []
+    updated = current ++ [%{}]
+
+    new_changeset = Ecto.Changeset.put_embed(changeset, section_atom, updated)
+
+    {:noreply, assign(socket, data_form: to_form(new_changeset, as: "data"), data_params: nil)}
+  end
+
+  @impl true
+  def handle_event("remove_item", %{"section" => section, "index" => index}, socket) do
+    index = String.to_integer(index)
+    section_atom = String.to_existing_atom(section)
+    changeset = changeset_from_params(socket)
+    current = Ecto.Changeset.get_field(changeset, section_atom) || []
+    updated = List.delete_at(current, index)
+
+    new_changeset = Ecto.Changeset.put_embed(changeset, section_atom, updated)
+
+    {:noreply, assign(socket, data_form: to_form(new_changeset, as: "data"), data_params: nil)}
+  end
+
+  @impl true
   def handle_event("validate_targeting", %{"targeting" => params}, socket) do
-    {:noreply, assign(socket, targeting_form: to_form(params, as: "targeting"))}
+    {:noreply, assign(socket, targeting_params: params)}
   end
 
   @impl true
@@ -203,7 +352,8 @@ defmodule ResumeWeb.ResumesLive.Show do
   @impl true
   def handle_event("fetch_url", _params, socket) do
     url =
-      socket.assigns.targeting_form.params["job_posting_url"]
+      (socket.assigns[:targeting_params]["job_posting_url"] ||
+         socket.assigns.targeting_form.params["job_posting_url"])
       |> non_blank()
 
     if url do
@@ -301,6 +451,12 @@ defmodule ResumeWeb.ResumesLive.Show do
     {:noreply, socket}
   end
 
+  defp render_template(template_mod, data) do
+    template_mod.render(%{data: data})
+    |> Phoenix.HTML.Safe.to_iodata()
+    |> IO.iodata_to_binary()
+  end
+
   defp build_targeting_form(resume) do
     to_form(
       %{
@@ -309,6 +465,99 @@ defmodule ResumeWeb.ResumesLive.Show do
       },
       as: "targeting"
     )
+  end
+
+  defp build_data_form(resume) do
+    changeset = Resumes.change_resume_data(resume)
+    to_form(changeset, as: "data")
+  end
+
+  defp changeset_from_params(socket) do
+    case socket.assigns.data_params do
+      nil ->
+        socket.assigns.data_form.source
+
+      params ->
+        params = process_data_params(params)
+        Resumes.change_resume_data(socket.assigns.resume, params)
+    end
+  end
+
+  defp process_data_params(params) do
+    params
+    |> process_array_fields("work_experience", "accomplishments")
+    |> process_array_fields("skills", "skills")
+    |> process_array_fields("projects", "highlights")
+    |> strip_empty_dates("work_experience", ["start_date", "end_date"])
+    |> strip_empty_dates("education", ["start_date", "end_date"])
+    |> strip_empty_dates("certifications", ["date"])
+    |> strip_empty_dates("publications", ["date"])
+    |> strip_empty_dates("volunteer_work", ["start_date", "end_date"])
+    |> strip_empty_dates("awards", ["date"])
+  end
+
+  defp process_array_fields(params, section, field) do
+    case Map.get(params, section) do
+      nil ->
+        params
+
+      items when is_map(items) ->
+        updated =
+          Enum.into(items, %{}, fn {idx, item} ->
+            {idx, process_textarea_to_list(item, field)}
+          end)
+
+        Map.put(params, section, updated)
+    end
+  end
+
+  defp process_textarea_to_list(item, field) do
+    case Map.get(item, field) do
+      nil ->
+        item
+
+      value when is_binary(value) ->
+        list =
+          value
+          |> String.split("\n")
+          |> Enum.map(&String.trim/1)
+          |> Enum.reject(&(&1 == ""))
+
+        Map.put(item, field, list)
+
+      _ ->
+        item
+    end
+  end
+
+  defp strip_empty_dates(params, section, date_fields) do
+    case Map.get(params, section) do
+      nil ->
+        params
+
+      items when is_map(items) ->
+        updated =
+          Enum.into(items, %{}, fn {idx, item} ->
+            {idx, strip_empty_date_fields(item, date_fields)}
+          end)
+
+        Map.put(params, section, updated)
+    end
+  end
+
+  defp strip_empty_date_fields(item, date_fields) do
+    Enum.reduce(date_fields, item, fn field, acc ->
+      case Map.get(acc, field) do
+        %{"year" => y, "month" => m} when y in ["", nil] and m in ["", nil] ->
+          Map.delete(acc, field)
+
+        %{"year" => y} when y in ["", nil] ->
+          Map.delete(acc, field)
+
+        _ ->
+          acc
+      end
+    end)
   end
 
   defp non_blank(nil), do: nil

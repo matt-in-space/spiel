@@ -6,7 +6,7 @@ defmodule Resume.Resumes do
   import Ecto.Query
   require Logger
   alias Resume.Repo
-  alias Resume.Resumes.{Generator, Resume}
+  alias Resume.Resumes.{Generator, Resume, ResumeData}
 
   @doc """
   Returns all resumes for a given user.
@@ -62,6 +62,21 @@ defmodule Resume.Resumes do
   """
   def change_resume(%Resume{} = resume, attrs \\ %{}) do
     Resume.changeset(resume, attrs)
+  end
+
+  @doc """
+  Returns a changeset for the resume's embedded data.
+  """
+  def change_resume_data(%Resume{} = resume, data_attrs \\ %{}) do
+    data = resume.data || %ResumeData{}
+    ResumeData.changeset(data, data_attrs)
+  end
+
+  @doc """
+  Updates just the data field of a resume.
+  """
+  def update_resume_data(%Resume{} = resume, data_attrs) do
+    update_resume(resume, %{data: data_attrs})
   end
 
   @doc """
