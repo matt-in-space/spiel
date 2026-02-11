@@ -163,7 +163,17 @@ Two modes:
 - [ ] Set up runtime config for `DATABASE_URL`, `SECRET_KEY_BASE`, `PHX_HOST` via Fly secrets
 - [ ] CI pipeline (GitHub Actions → Fly deploy)
 
-### Phase 9: Polish and QA
+### Phase 9: Payments & Usage Limits
+
+- [ ] Integrate Stripe (Checkout Sessions + webhook for payment confirmation)
+- [ ] Define plan/pricing model — likely a simple monthly subscription or per-generation credit pack
+- [ ] Usage limits on LLM-powered actions (resume generation, regeneration, cover letters, fact extraction) — either a monthly generation cap or a rolling time window (e.g. N generations per 24h)
+- [ ] Track usage: add a `generations` counter or `generation_events` table to record each LLM call per user
+- [ ] Enforce limits in the generation pipeline — check before calling the LLM, show a clear upgrade/wait message when the limit is hit
+- [ ] Free tier: allow a limited number of generations so users can try before paying
+- [ ] Billing management page: current plan, usage, cancel/upgrade
+
+### Phase 10: Polish and QA
 
 - [ ] Test PDF rendering across various resume lengths (1-page, 2-page, 3-page) and verify page breaks never split sections
 - [ ] Test voice recording across browsers (Chrome, Firefox, Safari)
@@ -178,7 +188,5 @@ Two modes:
 - Additional resume templates (2-column, academic CV, minimal, etc.)
 - `.docx` export for applicant tracking systems
 - Fact editing UI (review, edit, delete individual facts)
-- Cost management for LLM/transcription calls if scaling to multiple users
-- Billing/subscription model (per-tailored-resume or monthly during active job search)
 - User-created or customizable templates
 - Alternative LLM providers (Ollama, OpenAI) via the behaviour system
