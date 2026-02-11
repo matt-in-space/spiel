@@ -189,6 +189,20 @@ defmodule Resume.Resumes.Generator do
           "start_date": {"year": 2019, "month": 1},
           "end_date": {"year": 2020, "month": 12}
         }
+      ],
+      "languages": [
+        {
+          "name": "English",
+          "fluency": "Native"
+        }
+      ],
+      "awards": [
+        {
+          "title": "Award Title",
+          "issuer": "Issuing Organization",
+          "summary": "Brief description",
+          "date": {"year": 2022, "month": 3}
+        }
       ]
     }
 
@@ -199,7 +213,9 @@ defmodule Resume.Resumes.Generator do
     - Dates should have year (required) and month (optional) — omit month if unknown
     - Omit sections that have no data (use empty arrays)
     - Each work experience accomplishment should be a concise, action-oriented bullet point
-    - Group skills into logical categories\
+    - Group skills into logical categories
+    - Include languages if mentioned (fluency: "Native", "Fluent", "Conversational", or "Basic")
+    - Include awards or honors if mentioned\
     """
   end
 

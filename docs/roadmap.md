@@ -142,7 +142,28 @@ Two modes:
 - [x] Save the tailored result as a new resume entity
 - [x] Preview and export the tailored resume using the same rendering pipeline
 
-### Phase 6: Polish and QA
+### Phase 6: Inline Editing & Review
+
+- [x] Inline editing of resume data on the show page (edit panel with collapsible sections)
+- [x] Add/remove items for array sections (work experience, skills, etc.)
+- [ ] Post-generation review step — after the LLM generates a resume, show a summary of tailoring decisions (skills emphasized, sections reordered, etc.) so the user understands what changed and can adjust before saving
+- [ ] Skill exclusion mechanism — let users flag specific skills/items they don't want on resumes (e.g. "EmberJS" inferred from a fact like "Worked on an Ember app"), so the LLM skips them during generation without requiring manual edits after the fact
+
+### Phase 7: Cover Letters
+
+- [ ] Cover letter generation from facts + job posting, using the same LLM pipeline
+- [ ] Cover letter preview and PDF export
+- [ ] Store cover letters alongside resumes (same job posting context)
+
+### Phase 8: Deployment
+
+- [ ] Deploy to Fly.io (Phoenix app + PostgreSQL)
+- [ ] Evaluate transcription approach for production: self-hosted Whisper on a GPU-capable Fly machine vs. third-party API (Deepgram, AssemblyAI, OpenAI Whisper API) — trade-off between cost, latency, and infrastructure complexity
+- [ ] Move WeasyPrint to a Fly service or replace with a hosted PDF rendering option
+- [ ] Set up runtime config for `DATABASE_URL`, `SECRET_KEY_BASE`, `PHX_HOST` via Fly secrets
+- [ ] CI pipeline (GitHub Actions → Fly deploy)
+
+### Phase 9: Polish and QA
 
 - [ ] Test PDF rendering across various resume lengths (1-page, 2-page, 3-page) and verify page breaks never split sections
 - [ ] Test voice recording across browsers (Chrome, Firefox, Safari)
@@ -156,7 +177,6 @@ Two modes:
 
 - Additional resume templates (2-column, academic CV, minimal, etc.)
 - `.docx` export for applicant tracking systems
-- Cover letter generation from the same facts + job posting
 - Fact editing UI (review, edit, delete individual facts)
 - Cost management for LLM/transcription calls if scaling to multiple users
 - Billing/subscription model (per-tailored-resume or monthly during active job search)

@@ -23,7 +23,7 @@ defmodule Resume.LLM.Anthropic do
       }
       |> maybe_put(:system, system)
 
-    case Req.post(@api_url, json: body, headers: headers()) do
+    case Req.post(@api_url, json: body, headers: headers(), receive_timeout: 120_000) do
       {:ok, %Req.Response{status: 200, body: body}} ->
         text =
           body

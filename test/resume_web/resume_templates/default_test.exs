@@ -2,6 +2,7 @@ defmodule ResumeWeb.ResumeTemplates.DefaultTest do
   use ExUnit.Case, async: true
 
   alias ResumeWeb.ResumeTemplates.Default
+  alias ResumeWeb.ResumeTemplates.Helpers
 
   @sample_data %Resume.Resumes.ResumeData{
     summary: "Experienced software engineer.",
@@ -67,6 +68,18 @@ defmodule ResumeWeb.ResumeTemplates.DefaultTest do
         start_date: %Resume.Resumes.FlexDate{year: 2019, month: 1},
         end_date: %Resume.Resumes.FlexDate{year: 2020, month: 12}
       }
+    ],
+    languages: [
+      %Resume.Resumes.Language{name: "English", fluency: "Native"},
+      %Resume.Resumes.Language{name: "Spanish", fluency: "Conversational"}
+    ],
+    awards: [
+      %Resume.Resumes.Award{
+        title: "Employee of the Year",
+        issuer: "Acme Corp",
+        summary: "Outstanding performance",
+        date: %Resume.Resumes.FlexDate{year: 2023, month: 1}
+      }
     ]
   }
 
@@ -100,6 +113,12 @@ defmodule ResumeWeb.ResumeTemplates.DefaultTest do
       assert html =~ "ACM"
       assert html =~ "Mentor"
       assert html =~ "Code for All"
+      assert html =~ "English"
+      assert html =~ "Native"
+      assert html =~ "Spanish"
+      assert html =~ "Employee of the Year"
+      assert html =~ "Acme Corp"
+      assert html =~ "Outstanding performance"
     end
 
     test "skips empty sections" do
@@ -112,7 +131,9 @@ defmodule ResumeWeb.ResumeTemplates.DefaultTest do
         certifications: [],
         projects: [],
         publications: [],
-        volunteer_work: []
+        volunteer_work: [],
+        languages: [],
+        awards: []
       }
 
       html =
@@ -125,6 +146,8 @@ defmodule ResumeWeb.ResumeTemplates.DefaultTest do
       refute html =~ "Education"
       refute html =~ "Skills"
       refute html =~ "Summary"
+      refute html =~ "Languages"
+      refute html =~ "Awards"
     end
   end
 
@@ -139,15 +162,15 @@ defmodule ResumeWeb.ResumeTemplates.DefaultTest do
 
   describe "format_flex_date/1" do
     test "formats year and month" do
-      assert Default.format_flex_date(%{year: 2023, month: 11}) == "Nov 2023"
+      assert Helpers.format_flex_date(%{year: 2023, month: 11}) == "Nov 2023"
     end
 
     test "formats year only" do
-      assert Default.format_flex_date(%{year: 2023, month: nil}) == "2023"
+      assert Helpers.format_flex_date(%{year: 2023, month: nil}) == "2023"
     end
 
     test "handles nil" do
-      assert Default.format_flex_date(nil) == ""
+      assert Helpers.format_flex_date(nil) == ""
     end
   end
 
@@ -155,16 +178,16 @@ defmodule ResumeWeb.ResumeTemplates.DefaultTest do
     test "formats full range" do
       s = %{year: 2020, month: 1}
       e = %{year: 2023, month: 6}
-      assert Default.format_date_range(s, e, false) == "Jan 2020 — Jun 2023"
+      assert Helpers.format_date_range(s, e, false) == "Jan 2020 — Jun 2023"
     end
 
     test "current shows Present" do
       s = %{year: 2020, month: 1}
-      assert Default.format_date_range(s, nil, true) == "Jan 2020 — Present"
+      assert Helpers.format_date_range(s, nil, true) == "Jan 2020 — Present"
     end
 
     test "nil start and end" do
-      assert Default.format_date_range(nil, nil, false) == ""
+      assert Helpers.format_date_range(nil, nil, false) == ""
     end
   end
 end

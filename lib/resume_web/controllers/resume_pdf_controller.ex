@@ -4,7 +4,10 @@ defmodule ResumeWeb.ResumePDFController do
   alias Resume.{PDF, Resumes}
 
   @templates %{
-    "default" => ResumeWeb.ResumeTemplates.Default
+    "default" => ResumeWeb.ResumeTemplates.Default,
+    "mono" => ResumeWeb.ResumeTemplates.Mono,
+    "fresh" => ResumeWeb.ResumeTemplates.Fresh,
+    "executive" => ResumeWeb.ResumeTemplates.Executive
   }
 
   def show(conn, %{"id" => id}) do

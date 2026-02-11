@@ -9,6 +9,8 @@ defmodule ResumeWeb.ResumeTemplates.Default do
 
   use ResumeWeb, :html
 
+  import ResumeWeb.ResumeTemplates.Helpers
+
   attr :data, :any, required: true
 
   def render(assigns) do
@@ -23,6 +25,8 @@ defmodule ResumeWeb.ResumeTemplates.Default do
       <.projects_section projects={@data.projects} />
       <.publications_section pubs={@data.publications} />
       <.volunteer_section entries={@data.volunteer_work} />
+      <.languages_section languages={Map.get(@data, :languages, [])} />
+      <.awards_section awards={Map.get(@data, :awards, [])} />
     </div>
     """
   end
@@ -130,7 +134,7 @@ defmodule ResumeWeb.ResumeTemplates.Default do
         <div class="resume-entry-header">
           <span class="resume-entry-title">
             {cert.name}
-            <span :if={cert.issuer} class="resume-entry-issuer"> —   {cert.issuer}</span>
+            <span :if={cert.issuer} class="resume-entry-issuer"> —    {cert.issuer}</span>
           </span>
           <span :if={cert.date} class="resume-entry-date">{format_flex_date(cert.date)}</span>
         </div>
@@ -171,7 +175,7 @@ defmodule ResumeWeb.ResumeTemplates.Default do
         <div class="resume-entry-header">
           <span class="resume-entry-title">
             {pub.title}
-            <span :if={pub.publisher} class="resume-entry-issuer"> —   {pub.publisher}</span>
+            <span :if={pub.publisher} class="resume-entry-issuer"> —    {pub.publisher}</span>
             <a :if={pub.url} href={pub.url} class="resume-entry-link">Link</a>
           </span>
           <span :if={pub.date} class="resume-entry-date">{format_flex_date(pub.date)}</span>
@@ -196,6 +200,41 @@ defmodule ResumeWeb.ResumeTemplates.Default do
         </div>
         <div class="resume-entry-subtitle">{vol.organization}</div>
         <p :if={vol.description} class="resume-entry-description">{vol.description}</p>
+      </div>
+    </section>
+    """
+  end
+
+  defp languages_section(%{languages: []} = assigns), do: ~H""
+
+  defp languages_section(assigns) do
+    ~H"""
+    <section class="resume-section">
+      <h2 class="resume-section-title">Languages</h2>
+      <div class="resume-skills">
+        <span :for={lang <- @languages} class="resume-language">
+          {lang.name}<span :if={lang.fluency} class="resume-language-fluency"> ({lang.fluency})</span>
+        </span>
+      </div>
+    </section>
+    """
+  end
+
+  defp awards_section(%{awards: []} = assigns), do: ~H""
+
+  defp awards_section(assigns) do
+    ~H"""
+    <section class="resume-section">
+      <h2 class="resume-section-title">Awards</h2>
+      <div :for={award <- @awards} class="resume-entry">
+        <div class="resume-entry-header">
+          <span class="resume-entry-title">
+            {award.title}
+            <span :if={award.issuer} class="resume-entry-issuer"> —  {award.issuer}</span>
+          </span>
+          <span :if={award.date} class="resume-entry-date">{format_flex_date(award.date)}</span>
+        </div>
+        <p :if={award.summary} class="resume-entry-description">{award.summary}</p>
       </div>
     </section>
     """
@@ -358,29 +397,17 @@ defmodule ResumeWeb.ResumeTemplates.Default do
     .resume .resume-skill-list {
       color: #333 !important;
     }
+
+    /* Languages */
+    .resume .resume-language + .resume-language::before {
+      content: " \\2022  ";
+      color: #999 !important;
+    }
+
+    .resume .resume-language-fluency {
+      font-weight: 400;
+      color: #555 !important;
+    }
     """
-  end
-
-  @doc "Formats a FlexDate struct to a human-readable string."
-  def format_flex_date(nil), do: ""
-
-  def format_flex_date(%{year: year, month: month}) when is_integer(month) do
-    month_name = Calendar.strftime(%Date{year: year, month: month, day: 1}, "%b")
-    "#{month_name} #{year}"
-  end
-
-  def format_flex_date(%{year: year}), do: "#{year}"
-
-  @doc "Formats a date range from two FlexDate structs."
-  def format_date_range(start_date, end_date, current) do
-    start_str = format_flex_date(start_date)
-    end_str = if current, do: "Present", else: format_flex_date(end_date)
-
-    case {start_str, end_str} do
-      {"", ""} -> ""
-      {s, ""} -> s
-      {"", e} -> e
-      {s, e} -> "#{s} — #{e}"
-    end
   end
 end

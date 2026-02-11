@@ -3,9 +3,11 @@ defmodule Resume.Resumes.ResumeData do
   import Ecto.Changeset
 
   alias Resume.Resumes.{
+    Award,
     ContactInfo,
     WorkExperience,
     Education,
+    Language,
     SkillGroup,
     Certification,
     Project,
@@ -25,6 +27,8 @@ defmodule Resume.Resumes.ResumeData do
     embeds_many :projects, Project, on_replace: :delete
     embeds_many :publications, Publication, on_replace: :delete
     embeds_many :volunteer_work, VolunteerWork, on_replace: :delete
+    embeds_many :languages, Language, on_replace: :delete
+    embeds_many :awards, Award, on_replace: :delete
   end
 
   def changeset(resume_data, attrs) do
@@ -38,5 +42,7 @@ defmodule Resume.Resumes.ResumeData do
     |> cast_embed(:projects)
     |> cast_embed(:publications)
     |> cast_embed(:volunteer_work)
+    |> cast_embed(:languages)
+    |> cast_embed(:awards)
   end
 end
