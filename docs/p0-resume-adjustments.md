@@ -92,38 +92,38 @@ This can happen from two places:
 ## Implementation Tasks
 
 ### Feedback UI
-- [ ] Add feedback input component (text box + voice record button) to the resume show page
-- [ ] Position below the resume preview and writer's explanation
-- [ ] Wire up voice recording to existing transcription pipeline
+- [x] Add feedback input component (text box + voice record button) to the resume show page
+- [x] Position below the resume preview and writer's explanation
+- [x] Wire up voice recording to existing transcription pipeline
 
 ### Feedback Processing Pipeline
-- [ ] LLM prompt: current structured data + facts + directives + feedback → updated structured data + delta explanation + directive classification
-- [ ] Parse updated structured data, validate against schema
-- [ ] Generate delta explanation (what changed from previous version)
-- [ ] Display updated preview + delta to user
-- [ ] Confirm / iterate / revert controls
-- [ ] Save confirmed version (overwrite current resume)
+- [x] LLM prompt: current structured data + facts + directives + feedback → updated structured data + delta explanation + directive classification
+- [x] Parse updated structured data, validate against schema
+- [x] Generate delta explanation (what changed from previous version)
+- [x] Display updated preview + delta to user
+- [x] Confirm / iterate / revert controls
+- [x] Save confirmed version (overwrite current resume)
 
 ### Writer's Explanation (Prerequisite)
-- [ ] Update resume generation LLM prompt to also output a natural language explanation of tailoring decisions
-- [ ] Display explanation alongside resume preview on the resume show page
-- [ ] For adjustment iterations, explanation should be a delta ("here's what I changed") not a full re-explanation
+- [x] Update resume generation LLM prompt to also output a natural language explanation of tailoring decisions
+- [x] Display explanation alongside resume preview on the resume show page
+- [x] For adjustment iterations, explanation should be a delta ("here's what I changed") not a full re-explanation
 
 ### Directive System
 - [x] Migration: add `directives` JSONB column to users table (array of strings, default: [])
 - [x] Include directives in all resume generation prompts
-- [ ] Directive classification in feedback processing (resume-specific vs. persistent)
-- [ ] Ambiguous case: ask user "always or just this resume?" within the conversation flow
-- [ ] Directive CRUD:
-  - [ ] Add via conversation (automatic from feedback classification)
-  - [ ] View as list (in facts/settings area)
-  - [ ] Remove via delete button or conversational ("forget the Ember rule")
+- [x] Directive classification in feedback processing (resume-specific vs. persistent)
+- [x] Ambiguous case: ask user "always or just this resume?" within the conversation flow
+- [x] Directive CRUD:
+  - [x] Add via conversation (automatic from feedback classification)
+  - [x] View as list (in facts/settings area)
+  - [x] Remove via delete button ~~or conversational ("forget the Ember rule")~~
 
 ### Fact Updates from Conversation
-- [ ] Extend feedback pipeline to detect when feedback implies a fact-level change
-- [ ] LLM determines which fact(s) to update, add, or annotate
-- [ ] Apply changes to user's facts
-- [ ] Confirmation message: explain what was understood and changed
+- [x] Extend feedback pipeline to detect when feedback implies a fact-level change
+- [x] LLM determines which fact(s) to update, add, or annotate
+- [x] Apply changes to user's facts
+- [x] Confirmation message: explain what was understood and changed
 - [ ] Same pipeline accessible from facts management view
 
 ---
