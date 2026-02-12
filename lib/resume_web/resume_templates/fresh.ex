@@ -134,7 +134,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">
             {cert.name}
-            <span :if={cert.issuer} class="fresh-entry-meta"> —   {cert.issuer}</span>
+            <span :if={cert.issuer} class="fresh-entry-meta">&nbsp;&mdash; {cert.issuer}</span>
           </span>
           <span :if={cert.date} class="fresh-entry-date">{format_flex_date(cert.date)}</span>
         </div>
@@ -175,7 +175,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">
             {pub.title}
-            <span :if={pub.publisher} class="fresh-entry-meta"> —   {pub.publisher}</span>
+            <span :if={pub.publisher} class="fresh-entry-meta">&nbsp;&mdash; {pub.publisher}</span>
             <a :if={pub.url} href={pub.url} class="fresh-link">Link</a>
           </span>
           <span :if={pub.date} class="fresh-entry-date">{format_flex_date(pub.date)}</span>
@@ -213,7 +213,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
       <h2 class="fresh-section-title">Languages</h2>
       <div class="fresh-skill-tags">
         <span :for={lang <- @languages} class="fresh-skill-tag">
-          {lang.name}<span :if={lang.fluency} class="fresh-entry-meta"> — {lang.fluency}</span>
+          {lang.name}<span :if={lang.fluency} class="fresh-entry-meta">&nbsp;&mdash; {lang.fluency}</span>
         </span>
       </div>
     </section>
@@ -230,7 +230,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">
             {award.title}
-            <span :if={award.issuer} class="fresh-entry-meta"> —   {award.issuer}</span>
+            <span :if={award.issuer} class="fresh-entry-meta">&nbsp;&mdash; {award.issuer}</span>
           </span>
           <span :if={award.date} class="fresh-entry-date">{format_flex_date(award.date)}</span>
         </div>

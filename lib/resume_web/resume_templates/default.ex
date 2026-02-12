@@ -134,7 +134,7 @@ defmodule ResumeWeb.ResumeTemplates.Default do
         <div class="resume-entry-header">
           <span class="resume-entry-title">
             {cert.name}
-            <span :if={cert.issuer} class="resume-entry-issuer"> —     {cert.issuer}</span>
+            <span :if={cert.issuer} class="resume-entry-issuer">&nbsp;&mdash; {cert.issuer}</span>
           </span>
           <span :if={cert.date} class="resume-entry-date">{format_flex_date(cert.date)}</span>
         </div>
@@ -175,7 +175,7 @@ defmodule ResumeWeb.ResumeTemplates.Default do
         <div class="resume-entry-header">
           <span class="resume-entry-title">
             {pub.title}
-            <span :if={pub.publisher} class="resume-entry-issuer"> —     {pub.publisher}</span>
+            <span :if={pub.publisher} class="resume-entry-issuer">&nbsp;&mdash; {pub.publisher}</span>
             <a :if={pub.url} href={pub.url} class="resume-entry-link">Link</a>
           </span>
           <span :if={pub.date} class="resume-entry-date">{format_flex_date(pub.date)}</span>
@@ -230,7 +230,7 @@ defmodule ResumeWeb.ResumeTemplates.Default do
         <div class="resume-entry-header">
           <span class="resume-entry-title">
             {award.title}
-            <span :if={award.issuer} class="resume-entry-issuer"> —   {award.issuer}</span>
+            <span :if={award.issuer} class="resume-entry-issuer">&nbsp;&mdash; {award.issuer}</span>
           </span>
           <span :if={award.date} class="resume-entry-date">{format_flex_date(award.date)}</span>
         </div>
