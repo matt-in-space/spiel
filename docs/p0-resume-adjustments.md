@@ -4,102 +4,122 @@
 
 ## Problem
 
-After a resume is generated, users inevitably want to make changes. The current approach is inline editing via forms — collapsible sections where you manually edit fields, add/remove items, etc. This works but it's the opposite of what Spiel is about. The whole point is "just talk" — so refining a resume should work the same way.
+After a resume is generated, users need to refine it. The current approach is inline form editing. This contradicts Spiel's core philosophy — if the input is conversational, the refinement should be too.
 
-The deeper problem is illustrated by the Ember example: a user worked on an Ember project, so "Ember" shows up in both their work history AND their skills. But they don't consider Ember a real skill — it was incidental. Today they'd have to manually find and remove it from the skills section, and it would probably come back next time they generate a resume. There's no way to tell the system "I know about Ember but don't treat it as a skill."
+The deeper issue is that some adjustments are one-time ("move AWS higher on this resume") and others are permanent preferences ("never list Ember as a skill"). The system needs to handle both through the same conversational interface without the user needing to think about the distinction.
 
 ## Essential Outcome
 
-Users refine their resumes through natural language feedback — text or voice. The system applies changes intelligently, and when feedback represents a lasting preference, it remembers it for all future generations. The manual editing UI stays as a fallback but is no longer the primary interaction.
+Users refine resumes by talking to the system. Feedback that represents a lasting preference is automatically remembered for future generations. The manual editing UI stays as a fallback but is not the primary path.
+
+## Relationship to Onboarding Doc
+
+The full user journey — including how adjustments fit into the flow from generation through iteration — is documented in `p0-agent-onboarding.md` (sections 7-9). This doc covers the implementation specifics.
+
+---
 
 ## Design
 
 ### Resume Feedback Loop
 
-On the resume view page, below or alongside the preview, there's a simple input: a text box and a voice record button. The user provides feedback like:
+**Where it lives:** On the resume view page, below the preview and writer's explanation.
 
-- "Remove Ember from the skills section but keep it in the Bonusly work history"
-- "Emphasize leadership experience more"
-- "Make the summary shorter and more direct"
-- "Move the AWS certification higher up"
-- "The dates for my time at Company X are wrong — I was there from 2019 to 2022, not 2021"
-- "This is too long, try to get it to one page"
+**Interface:** Text input + voice record button. Same component used everywhere in the app.
 
 **Flow:**
 1. User provides feedback (text or voice → transcribed)
-2. System sends the current resume structured data + the feedback to the LLM
-3. LLM returns updated structured data
-4. System shows the user what changed — ideally a visual diff or at minimum a summary like "Removed EmberJS from skills, updated Company X dates to 2019–2022"
-5. User confirms or provides additional feedback
-6. Updated resume is saved
+2. LLM receives: current resume structured data + full user facts + user directives + feedback
+3. LLM returns: updated structured data + delta explanation ("Moved AWS to top of skills, shortened summary")
+4. User sees updated preview + explanation of changes
+5. User confirms, provides more feedback, or reverts
+6. Confirmed version is saved
 
-This creates a tight loop: view → feedback → updated view → more feedback → done.
+**Important:** Each iteration sends the full context — current structured data, all facts, all directives, AND the feedback. The LLM isn't doing incremental patches; it's regenerating with additional guidance. This is more expensive per call but far more reliable than trying to do surgical edits.
 
-### Persistent User Directives
+### Directive Detection
 
-Some feedback is about this specific resume. Other feedback is about how the user wants ALL their resumes built. The system needs to distinguish between these.
+When the user provides feedback, the system needs to determine: is this just for this resume, or for all future resumes?
 
-**Resume-specific adjustments:**
+**Resume-specific examples:**
 - "Move the AWS section higher on this one"
-- "Make this summary tailored more toward backend"
-- "Cut the volunteer section from this resume"
+- "Cut the volunteer section"
+- "Make the summary more tailored toward backend"
 
-**Persistent directives (apply to all future generations):**
-- "I don't consider Ember a real skill — don't list it under skills"
-- "Always emphasize cloud architecture and infrastructure"
-- "Prefer 'Software Engineer' over 'Developer' in job titles"
-- "Never include my freelance work unless the posting is for contract roles"
+**Directive examples:**
+- "I don't consider Ember a real skill"
+- "Always emphasize cloud architecture"
+- "Prefer 'Software Engineer' over 'Developer'"
+- "Never include freelance work unless it's a contract role"
 - "Keep resumes to one page unless I say otherwise"
 
-**How directives work:**
-- Stored as a list of natural language strings on the user record
-- The LLM classifies incoming feedback: is this resume-specific or a general directive?
-  - If general → save to directives list AND apply to current resume
-  - If resume-specific → apply only to current resume
-  - If ambiguous → apply to current resume and ask "should I always do this?"
-- Every resume generation prompt includes the user's directives alongside their facts
-- Directives can be viewed as a simple list and removed via voice or text ("forget the rule about Ember")
+**How it works:**
+- The same LLM call that processes the feedback also classifies it
+- If directive: save to user's directives list AND apply to current resume
+- If resume-specific: apply only to current resume
+- If ambiguous: apply to current resume, then confirm with the user — "Should I always do this, or just for this resume?"
+- The confirmation response is part of the conversation, not a separate modal or form
 
-**Data model:**
-- Add a `directives` column to the users table (JSONB array of strings, default: empty)
-- Update all resume generation prompts to include directives
+### Directives Storage & Application
 
-### Voice-Driven Updates Beyond Resumes
+**Storage:** `directives` column on users table (JSONB array of strings). Each directive is a natural language string — no structured format needed since the LLM interprets them at generation time.
 
-Extend the same conversational pattern to managing the master record:
+**Application:** Every resume generation prompt includes the user's directives. The LLM treats them as standing instructions alongside the facts and job target.
 
-- **Modifying facts:** "Actually I was at that company for 3 years, not 2" → agent finds the relevant fact and updates it
-- **Requesting a resume:** "Make me a resume for a senior backend role focusing on Elixir and distributed systems" → generates resume with directives applied, no need to navigate to a form
-- **Adding new experience:** Already works via the incremental addition flow, but should be accessible from anywhere, not just a dedicated page
+**Management:** Directives are visible in the facts/settings view. Can be removed manually (delete button) or conversationally ("forget the rule about Ember"). Can also be added directly from the facts view, not just during resume feedback.
+
+### Fact Updates via Conversation
+
+The same conversational interface supports modifying the user's facts, not just the current resume:
+
+- "I actually was at Company X for 3 years, not 2" → agent identifies the relevant fact(s) and updates them
+- "I got promoted to Staff Engineer in January" → new fact appended
+- "I don't actually have a skill in EmberJS" → directive added (don't list as skill), fact about working on an Ember project remains
+
+This can happen from two places:
+1. During resume feedback — if the user corrects something that's a fact-level issue, the system should update the facts, not just the current resume
+2. From the facts management view — dedicated place to talk about your career data
+
+**Confirmation:** When the system modifies facts or adds a directive, it should confirm what it understood: "Got it — I won't list EmberJS as a skill on future resumes. Your work on the Ember project at Bonusly is still recorded." This adds an LLM call but prevents silent misinterpretations.
+
+---
 
 ## Implementation Tasks
 
-- [ ] **Resume feedback UI**
-  - [ ] Add feedback input (text box + voice record button) to the resume show/preview page
-  - [ ] Wire up voice recording to existing transcription pipeline
-- [ ] **Feedback processing pipeline**
-  - [ ] Build LLM prompt: takes current resume structured data + user feedback → returns updated structured data
-  - [ ] Parse and validate the LLM's updated output
-  - [ ] Generate a human-readable summary of what changed (diff)
-  - [ ] Show diff to user for confirmation
-  - [ ] Save updated resume on confirm
-- [ ] **Directive classification**
-  - [ ] Build LLM prompt (or extend feedback prompt) to classify feedback as resume-specific vs. persistent directive
-  - [ ] If directive: save to user's directives list AND apply to current resume
-  - [ ] If ambiguous: apply to current resume, ask user if it should be a standing rule
-- [ ] **Directives storage and application**
-  - [ ] Add `directives` JSONB column to users table (migration)
-  - [ ] Update all resume generation prompts to include user directives
-  - [ ] Build a simple directives list view (viewable from settings or profile)
-  - [ ] Support removing directives via the same feedback interface ("forget the rule about Ember")
-- [ ] **Voice-driven fact updates**
-  - [ ] Accept voice/text input that modifies existing facts (not just appends new ones)
-  - [ ] LLM determines which existing fact(s) to update based on the input
-  - [ ] Show the user what changed before confirming
+### Feedback UI
+- [ ] Add feedback input component (text box + voice record button) to the resume show page
+- [ ] Position below the resume preview and writer's explanation
+- [ ] Wire up voice recording to existing transcription pipeline
+
+### Feedback Processing Pipeline
+- [ ] LLM prompt: current structured data + facts + directives + feedback → updated structured data + delta explanation + directive classification
+- [ ] Parse updated structured data, validate against schema
+- [ ] Generate delta explanation (what changed from previous version)
+- [ ] Display updated preview + delta to user
+- [ ] Confirm / iterate / revert controls
+- [ ] Save confirmed version (overwrite current resume)
+
+### Directive System
+- [ ] Migration: add `directives` JSONB column to users table (array of strings, default: [])
+- [ ] Include directives in all resume generation prompts
+- [ ] Directive classification in feedback processing (resume-specific vs. persistent)
+- [ ] Ambiguous case: ask user "always or just this resume?" within the conversation flow
+- [ ] Directive CRUD:
+  - [ ] Add via conversation (automatic from feedback classification)
+  - [ ] View as list (in facts/settings area)
+  - [ ] Remove via delete button or conversational ("forget the Ember rule")
+
+### Fact Updates from Conversation
+- [ ] Extend feedback pipeline to detect when feedback implies a fact-level change
+- [ ] LLM determines which fact(s) to update, add, or annotate
+- [ ] Apply changes to user's facts
+- [ ] Confirmation message: explain what was understood and changed
+- [ ] Same pipeline accessible from facts management view
+
+---
 
 ## Open Questions
 
-- Should the diff view show a before/after of the rendered resume (visual), or a list of structured changes? Visual is more intuitive but harder to build. A structured summary ("Changed X, removed Y, added Z") might be good enough.
-- When the LLM classifies feedback as a directive, should it always ask for confirmation, or just do it and let the user see it in their directives list?
-- Should there be a limit on the number of directives? Too many could make the generation prompt unwieldy and produce conflicting instructions.
-- Can directives conflict with each other? If so, how do we handle that — last-one-wins, or flag it to the user?
+- Should directive classification be part of the same LLM call as the resume update, or a separate call? Same call is cheaper but the prompt gets complex. Separate call is cleaner but doubles latency.
+- Can directives conflict with each other? ("Always emphasize leadership" + "Focus on individual contribution") If so, should the system detect and flag this, or just let the LLM figure it out?
+- Should there be a limit on directives? 10? 20? Unbounded? Too many could make the generation prompt unwieldy.
+- When feedback implies a fact change during resume iteration, should the system update facts immediately, or queue it and confirm after the resume iteration is done? Updating immediately means the next iteration already has corrected facts. Queuing avoids interrupting the resume refinement flow.
