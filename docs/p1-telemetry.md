@@ -92,15 +92,57 @@ Elixir's built-in Logger + a JSON formatter backend is sufficient. No need for a
 
 ### LLM Cost Tracking
 
-This deserves its own callout because it's the primary ongoing cost:
+This deserves its own callout because it's the primary ongoing cost.
 
-- Maintain a config map of model → price per input token / output token
-- After each LLM call, compute estimated cost from token counts
+#### Current Anthropic Pricing (per million tokens, as of Feb 2025)
+
+| Model | Input | Output |
+|-------|-------|--------|
+| Haiku 4.5 | $1 | $5 |
+| Sonnet 4.5 | $3 | $15 |
+| Opus 4.5 | $5 | $25 |
+
+**Recommended model:** Sonnet 4.5 for all Spiel operations. Best balance of capability and cost for structured extraction and generation tasks.
+
+#### Estimated Cost Per Operation (Sonnet 4.5)
+
+| Operation | Input Tokens | Output Tokens | Est. Cost |
+|-----------|-------------|---------------|----------|
+| Fact extraction (voice/upload) | ~3,500 | ~1,000 | ~$0.01 |
+| Onboarding interview question | ~4,000 | ~200 | ~$0.015 |
+| Job posting extraction | ~3,000 | ~500 | ~$0.017 |
+| Resume generation | ~8,000 | ~2,500 | ~$0.06 |
+| Resume adjustment | ~10,000 | ~2,500 | ~$0.07 |
+| Directive classification | ~2,000 | ~200 | ~$0.006 |
+
+**Typical user session** (generate 1 tailored resume + 3 adjustment rounds): ~$0.29
+
+**Typical active monthly user** (10 tailored resumes with adjustments): ~$2-4/month in API costs
+
+**Full onboarding** (upload + 8-10 interview questions + recap): ~$0.20-0.30
+
+These estimates assume facts lists of ~3,000-5,000 tokens. As users accumulate more facts over time, input token counts for generation and adjustment calls will grow. Prompt caching (see below) mitigates this significantly.
+
+#### Prompt Caching
+
+Anthropic's prompt caching reduces repeated input costs by 90%. Since Spiel sends the same system prompt + user facts + directives on nearly every call in a session, caching should be implemented early:
+
+- Cache write: 1.25x base input price (first call in a session)
+- Cache read: 0.1x base input price (subsequent calls)
+- 5-minute default TTL, 1-hour option available
+
+With caching, a session with 4 resume adjustments drops from ~$0.29 to ~$0.12 since the facts/directives/system prompt are only paid in full once.
+
+#### Cost Tracking Implementation
+
+- Maintain a config map of model → price per input token / output token (update when Anthropic changes pricing)
+- Anthropic returns `input_tokens` and `output_tokens` in every API response body — read these directly, don't estimate
+- After each LLM call, compute estimated cost from actual token counts
 - Emit as a telemetry measurement so it flows into Prometheus
 - Grafana dashboard: daily/weekly/monthly LLM spend, broken down by call type
 - Per-user token usage (feeds directly into P3 usage limits)
 
-**Storage consideration:** For per-user tracking and billing, you may want to persist LLM call records to the database (not just Prometheus) — a `llm_events` table with user_id, call_type, model, input_tokens, output_tokens, estimated_cost, timestamp. This gives you queryable history that Prometheus time-series data doesn't easily support (Prometheus is great for aggregates, not great for "show me all calls for user X in the last month").
+**Storage consideration:** For per-user tracking and billing, persist LLM call records to the database (not just Prometheus) — a `llm_events` table with user_id, call_type, model, input_tokens, output_tokens, estimated_cost_cents, timestamp. This gives you queryable history that Prometheus time-series data doesn't easily support (Prometheus is great for aggregates, not great for "show me all calls for user X in the last month").
 
 ---
 
@@ -120,11 +162,17 @@ This deserves its own callout because it's the primary ongoing cost:
 - [ ] Instrument fact extraction pipeline: emit `[:spiel, :facts, :extracted]` with count, source type, end-to-end latency
 
 ### LLM Cost Tracking
-- [ ] Config map: model name → input token price, output token price
+- [ ] Config map: model name → input token price, output token price (Sonnet 4.5: $3/$15 per MTok)
+- [ ] Read `input_tokens` and `output_tokens` from Anthropic API response body (don't estimate)
 - [ ] Compute estimated cost per call, include in telemetry event
-- [ ] Create `llm_events` table (user_id, call_type, model, input_tokens, output_tokens, estimated_cost_cents, inserted_at)
+- [ ] Create `llm_events` table (user_id, call_type, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, estimated_cost_cents, inserted_at)
 - [ ] Write to `llm_events` after each LLM call (async — don't block the request)
 - [ ] Context function: `Spiel.Telemetry.user_usage_summary(user_id, period)` for querying usage
+
+### Prompt Caching
+- [ ] Implement Anthropic prompt caching for system prompt + user facts + directives (these are the same across calls in a session)
+- [ ] Track cache hit/miss in telemetry events
+- [ ] Monitor cache effectiveness in Grafana (cache hit rate, cost savings vs. non-cached)
 
 ### Structured Logging
 - [ ] Set up Logger metadata: user_id, request_id on each request/socket connection
