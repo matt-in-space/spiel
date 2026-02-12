@@ -62,10 +62,12 @@ defmodule Resume.Resumes.Generator do
   defp build_prompt(user, job_posting_text) do
     profile = user.default_resume_data || %{}
     facts = user.facts || []
+    directives = user.directives || []
 
     sections = [
       profile_section(profile),
       facts_section(facts),
+      directives_section(directives),
       job_posting_section(job_posting_text),
       schema_instructions()
     ]
@@ -111,6 +113,22 @@ defmodule Resume.Resumes.Generator do
 
     """
     ## Career Facts
+    #{numbered}\
+    """
+  end
+
+  defp directives_section([]), do: nil
+
+  defp directives_section(directives) do
+    numbered =
+      directives
+      |> Enum.with_index(1)
+      |> Enum.map(fn {directive, i} -> "#{i}. #{directive}" end)
+      |> Enum.join("\n")
+
+    """
+    ## Directives
+    Follow these instructions when generating the resume:
     #{numbered}\
     """
   end

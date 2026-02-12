@@ -9,10 +9,23 @@ defmodule Resume.LLM.Mock do
   def complete(_prompt, opts \\ []) do
     system = Keyword.get(opts, :system, "")
 
-    if String.contains?(system, "resume generation") do
-      {:ok, resume_json()}
-    else
-      {:ok, ~s(["Mock fact about career", "Mock fact about skills"])}
+    cond do
+      String.contains?(system, "resume generation") ->
+        {:ok, resume_json()}
+
+      String.contains?(system, "career interviewer") and String.contains?(system, "opening") ->
+        {:ok, ~s({"question": "Tell me about your current or most recent role."})}
+
+      String.contains?(system, "career interviewer") ->
+        {:ok,
+         ~s({"facts": ["Mock extracted fact from interview"], "question": "What technologies do you work with?", "should_wrap_up": false})}
+
+      String.contains?(system, "summarizing") ->
+        {:ok,
+         ~s({"recap": "You are an experienced professional with a strong background in software engineering."})}
+
+      true ->
+        {:ok, ~s(["Mock fact about career", "Mock fact about skills"])}
     end
   end
 

@@ -10,6 +10,7 @@ defmodule Resume.Accounts.User do
     field :authenticated_at, :utc_datetime, virtual: true
     field :facts, {:array, :string}, default: []
     field :default_resume_data, :map, default: %{}
+    field :directives, {:array, :string}, default: []
     field :onboarding_completed_at, :utc_datetime
 
     timestamps(type: :utc_datetime)
@@ -55,6 +56,14 @@ defmodule Resume.Accounts.User do
   def facts_changeset(user, attrs) do
     user
     |> cast(attrs, [:facts])
+  end
+
+  @doc """
+  A changeset for updating the directives list.
+  """
+  def directives_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:directives])
   end
 
   @doc """

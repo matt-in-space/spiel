@@ -101,6 +101,15 @@ defmodule Resume.Accounts do
   end
 
   @doc """
+  Replaces the user's directives list.
+  """
+  def update_user_directives(user, directives) when is_list(directives) do
+    user
+    |> User.directives_changeset(%{directives: directives})
+    |> Repo.update()
+  end
+
+  @doc """
   Appends new facts to the user's existing facts list.
   """
   def append_user_facts(user, new_facts) when is_list(new_facts) do

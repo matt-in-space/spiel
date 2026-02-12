@@ -195,7 +195,7 @@ defmodule ResumeWeb.UserAuth do
   end
 
   defp signed_in_path(%{onboarding_completed_at: nil}), do: ~p"/onboarding"
-  defp signed_in_path(_user), do: ~p"/"
+  defp signed_in_path(_user), do: ~p"/home"
 
   @doc """
   Plug for routes that require the user to be authenticated.

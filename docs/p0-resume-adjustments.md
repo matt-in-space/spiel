@@ -12,9 +12,15 @@ The deeper issue is that some adjustments are one-time ("move AWS higher on this
 
 Users refine resumes by talking to the system. Feedback that represents a lasting preference is automatically remembered for future generations. The manual editing UI stays as a fallback but is not the primary path.
 
-## Relationship to Onboarding Doc
+## Prior Work (Completed)
 
-The full user journey — including how adjustments fit into the flow from generation through iteration — is documented in `p0-agent-onboarding.md` (sections 7-9). This doc covers the implementation specifics.
+The onboarding rewrite and home state redesign are done (`p0-agent-onboarding.md`, now deleted). As part of that work:
+- `directives` column added to users (array of strings, default `[]`)
+- `User.directives_changeset/2` and `Accounts.update_user_directives/2` exist
+- Directives are included in all resume generation prompts (`Generator.directives_section/1`)
+- Home state at `/home` with job target input + resume list
+- AI interview module (`Resume.Interview`) with adaptive questioning
+- No directive creation/management UI yet — that's part of this ticket
 
 ---
 
@@ -98,9 +104,14 @@ This can happen from two places:
 - [ ] Confirm / iterate / revert controls
 - [ ] Save confirmed version (overwrite current resume)
 
+### Writer's Explanation (Prerequisite)
+- [ ] Update resume generation LLM prompt to also output a natural language explanation of tailoring decisions
+- [ ] Display explanation alongside resume preview on the resume show page
+- [ ] For adjustment iterations, explanation should be a delta ("here's what I changed") not a full re-explanation
+
 ### Directive System
-- [ ] Migration: add `directives` JSONB column to users table (array of strings, default: [])
-- [ ] Include directives in all resume generation prompts
+- [x] Migration: add `directives` JSONB column to users table (array of strings, default: [])
+- [x] Include directives in all resume generation prompts
 - [ ] Directive classification in feedback processing (resume-specific vs. persistent)
 - [ ] Ambiguous case: ask user "always or just this resume?" within the conversation flow
 - [ ] Directive CRUD:

@@ -57,6 +57,7 @@ defmodule ResumeWeb.Router do
   scope "/", ResumeWeb do
     pipe_through [:browser, :require_authenticated_user]
 
+    live "/home", HomeLive
     live "/record", RecordingLive
     live "/upload", UploadLive
     live "/onboarding", OnboardingLive

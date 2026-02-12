@@ -12,7 +12,7 @@ defmodule ResumeWeb.OnboardingLiveTest do
       assert path == ~p"/users/log-in"
     end
 
-    test "redirects already-onboarded users to /", %{conn: conn} do
+    test "redirects already-onboarded users to /home", %{conn: conn} do
       user = user_fixture()
 
       {:ok, _user} =
@@ -20,14 +20,14 @@ defmodule ResumeWeb.OnboardingLiveTest do
 
       conn = log_in_user(conn, user)
       assert {:error, redirect} = live(conn, ~p"/onboarding")
-      assert {:redirect, %{to: "/"}} = redirect
+      assert {:redirect, %{to: "/home"}} = redirect
     end
   end
 
-  describe "profile step" do
+  describe "contact step" do
     setup :register_and_log_in_user
 
-    test "renders profile form at step 1", %{conn: conn} do
+    test "renders contact form at step 1", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/onboarding")
       assert html =~ "Tell us about yourself"
       assert html =~ "Full Name"
@@ -46,11 +46,10 @@ defmodule ResumeWeb.OnboardingLiveTest do
         |> form("form", profile: %{name: "", email: "test@test.com"})
         |> render_submit()
 
-      # Should stay on profile step and show error
       assert html =~ "Tell us about yourself" || has_element?(view, ".alert-error")
     end
 
-    test "advances to current_role on valid submit", %{conn: conn} do
+    test "advances to import on valid submit", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/onboarding")
 
       view
@@ -58,17 +57,16 @@ defmodule ResumeWeb.OnboardingLiveTest do
       |> render_submit()
 
       html = render(view)
-      assert html =~ "Current / Most Recent Role"
+      assert html =~ "Import Your Experience"
     end
   end
 
-  describe "recording steps" do
+  describe "import step" do
     setup :register_and_log_in_user
 
     setup %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/onboarding")
 
-      # Advance past profile step
       view
       |> form("form", profile: %{name: "Jane Doe", email: "jane@test.com"})
       |> render_submit()
@@ -76,161 +74,162 @@ defmodule ResumeWeb.OnboardingLiveTest do
       %{view: view}
     end
 
-    test "renders current role step", %{view: view} do
+    test "renders import step", %{view: view} do
       html = render(view)
-      assert html =~ "Current / Most Recent Role"
-      assert html =~ "Record"
+      assert html =~ "Import Your Experience"
+      assert html =~ "Skip"
     end
 
-    test "toggles recording state", %{view: view} do
-      html = view |> element("button", "Record") |> render_click()
-      assert html =~ "Stop Recording"
-      assert html =~ "Recording..."
-
-      html = view |> element("button", "Stop Recording") |> render_click()
-      assert html =~ "Record"
-    end
-
-    test "receives audio data and shows transcribing state", %{view: view} do
-      html =
-        render_hook(view, "audio_data", %{
-          "data" => Base.encode64("fake audio data"),
-          "size" => 1234,
-          "type" => "audio/webm"
-        })
-
-      assert html =~ "Recording #1"
-      assert html =~ "Transcribing..."
-    end
-
-    test "next button advances step with no recordings", %{view: view} do
-      view |> element("button", "Next") |> render_click()
-
-      # Wait for async extraction
-      Process.sleep(50)
-      html = render(view)
-      assert html =~ "Previous Experience"
-    end
-
-    test "skip button advances step", %{view: view} do
-      # First advance to a skippable step (previous_roles)
-      view |> element("button", "Next") |> render_click()
-      Process.sleep(50)
-      html = render(view)
-      assert html =~ "Previous Experience"
-
+    test "skip advances to interview", %{view: view} do
       view |> element("button", "Skip") |> render_click()
+
+      Process.sleep(100)
       html = render(view)
-      assert html =~ "Education"
+      assert html =~ "Career Interview"
     end
 
-    test "next with transcripts triggers fact extraction", %{view: view} do
-      render_hook(view, "audio_data", %{
-        "data" => Base.encode64("fake audio data"),
-        "size" => 1234,
-        "type" => "audio/webm"
-      })
+    test "text paste triggers extraction and shows count", %{view: view} do
+      view
+      |> form("form", paste: %{text: "I worked at Acme Corp for 5 years as a senior engineer."})
+      |> render_submit()
 
-      # Wait for transcription to complete
-      Process.sleep(50)
+      Process.sleep(100)
       html = render(view)
-      assert html =~ "mock transcript"
+      assert html =~ "Extracted"
+      assert html =~ "facts"
+    end
 
-      view |> element("button", "Next") |> render_click()
+    test "continue after import advances to interview", %{view: view} do
+      view
+      |> form("form", paste: %{text: "I worked at Acme Corp for 5 years."})
+      |> render_submit()
 
-      # Wait for LLM extraction
-      Process.sleep(50)
+      Process.sleep(100)
+
+      view |> element("button", "Continue") |> render_click()
+
+      Process.sleep(100)
       html = render(view)
-
-      # Should have advanced to next step
-      assert html =~ "Previous Experience"
+      assert html =~ "Career Interview"
     end
   end
 
-  describe "review step" do
+  describe "interview step" do
     setup :register_and_log_in_user
 
     setup %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/onboarding")
 
-      # Advance past profile
+      # Advance past contact
       view
       |> form("form", profile: %{name: "Jane Doe", email: "jane@test.com"})
       |> render_submit()
 
-      # Record at current_role step
-      render_hook(view, "audio_data", %{
-        "data" => Base.encode64("fake audio"),
-        "size" => 100,
-        "type" => "audio/webm"
-      })
+      # Skip import
+      view |> element("button", "Skip") |> render_click()
 
-      # Wait for transcription to complete
       Process.sleep(100)
-
-      view |> element("button", "Next") |> render_click()
-
-      # Wait for LLM extraction to complete and step to advance
-      Process.sleep(100)
-
-      # Skip through remaining steps (previous_roles → education → skills → review)
-      view |> element("button", "Skip") |> render_click()
-      view |> element("button", "Skip") |> render_click()
-      view |> element("button", "Skip") |> render_click()
 
       %{view: view}
     end
 
-    test "shows review step with extracted facts", %{view: view} do
+    test "displays opening question", %{view: view} do
       html = render(view)
-      assert html =~ "Review Your Facts"
-      assert html =~ "Mock fact about career"
-      assert html =~ "Mock fact about skills"
+      assert html =~ "Career Interview"
+      assert html =~ "current or most recent role"
     end
 
-    test "remove button removes a fact", %{view: view} do
-      html = render(view)
-      assert html =~ "Mock fact about career"
+    test "sending a message gets a response", %{view: view} do
+      view
+      |> form("form", chat: %{message: "I work at Acme Corp as an engineer"})
+      |> render_submit()
 
-      view |> element(~s(button[phx-click="remove_fact"][phx-value-index="0"])) |> render_click()
+      Process.sleep(100)
       html = render(view)
-
-      refute html =~ "Mock fact about career"
-      assert html =~ "Mock fact about skills"
+      assert html =~ "technologies"
     end
 
-    test "complete onboarding saves and redirects", %{view: view} do
-      # Verify we're at review step and can complete
-      assert render(view) =~ "Review Your Facts"
+    test "skip advances to recap", %{view: view} do
+      view |> element("button", "Skip") |> render_click()
 
-      view |> element("button", "Save & Continue") |> render_click()
-      flash = assert_redirect(view, ~p"/")
+      html = render(view)
+      assert html =~ "Your Career Summary"
+    end
+
+    test "I'm done advances to recap", %{view: view} do
+      view |> element(~s(button[phx-click="interview_done"])) |> render_click()
+
+      html = render(view)
+      assert html =~ "Your Career Summary"
+    end
+  end
+
+  describe "recap step" do
+    setup :register_and_log_in_user
+
+    setup %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/onboarding")
+
+      # Advance through contact
+      view
+      |> form("form", profile: %{name: "Jane Doe", email: "jane@test.com"})
+      |> render_submit()
+
+      # Paste text to get some facts
+      view
+      |> form("form", paste: %{text: "I worked at Acme Corp for 5 years as a senior engineer."})
+      |> render_submit()
+
+      Process.sleep(100)
+
+      # Continue from import
+      view |> element("button", "Continue") |> render_click()
+
+      Process.sleep(100)
+
+      # Skip interview
+      view |> element("button", "Skip") |> render_click()
+
+      Process.sleep(100)
+
+      %{view: view}
+    end
+
+    test "shows recap summary", %{view: view} do
+      html = render(view)
+      assert html =~ "Your Career Summary"
+      assert html =~ "experienced professional" || html =~ "Complete Setup"
+    end
+
+    test "complete saves and redirects to /home", %{view: view} do
+      view |> element("button", "Complete Setup") |> render_click()
+      flash = assert_redirect(view, ~p"/home")
       assert flash["info"] =~ "Welcome"
     end
   end
 
-  describe "complete onboarding (simple)" do
+  describe "complete onboarding (simple path)" do
     setup :register_and_log_in_user
 
-    test "saves profile and facts and redirects to /", %{conn: conn} do
+    test "skip everything and complete", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/onboarding")
 
-      # Fill in profile and advance
+      # Fill in contact
       view
       |> form("form", profile: %{name: "Jane Doe"})
       |> render_submit()
 
-      # Skip all recording steps to reach review
-      view |> element("button", "Next") |> render_click()
-      Process.sleep(50)
+      # Skip import
       view |> element("button", "Skip") |> render_click()
-      view |> element("button", "Skip") |> render_click()
+      Process.sleep(100)
+
+      # Skip interview
       view |> element("button", "Skip") |> render_click()
 
-      assert render(view) =~ "Review Your Facts"
+      assert render(view) =~ "Your Career Summary"
 
-      view |> element("button", "Save & Continue") |> render_click()
-      flash = assert_redirect(view, ~p"/")
+      view |> element("button", "Complete Setup") |> render_click()
+      flash = assert_redirect(view, ~p"/home")
       assert flash["info"] =~ "Welcome"
     end
   end

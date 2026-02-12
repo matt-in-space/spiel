@@ -56,5 +56,20 @@ defmodule Resume.Resumes.GeneratorTest do
 
       assert is_map(data)
     end
+
+    test "works with directives" do
+      user = user_fixture()
+      {:ok, user} = Resume.Accounts.update_user_profile(user, %{"name" => "Test User"})
+
+      {:ok, user} =
+        Resume.Accounts.update_user_directives(user, [
+          "Always emphasize leadership experience",
+          "Keep resume to one page"
+        ])
+
+      {:ok, data, _tailoring_notes} = Generator.generate(user)
+
+      assert is_map(data)
+    end
   end
 end
