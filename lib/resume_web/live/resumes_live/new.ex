@@ -72,7 +72,7 @@ defmodule ResumeWeb.ResumesLive.New do
               <button type="submit" class="btn btn-primary">
                 <.icon name="hero-sparkles-micro" class="size-4" /> Generate Resume
               </button>
-              <.link navigate={~p"/resumes"} class="btn btn-ghost">Cancel</.link>
+              <.link navigate={~p"/home"} class="btn btn-ghost">Cancel</.link>
             </div>
           </div>
         </.form>

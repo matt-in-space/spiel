@@ -67,7 +67,7 @@ defmodule ResumeWeb.ResumesLive.Show do
             Created {Calendar.strftime(@resume.inserted_at, "%b %d, %Y")}
           </:subtitle>
           <:actions>
-            <.link navigate={~p"/resumes"} class="btn btn-ghost btn-sm">
+            <.link navigate={~p"/home"} class="btn btn-ghost btn-sm">
               <.icon name="hero-arrow-left-micro" class="size-4" /> Back
             </.link>
             <.link href={~p"/resumes/#{@resume}/pdf"} class="btn btn-sm">
@@ -417,7 +417,7 @@ defmodule ResumeWeb.ResumesLive.Show do
     {:noreply,
      socket
      |> put_flash(:info, "Resume deleted.")
-     |> push_navigate(to: ~p"/resumes")}
+     |> push_navigate(to: ~p"/home")}
   end
 
   @impl true
