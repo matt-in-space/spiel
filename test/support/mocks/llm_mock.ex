@@ -10,6 +10,9 @@ defmodule Resume.LLM.Mock do
     system = Keyword.get(opts, :system, "")
 
     cond do
+      String.contains?(system, "resume adjustment") ->
+        {:ok, feedback_json()}
+
       String.contains?(system, "resume generation") ->
         {:ok, resume_json()}
 
@@ -27,6 +30,47 @@ defmodule Resume.LLM.Mock do
       true ->
         {:ok, ~s(["Mock fact about career", "Mock fact about skills"])}
     end
+  end
+
+  defp feedback_json do
+    Jason.encode!(%{
+      "summary" =>
+        "Experienced software engineer with deep expertise in web development and cloud architecture.",
+      "work_experience" => [
+        %{
+          "role" => "Senior Software Engineer",
+          "company" => "Acme Corp",
+          "current" => false,
+          "start_date" => %{"year" => 2020, "month" => 1},
+          "end_date" => %{"year" => 2023, "month" => 6},
+          "accomplishments" => [
+            "Led migration to microservices architecture",
+            "Mentored team of 3 junior engineers"
+          ]
+        }
+      ],
+      "education" => [
+        %{
+          "institution" => "State University",
+          "degree" => "B.S.",
+          "field" => "Computer Science",
+          "start_date" => %{"year" => 2014, "month" => 9},
+          "end_date" => %{"year" => 2018, "month" => 5}
+        }
+      ],
+      "skills" => [
+        %{"category" => "Languages", "skills" => ["Elixir", "JavaScript"]},
+        %{"category" => "Frameworks", "skills" => ["Phoenix", "React"]}
+      ],
+      "certifications" => [],
+      "projects" => [],
+      "publications" => [],
+      "volunteer_work" => [],
+      "explanation" => "Added cloud architecture emphasis to the summary as requested.",
+      "classification" => "resume",
+      "directive" => nil,
+      "fact_changes" => []
+    })
   end
 
   defp resume_json do
@@ -62,6 +106,8 @@ defmodule Resume.LLM.Mock do
       "projects" => [],
       "publications" => [],
       "volunteer_work" => [],
+      "explanation" =>
+        "Highlighted web development expertise and leadership experience. Grouped skills by category to emphasize full-stack capabilities. Emphasized the microservices migration as a key accomplishment.",
       "tailoring_notes" =>
         "- Emphasized web development and Elixir/Phoenix skills\n- Highlighted microservices migration experience\n- Reordered skills to prioritize relevant technologies"
     })

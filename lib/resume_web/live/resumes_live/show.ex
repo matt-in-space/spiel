@@ -3,9 +3,8 @@ defmodule ResumeWeb.ResumesLive.Show do
 
   require Logger
 
-  alias Resume.{Accounts, JobPostings, Resumes}
+  alias Resume.{Accounts, Feedback, JobPostings, Resumes}
   alias ResumeWeb.ResumeTemplates.Default
-  alias ResumeWeb.ResumesLive.EditPanel
 
   @templates %{
     "default" => ResumeWeb.ResumeTemplates.Default,
@@ -29,11 +28,15 @@ defmodule ResumeWeb.ResumesLive.Show do
        template_form: to_form(%{"template" => resume.template}, as: "template"),
        targeting_form: build_targeting_form(resume),
        targeting_params: nil,
-       editing: false,
-       data_form: build_data_form(resume),
-       data_params: nil,
        fetching_url: false,
-       regenerating: false,
+       feedback_messages: [],
+       feedback_form: to_form(%{"message" => ""}, as: "feedback"),
+       preview_data: nil,
+       preview_explanation: nil,
+       pending_directive: nil,
+       processing_feedback: false,
+       recording: false,
+       transcribing: false,
        task_refs: %{}
      )}
   end
@@ -73,37 +76,6 @@ defmodule ResumeWeb.ResumesLive.Show do
             <.link href={~p"/resumes/#{@resume}/pdf"} class="btn btn-sm">
               <.icon name="hero-arrow-down-tray-micro" class="size-4" /> Download PDF
             </.link>
-            <button
-              :if={@resume.data && !@editing}
-              phx-click="toggle_edit"
-              class="btn btn-sm"
-            >
-              <.icon name="hero-pencil-square-micro" class="size-4" /> Edit
-            </button>
-            <button
-              :if={@editing}
-              type="submit"
-              form="data-edit-form"
-              class="btn btn-sm btn-primary"
-            >
-              <.icon name="hero-check-micro" class="size-4" /> Save
-            </button>
-            <button
-              :if={@editing}
-              type="button"
-              phx-click="toggle_edit"
-              class="btn btn-ghost btn-sm"
-            >
-              Cancel
-            </button>
-            <button
-              phx-click="regenerate"
-              disabled={@regenerating}
-              class="btn btn-sm"
-            >
-              <span :if={@regenerating} class="loading loading-spinner loading-xs"></span>
-              <.icon :if={!@regenerating} name="hero-arrow-path-micro" class="size-4" /> Regenerate
-            </button>
             <button
               phx-click="delete"
               data-confirm="Are you sure you want to delete this resume?"
@@ -186,6 +158,15 @@ defmodule ResumeWeb.ResumesLive.Show do
           </div>
         </details>
 
+        <details :if={@resume.explanation} class="collapse collapse-arrow bg-base-200" open>
+          <summary class="collapse-title text-sm font-medium">
+            Writer's Notes
+          </summary>
+          <div class="collapse-content">
+            <p class="text-sm">{@resume.explanation}</p>
+          </div>
+        </details>
+
         <details :if={@resume.tailoring_notes} class="collapse collapse-arrow bg-base-200" open>
           <summary class="collapse-title text-sm font-medium">
             Tailoring Notes
@@ -197,42 +178,183 @@ defmodule ResumeWeb.ResumesLive.Show do
           </div>
         </details>
 
-        <div :if={@editing && @resume.data} id="edit-panel-wrapper" phx-hook=".DetailsState">
-          <.form
-            for={@data_form}
-            id="data-edit-form"
-            phx-change="validate_data"
-            phx-submit="save_data"
+        <div :if={@resume.data} class="space-y-4">
+          <div
+            :if={@feedback_messages != []}
+            id="feedback-messages"
+            phx-hook=".ChatScroll"
+            class="max-h-80 overflow-y-auto space-y-3 p-3 bg-base-200 rounded-lg"
           >
-            <EditPanel.edit_panel data_form={@data_form} />
+            <div
+              :for={msg <- @feedback_messages}
+              class={[
+                "chat",
+                if(msg.role == :user, do: "chat-end", else: "chat-start")
+              ]}
+            >
+              <div class={[
+                "chat-bubble",
+                if(msg.role == :assistant, do: "chat-bubble-primary", else: "")
+              ]}>
+                {msg.content}
+              </div>
+            </div>
+
+            <div :if={@pending_directive} class="chat chat-start">
+              <div class="chat-bubble chat-bubble-primary">
+                <p class="mb-2">Should this always apply?</p>
+                <p class="text-xs opacity-80 mb-3">"{@pending_directive}"</p>
+                <div class="flex gap-2">
+                  <button phx-click="always_directive" class="btn btn-xs btn-accent">Always</button>
+                  <button phx-click="just_this_resume" class="btn btn-xs btn-ghost">
+                    Just this resume
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div :if={@processing_feedback} class="chat chat-start">
+              <div class="chat-bubble chat-bubble-primary">
+                <span class="loading loading-dots loading-sm"></span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            id="audio-recorder"
+            phx-hook=".AudioRecorder"
+            phx-update="ignore"
+            data-recording={to_string(@recording)}
+          >
+          </div>
+
+          <div :if={@transcribing} class="flex items-center gap-2 text-sm">
+            <span class="loading loading-spinner loading-xs"></span> Transcribing...
+          </div>
+
+          <.form
+            for={@feedback_form}
+            phx-submit="send_feedback"
+            phx-change="validate_feedback"
+            class="flex items-end gap-2"
+          >
+            <div class="flex-1">
+              <.input
+                field={@feedback_form[:message]}
+                placeholder="Suggest changes to your resume..."
+                autocomplete="off"
+              />
+            </div>
+            <%= if @recording do %>
+              <button type="button" phx-click="stop_recording" class="btn btn-error btn-sm">
+                <.icon name="hero-stop-solid" class="size-4" />
+              </button>
+            <% else %>
+              <button type="button" phx-click="start_recording" class="btn btn-ghost btn-sm">
+                <.icon name="hero-microphone-solid" class="size-4" />
+              </button>
+            <% end %>
+            <button
+              type="submit"
+              class="btn btn-primary btn-sm"
+              disabled={@processing_feedback || @transcribing}
+            >
+              <.icon name="hero-paper-airplane-solid" class="size-4" />
+            </button>
           </.form>
+
+          <div :if={@preview_data} class="flex items-center gap-2">
+            <button phx-click="confirm_changes" class="btn btn-primary btn-sm">
+              <.icon name="hero-check-micro" class="size-4" /> Confirm Changes
+            </button>
+            <button phx-click="revert_changes" class="btn btn-ghost btn-sm">
+              <.icon name="hero-arrow-uturn-left-micro" class="size-4" /> Revert
+            </button>
+          </div>
         </div>
 
         <div
           :if={@resume.data}
           class="mx-auto max-w-[8.5in] bg-white shadow-lg rounded-sm p-[0.85in] print:shadow-none print:p-0"
         >
+          <div
+            :if={@preview_data}
+            class="flex items-center gap-2 mb-4 -mt-4 -mx-4 px-4 py-2 bg-warning/10 border-b border-warning/30"
+          >
+            <.icon name="hero-eye-micro" class="size-4 text-warning" />
+            <span class="text-sm font-medium text-warning">Preview — unsaved changes</span>
+          </div>
           {raw("<style>" <> @template_css <> "</style>")}
-          {raw(render_template(@template_mod, @resume.data))}
+          {raw(render_template(@template_mod, display_data(@preview_data, @resume)))}
         </div>
       </div>
     </Layouts.app>
 
-    <script :type={Phoenix.LiveView.ColocatedHook} name=".DetailsState">
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".AudioRecorder">
       export default {
-        beforeUpdate() {
-          this._openStates = {};
-          this.el.querySelectorAll('details[id]').forEach(d => {
-            this._openStates[d.id] = d.open;
-          });
+        mounted() {
+          this.mediaRecorder = null;
+          this.audioChunks = [];
+
+          this.handleEvent("start_recording", () => this.startRecording());
+          this.handleEvent("stop_recording", () => this.stopRecording());
+        },
+
+        async startRecording() {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.audioChunks = [];
+            this.mediaRecorder = new MediaRecorder(stream);
+
+            this.mediaRecorder.ondataavailable = (event) => {
+              if (event.data.size > 0) {
+                this.audioChunks.push(event.data);
+              }
+            };
+
+            this.mediaRecorder.onstop = () => {
+              const blob = new Blob(this.audioChunks, { type: this.mediaRecorder.mimeType });
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const base64 = reader.result.split(",")[1];
+                this.pushEvent("audio_data", {
+                  data: base64,
+                  size: blob.size,
+                  type: blob.type,
+                });
+              };
+              reader.readAsDataURL(blob);
+
+              stream.getTracks().forEach((track) => track.stop());
+            };
+
+            this.mediaRecorder.start();
+          } catch (error) {
+            console.error("Recording error:", error);
+            this.pushEvent("recording_error", { reason: error.message });
+          }
+        },
+
+        stopRecording() {
+          if (this.mediaRecorder && this.mediaRecorder.state === "recording") {
+            this.mediaRecorder.stop();
+          }
+        },
+      };
+    </script>
+
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".ChatScroll">
+      export default {
+        mounted() {
+          this.scrollToBottom();
         },
         updated() {
-          for (const [id, open] of Object.entries(this._openStates || {})) {
-            const el = document.getElementById(id);
-            if (el) el.open = open;
-          }
-        }
-      }
+          this.scrollToBottom();
+        },
+        scrollToBottom() {
+          this.el.scrollTop = this.el.scrollHeight;
+        },
+      };
     </script>
     """
   end
@@ -250,89 +372,6 @@ defmodule ResumeWeb.ResumesLive.Show do
        template_css: template_mod.css(),
        template_form: to_form(%{"template" => template}, as: "template")
      )}
-  end
-
-  @impl true
-  def handle_event("toggle_edit", _params, socket) do
-    editing = !socket.assigns.editing
-    # Rebuild form from current resume data when entering edit mode
-    socket =
-      if editing do
-        assign(socket,
-          editing: true,
-          data_form: build_data_form(socket.assigns.resume),
-          data_params: nil
-        )
-      else
-        assign(socket, editing: false)
-      end
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("validate_data", %{"data" => params}, socket) do
-    {:noreply, assign(socket, data_params: params)}
-  end
-
-  @impl true
-  def handle_event("save_data", %{"data" => params}, socket) do
-    params = process_data_params(params)
-
-    case Resumes.update_resume_data(socket.assigns.resume, params) do
-      {:ok, resume} ->
-        {:noreply,
-         socket
-         |> assign(
-           resume: resume,
-           data_form: build_data_form(resume),
-           data_params: nil,
-           editing: false
-         )
-         |> put_flash(:info, "Resume data saved.")}
-
-      {:error, resume_changeset} ->
-        Logger.warning("Resume data save failed: #{inspect(resume_changeset.errors)}")
-
-        case resume_changeset.changes[:data] do
-          %Ecto.Changeset{} = data_changeset ->
-            {:noreply,
-             socket
-             |> assign(
-               data_form: to_form(%{data_changeset | action: :validate}, as: "data"),
-               data_params: nil
-             )
-             |> put_flash(:error, "Please fix the errors highlighted below.")}
-
-          _ ->
-            {:noreply, put_flash(socket, :error, "Failed to save.")}
-        end
-    end
-  end
-
-  @impl true
-  def handle_event("add_item", %{"section" => section}, socket) do
-    section_atom = String.to_existing_atom(section)
-    changeset = changeset_from_params(socket)
-    current = Ecto.Changeset.get_field(changeset, section_atom) || []
-    updated = current ++ [%{}]
-
-    new_changeset = Ecto.Changeset.put_embed(changeset, section_atom, updated)
-
-    {:noreply, assign(socket, data_form: to_form(new_changeset, as: "data"), data_params: nil)}
-  end
-
-  @impl true
-  def handle_event("remove_item", %{"section" => section, "index" => index}, socket) do
-    index = String.to_integer(index)
-    section_atom = String.to_existing_atom(section)
-    changeset = changeset_from_params(socket)
-    current = Ecto.Changeset.get_field(changeset, section_atom) || []
-    updated = List.delete_at(current, index)
-
-    new_changeset = Ecto.Changeset.put_embed(changeset, section_atom, updated)
-
-    {:noreply, assign(socket, data_form: to_form(new_changeset, as: "data"), data_params: nil)}
   end
 
   @impl true
@@ -397,17 +436,131 @@ defmodule ResumeWeb.ResumesLive.Show do
     end
   end
 
-  @impl true
-  def handle_event("regenerate", _params, socket) do
-    user = Accounts.get_user!(socket.assigns.user.id)
-    resume = socket.assigns.resume
+  # Feedback events
 
-    task = Task.async(fn -> Resumes.regenerate_resume(resume, user) end)
+  @impl true
+  def handle_event("validate_feedback", %{"feedback" => params}, socket) do
+    {:noreply, assign(socket, feedback_form: to_form(params, as: "feedback"))}
+  end
+
+  @impl true
+  def handle_event("send_feedback", %{"feedback" => %{"message" => message}}, socket) do
+    message = String.trim(message)
+
+    if message == "" do
+      {:noreply, socket}
+    else
+      {:noreply, process_feedback_message(socket, message)}
+    end
+  end
+
+  @impl true
+  def handle_event("confirm_changes", _params, socket) do
+    preview_data = socket.assigns.preview_data
+    explanation = socket.assigns.preview_explanation
+
+    case Resumes.update_resume(socket.assigns.resume, %{
+           data: preview_data,
+           explanation: explanation
+         }) do
+      {:ok, resume} ->
+        {:noreply,
+         socket
+         |> assign(
+           resume: resume,
+           preview_data: nil,
+           preview_explanation: nil
+         )
+         |> put_flash(:info, "Changes saved.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to save changes.")}
+    end
+  end
+
+  @impl true
+  def handle_event("revert_changes", _params, socket) do
+    {:noreply,
+     assign(socket,
+       preview_data: nil,
+       preview_explanation: nil,
+       pending_directive: nil
+     )}
+  end
+
+  @impl true
+  def handle_event("always_directive", _params, socket) do
+    directive = socket.assigns.pending_directive
+    user = Accounts.get_user!(socket.assigns.user.id)
+    directives = (user.directives || []) ++ [directive]
+
+    case Accounts.update_user_directives(user, directives) do
+      {:ok, user} ->
+        {:noreply,
+         socket
+         |> assign(
+           user: user,
+           pending_directive: nil,
+           feedback_messages:
+             socket.assigns.feedback_messages ++
+               [%{role: :assistant, content: "Saved as a standing directive: \"#{directive}\""}]
+         )}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to save directive.")}
+    end
+  end
+
+  @impl true
+  def handle_event("just_this_resume", _params, socket) do
+    {:noreply,
+     assign(socket,
+       pending_directive: nil,
+       feedback_messages:
+         socket.assigns.feedback_messages ++
+           [%{role: :assistant, content: "Applied to this resume only."}]
+     )}
+  end
+
+  # Voice recording events
+
+  @impl true
+  def handle_event("start_recording", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:recording, true)
+     |> push_event("start_recording", %{})}
+  end
+
+  @impl true
+  def handle_event("stop_recording", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:recording, false)
+     |> push_event("stop_recording", %{})}
+  end
+
+  @impl true
+  def handle_event("audio_data", %{"data" => data, "type" => type}, socket) do
+    audio_binary = Base.decode64!(data)
+
+    task =
+      Task.async(fn ->
+        Resume.Transcription.transcribe(audio_binary, content_type: type)
+      end)
 
     {:noreply,
      socket
-     |> assign(regenerating: true)
-     |> update(:task_refs, &Map.put(&1, task.ref, :regenerate))}
+     |> assign(recording: false, transcribing: true)
+     |> update(:task_refs, &Map.put(&1, task.ref, :transcribe_feedback))}
+  end
+
+  @impl true
+  def handle_event("recording_error", %{"reason" => reason}, socket) do
+    {:noreply,
+     socket
+     |> assign(:recording, false)
+     |> put_flash(:error, "Recording failed: #{reason}")}
   end
 
   @impl true
@@ -427,18 +580,6 @@ defmodule ResumeWeb.ResumesLive.Show do
     socket = assign(socket, task_refs: task_refs)
 
     case {tag, result} do
-      {:regenerate, {:ok, resume}} ->
-        {:noreply,
-         socket
-         |> assign(resume: resume, regenerating: false)
-         |> put_flash(:info, "Resume regenerated.")}
-
-      {:regenerate, {:error, _reason}} ->
-        {:noreply,
-         socket
-         |> assign(regenerating: false)
-         |> put_flash(:error, "Failed to regenerate resume. Please try again.")}
-
       {:fetch_url, {:ok, text}} ->
         params = Map.put(socket.assigns.targeting_form.params, "job_posting_text", text)
 
@@ -452,6 +593,27 @@ defmodule ResumeWeb.ResumesLive.Show do
          socket
          |> assign(fetching_url: false)
          |> put_flash(:error, "Failed to fetch job posting. Try pasting the text instead.")}
+
+      {:feedback, {:ok, result}} ->
+        {:noreply, handle_feedback_result(socket, result)}
+
+      {:feedback, {:error, _reason}} ->
+        {:noreply,
+         socket
+         |> assign(processing_feedback: false)
+         |> put_flash(:error, "Failed to process feedback. Please try again.")}
+
+      {:transcribe_feedback, {:ok, transcript}} ->
+        {:noreply,
+         socket
+         |> assign(transcribing: false)
+         |> process_feedback_message(transcript)}
+
+      {:transcribe_feedback, {:error, _reason}} ->
+        {:noreply,
+         socket
+         |> assign(transcribing: false)
+         |> put_flash(:error, "Transcription failed. Please try typing instead.")}
 
       _ ->
         {:noreply, socket}
@@ -479,99 +641,6 @@ defmodule ResumeWeb.ResumesLive.Show do
     )
   end
 
-  defp build_data_form(resume) do
-    changeset = Resumes.change_resume_data(resume)
-    to_form(changeset, as: "data")
-  end
-
-  defp changeset_from_params(socket) do
-    case socket.assigns.data_params do
-      nil ->
-        socket.assigns.data_form.source
-
-      params ->
-        params = process_data_params(params)
-        Resumes.change_resume_data(socket.assigns.resume, params)
-    end
-  end
-
-  defp process_data_params(params) do
-    params
-    |> process_array_fields("work_experience", "accomplishments")
-    |> process_array_fields("skills", "skills")
-    |> process_array_fields("projects", "highlights")
-    |> strip_empty_dates("work_experience", ["start_date", "end_date"])
-    |> strip_empty_dates("education", ["start_date", "end_date"])
-    |> strip_empty_dates("certifications", ["date"])
-    |> strip_empty_dates("publications", ["date"])
-    |> strip_empty_dates("volunteer_work", ["start_date", "end_date"])
-    |> strip_empty_dates("awards", ["date"])
-  end
-
-  defp process_array_fields(params, section, field) do
-    case Map.get(params, section) do
-      nil ->
-        params
-
-      items when is_map(items) ->
-        updated =
-          Enum.into(items, %{}, fn {idx, item} ->
-            {idx, process_textarea_to_list(item, field)}
-          end)
-
-        Map.put(params, section, updated)
-    end
-  end
-
-  defp process_textarea_to_list(item, field) do
-    case Map.get(item, field) do
-      nil ->
-        item
-
-      value when is_binary(value) ->
-        list =
-          value
-          |> String.split("\n")
-          |> Enum.map(&String.trim/1)
-          |> Enum.reject(&(&1 == ""))
-
-        Map.put(item, field, list)
-
-      _ ->
-        item
-    end
-  end
-
-  defp strip_empty_dates(params, section, date_fields) do
-    case Map.get(params, section) do
-      nil ->
-        params
-
-      items when is_map(items) ->
-        updated =
-          Enum.into(items, %{}, fn {idx, item} ->
-            {idx, strip_empty_date_fields(item, date_fields)}
-          end)
-
-        Map.put(params, section, updated)
-    end
-  end
-
-  defp strip_empty_date_fields(item, date_fields) do
-    Enum.reduce(date_fields, item, fn field, acc ->
-      case Map.get(acc, field) do
-        %{"year" => y, "month" => m} when y in ["", nil] and m in ["", nil] ->
-          Map.delete(acc, field)
-
-        %{"year" => y} when y in ["", nil] ->
-          Map.delete(acc, field)
-
-        _ ->
-          acc
-      end
-    end)
-  end
-
   defp parse_tailoring_notes(notes) do
     notes
     |> String.split("\n")
@@ -586,5 +655,145 @@ defmodule ResumeWeb.ResumesLive.Show do
       "" -> nil
       trimmed -> trimmed
     end
+  end
+
+  defp display_data(nil, resume), do: resume.data
+
+  defp display_data(preview_data, _resume) do
+    %Resume.Resumes.ResumeData{}
+    |> Resume.Resumes.ResumeData.changeset(preview_data)
+    |> Ecto.Changeset.apply_changes()
+  end
+
+  defp process_feedback_message(socket, message) do
+    messages = socket.assigns.feedback_messages ++ [%{role: :user, content: message}]
+    user = Accounts.get_user!(socket.assigns.user.id)
+    resume = socket.assigns.resume
+    current_data = socket.assigns.preview_data || resume_data_to_map(resume.data)
+
+    task =
+      Task.async(fn ->
+        Feedback.process_feedback(current_data, user, message, history: messages)
+      end)
+
+    socket
+    |> assign(
+      feedback_messages: messages,
+      processing_feedback: true,
+      feedback_form: to_form(%{"message" => ""}, as: "feedback"),
+      user: user
+    )
+    |> update(:task_refs, &Map.put(&1, task.ref, :feedback))
+  end
+
+  defp handle_feedback_result(socket, result) do
+    messages =
+      socket.assigns.feedback_messages ++
+        [%{role: :assistant, content: result.explanation}]
+
+    socket = assign(socket, processing_feedback: false, feedback_messages: messages)
+
+    # Set preview data
+    socket = assign(socket, preview_data: result.data, preview_explanation: result.explanation)
+
+    # Handle classification
+    socket =
+      case result.classification do
+        :directive when is_binary(result.directive) ->
+          user = Accounts.get_user!(socket.assigns.user.id)
+          directives = (user.directives || []) ++ [result.directive]
+
+          case Accounts.update_user_directives(user, directives) do
+            {:ok, user} ->
+              assign(socket,
+                user: user,
+                feedback_messages:
+                  socket.assigns.feedback_messages ++
+                    [
+                      %{
+                        role: :assistant,
+                        content: "Saved as a standing directive: \"#{result.directive}\""
+                      }
+                    ]
+              )
+
+            {:error, _} ->
+              socket
+          end
+
+        :ambiguous when is_binary(result.directive) ->
+          assign(socket, pending_directive: result.directive)
+
+        _ ->
+          socket
+      end
+
+    # Handle fact changes
+    apply_fact_changes(socket, result.fact_changes)
+  end
+
+  defp apply_fact_changes(socket, []), do: socket
+
+  defp apply_fact_changes(socket, changes) do
+    user = Accounts.get_user!(socket.assigns.user.id)
+    facts = user.facts || []
+
+    {facts, descriptions} =
+      Enum.reduce(changes, {facts, []}, fn change, {facts_acc, descs} ->
+        case change do
+          %{"type" => "add", "text" => text} ->
+            {facts_acc ++ [text], descs ++ ["Added fact: \"#{text}\""]}
+
+          %{"type" => "update", "index" => idx, "text" => text} when is_integer(idx) ->
+            zero_idx = idx - 1
+
+            if zero_idx >= 0 and zero_idx < length(facts_acc) do
+              {List.replace_at(facts_acc, zero_idx, text),
+               descs ++ ["Updated fact ##{idx}: \"#{text}\""]}
+            else
+              {facts_acc, descs}
+            end
+
+          %{"type" => "remove", "index" => idx} when is_integer(idx) ->
+            zero_idx = idx - 1
+
+            if zero_idx >= 0 and zero_idx < length(facts_acc) do
+              {List.delete_at(facts_acc, zero_idx), descs ++ ["Removed fact ##{idx}"]}
+            else
+              {facts_acc, descs}
+            end
+
+          _ ->
+            {facts_acc, descs}
+        end
+      end)
+
+    case Accounts.update_user_facts(user, facts) do
+      {:ok, user} ->
+        if descriptions != [] do
+          msg = Enum.join(descriptions, ". ") <> "."
+
+          assign(socket,
+            user: user,
+            feedback_messages:
+              socket.assigns.feedback_messages ++
+                [%{role: :assistant, content: msg}]
+          )
+        else
+          assign(socket, user: user)
+        end
+
+      {:error, _} ->
+        socket
+    end
+  end
+
+  defp resume_data_to_map(nil), do: %{}
+
+  defp resume_data_to_map(data) do
+    data
+    |> Ecto.embedded_dump(:json)
+    |> Jason.encode!()
+    |> Jason.decode!()
   end
 end

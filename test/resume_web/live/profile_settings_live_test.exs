@@ -174,4 +174,65 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
              ]
     end
   end
+
+  describe "directives management" do
+    setup :register_and_log_in_user
+
+    test "renders directives section", %{conn: conn} do
+      {:ok, _view, html} = live(conn, ~p"/profile")
+      assert html =~ "Your Directives"
+    end
+
+    test "shows empty state when no directives", %{conn: conn} do
+      {:ok, _view, html} = live(conn, ~p"/profile")
+      assert html =~ "No directives yet"
+    end
+
+    test "renders saved directives", %{conn: conn, user: user} do
+      {:ok, _user} =
+        Resume.Accounts.update_user_directives(user, [
+          "Always emphasize leadership",
+          "Keep resume to one page"
+        ])
+
+      {:ok, _view, html} = live(conn, ~p"/profile")
+      assert html =~ "Always emphasize leadership"
+      assert html =~ "Keep resume to one page"
+      assert html =~ "2"
+    end
+
+    test "add directive appends and persists", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/profile")
+
+      view
+      |> form(~s(form[phx-submit="add_directive"]),
+        new_directive: %{text: "Always emphasize leadership"}
+      )
+      |> render_submit()
+
+      html = render(view)
+      assert html =~ "Always emphasize leadership"
+    end
+
+    test "delete directive removes and persists", %{conn: conn, user: user} do
+      {:ok, _user} =
+        Resume.Accounts.update_user_directives(user, [
+          "Highlight cloud architecture skills",
+          "Keep resume to one page"
+        ])
+
+      {:ok, view, _html} = live(conn, ~p"/profile")
+
+      view
+      |> element(~s(button[phx-click="delete_directive"][phx-value-index="0"]))
+      |> render_click()
+
+      html = render(view)
+      refute html =~ "Highlight cloud architecture skills"
+      assert html =~ "Keep resume to one page"
+
+      updated_user = Resume.Accounts.get_user!(user.id)
+      assert updated_user.directives == ["Keep resume to one page"]
+    end
+  end
 end

@@ -10,6 +10,7 @@ defmodule Resume.Resumes.Resume do
     field :job_posting_url, :string
     field :job_posting_text, :string
     field :tailoring_notes, :string
+    field :explanation, :string
 
     embeds_one :data, ResumeData, on_replace: :update
 
@@ -26,6 +27,7 @@ defmodule Resume.Resumes.Resume do
       :job_posting_url,
       :job_posting_text,
       :tailoring_notes,
+      :explanation,
       :user_id
     ])
     |> validate_required([:title, :user_id])

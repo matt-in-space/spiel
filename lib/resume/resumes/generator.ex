@@ -24,7 +24,10 @@ defmodule Resume.Resumes.Generator do
         case parse_response(response) do
           {:ok, data} ->
             {tailoring_notes, data} = Map.pop(data, "tailoring_notes")
-            {:ok, Map.put(data, "contact_info", build_contact_info(user)), tailoring_notes}
+            {explanation, data} = Map.pop(data, "explanation")
+
+            {:ok, Map.put(data, "contact_info", build_contact_info(user)),
+             %{tailoring_notes: tailoring_notes, explanation: explanation}}
 
           {:error, reason} ->
             Logger.error("Resume generation failed to parse LLM response: #{inspect(reason)}")
@@ -145,7 +148,7 @@ defmodule Resume.Resumes.Generator do
     """
   end
 
-  defp schema_instructions do
+  def schema_instructions do
     """
     ## Output Format
     Return a JSON object with this exact structure:
@@ -235,6 +238,7 @@ defmodule Resume.Resumes.Generator do
     - Group skills into logical categories
     - Include languages if mentioned (fluency: "Native", "Fluent", "Conversational", or "Basic")
     - Include awards or honors if mentioned
+    - Include an "explanation" field — a brief natural language explanation (2-4 sentences) of the key decisions made: why certain experience was highlighted, how skills were grouped, what was emphasized or de-emphasized.
     - If a job posting was provided, include a "tailoring_notes" field — a concise summary (3-5 bullet points, each on its own line starting with "- ") of how you tailored the resume: which skills were emphasized, what experience was highlighted, what was reworded or reordered to match the posting. Omit this field if no job posting was provided.\
     """
   end

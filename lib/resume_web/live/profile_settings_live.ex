@@ -16,6 +16,8 @@ defmodule ResumeWeb.ProfileSettingsLive do
        editing_index: nil,
        edit_form: to_form(%{"text" => ""}, as: "edit"),
        new_fact_form: to_form(%{"text" => ""}, as: "new_fact"),
+       directives: user.directives || [],
+       new_directive_form: to_form(%{"text" => ""}, as: "new_directive"),
        page_title: "Profile"
      )}
   end
@@ -138,6 +140,52 @@ defmodule ResumeWeb.ProfileSettingsLive do
             <button type="submit" class="btn btn-primary btn-sm">Add</button>
           </.form>
         </div>
+
+        <div class="divider"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl font-bold">Your Directives</h2>
+            <span class="badge badge-neutral">{length(@directives)}</span>
+          </div>
+
+          <div :if={@directives == []} class="text-sm opacity-50">
+            No directives yet. Directives are standing instructions that apply to all your resumes,
+            like "always emphasize leadership" or "keep it to one page."
+          </div>
+
+          <ul :if={@directives != []} class="space-y-2">
+            <li
+              :for={{directive, index} <- Enum.with_index(@directives)}
+              class="card bg-base-200 p-3 flex flex-row items-center gap-3"
+            >
+              <div class="flex-1">{directive}</div>
+              <button
+                type="button"
+                phx-click="delete_directive"
+                phx-value-index={index}
+                class="btn btn-ghost btn-xs"
+                aria-label="Delete directive"
+              >
+                <.icon name="hero-x-mark" class="size-4" />
+              </button>
+            </li>
+          </ul>
+
+          <.form
+            for={@new_directive_form}
+            phx-change="validate_new_directive"
+            phx-submit="add_directive"
+            class="flex items-center gap-2"
+          >
+            <.input
+              field={@new_directive_form[:text]}
+              placeholder="Add a directive, e.g. 'Always emphasize leadership'"
+              class="flex-1"
+            />
+            <button type="submit" class="btn btn-primary btn-sm">Add</button>
+          </.form>
+        </div>
       </div>
     </Layouts.app>
     """
@@ -205,6 +253,40 @@ defmodule ResumeWeb.ProfileSettingsLive do
          new_fact_form: to_form(%{"text" => ""}, as: "new_fact")
        )}
     end
+  end
+
+  # Directive events
+
+  @impl true
+  def handle_event("validate_new_directive", %{"new_directive" => params}, socket) do
+    {:noreply, assign(socket, new_directive_form: to_form(params, as: "new_directive"))}
+  end
+
+  @impl true
+  def handle_event("add_directive", %{"new_directive" => %{"text" => text}}, socket) do
+    text = String.trim(text)
+
+    if text == "" do
+      {:noreply, socket}
+    else
+      directives = socket.assigns.directives ++ [text]
+      {:ok, user} = Accounts.update_user_directives(socket.assigns.user, directives)
+
+      {:noreply,
+       assign(socket,
+         directives: user.directives,
+         user: user,
+         new_directive_form: to_form(%{"text" => ""}, as: "new_directive")
+       )}
+    end
+  end
+
+  @impl true
+  def handle_event("delete_directive", %{"index" => index}, socket) do
+    index = String.to_integer(index)
+    directives = List.delete_at(socket.assigns.directives, index)
+    {:ok, user} = Accounts.update_user_directives(socket.assigns.user, directives)
+    {:noreply, assign(socket, directives: user.directives, user: user)}
   end
 
   @impl true
