@@ -1,14 +1,15 @@
 # Spiel
 
-A voice-first resume builder. Talk about your experience and the app extracts facts, then generates polished, tailored resumes on demand. No forms, no manual data entry — just speak and get a resume.
+An agentic resume builder. Have a conversation with the AI to build your career profile, generate tailored resumes, and refine them through natural language feedback. Voice and text input throughout — speak or type, the system adapts.
 
 Built with Elixir, Phoenix LiveView, and Anthropic's Claude API.
 
 ## How It Works
 
-1. **Voice to facts** — Record audio describing your career. Whisper transcribes it, then the LLM extracts atomic career facts ("Built a monorepo using Vite and React at Bonusly", "Led a team of 4 engineers").
-2. **Facts to resume** — Provide a job title or paste a job posting. The LLM takes your facts and generates a structured resume tailored to the target.
-3. **Resume to PDF** — Pick a template, preview in the browser, tweak inline, and download a PDF.
+1. **Onboarding interview** — An AI interviewer asks about your career through text or voice. It extracts atomic career facts ("Built a monorepo using Vite and React at Bonusly", "Led a team of 4 engineers") and builds your profile. You can also import existing resumes or documents.
+2. **Resume generation** — Provide a job title or paste a job posting. The LLM takes your facts, profile, and standing directives to generate a structured, tailored resume.
+3. **Conversational refinement** — Chat with the system to adjust the resume. The AI classifies feedback as one-time tweaks or lasting preferences (directives) and applies changes as a preview you confirm before saving.
+4. **Export** — Pick a template, preview in the browser, and download a PDF.
 
 ## Prerequisites
 
@@ -85,7 +86,7 @@ mix precommit               # Full check: compile warnings, deps, format, tests
 
 ## Architecture
 
-- **`lib/resume/`** — Business logic: accounts, resumes, transcription, LLM, PDF, documents
+- **`lib/resume/`** — Business logic: accounts, resumes, feedback, interview, transcription, LLM, PDF
 - **`lib/resume_web/`** — Phoenix web layer: LiveViews, controllers, templates, components
 - **`lib/resume_web/resume_templates/`** — Resume HEEx templates + CSS (Default, Mono, Fresh, Executive)
 
@@ -94,24 +95,30 @@ Key patterns:
 - Resume data stored as **Ecto embedded schemas** in a JSONB column
 - Same HEEx templates render both the **live preview** and the **PDF export**
 - Voice input uses a **colocated JS hook** for MediaRecorder API integration
+- Conversational flows (onboarding interview, resume feedback) use **async tasks** with tagged refs for non-blocking LLM calls
 
 ## Project Structure
 
 ```
 lib/resume/
-  accounts/          # User auth (phx.gen.auth)
+  accounts/          # User auth (phx.gen.auth), profile, facts, directives
   resumes/           # Resume schemas, generator, embedded data types
+  feedback.ex        # Conversational resume adjustment via LLM
+  interview.ex       # AI-driven career interview for onboarding
+  facts.ex           # Fact extraction from text/documents
   transcription/     # Whisper adapter + behaviour
   llm/               # Anthropic adapter + behaviour
   pdf/               # WeasyPrint adapter + behaviour
+  job_postings.ex    # Job posting URL fetch + text extraction
   documents.ex       # File upload text extraction (PDF, plain text)
 
 lib/resume_web/
   live/
-    onboarding_live.ex    # Guided voice onboarding flow
-    recording_live.ex     # Incremental voice recording
-    upload_live.ex        # Document upload for fact extraction
-    resumes_live/         # Resume CRUD, preview, inline editing
-  resume_templates/       # HEEx + CSS templates for rendering
-  controllers/            # PDF download endpoint
+    onboarding_live.ex        # Guided onboarding: contact, import, interview, recap
+    home_live.ex              # Dashboard with resume list + generation
+    resumes_live/show.ex      # Resume view with conversational feedback
+    profile_settings_live.ex  # Profile, facts, and directive management
+    recording_live.ex         # Standalone voice recording
+  resume_templates/           # HEEx + CSS templates for rendering
+  controllers/                # PDF download endpoint
 ```
