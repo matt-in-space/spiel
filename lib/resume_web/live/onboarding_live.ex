@@ -380,9 +380,11 @@ defmodule ResumeWeb.OnboardingLive do
     else
       step = socket.assigns.step
 
+      existing_facts = socket.assigns.pending_facts
+
       task =
         Task.async(fn ->
-          Resume.Facts.extract(transcripts, step_context(step))
+          Resume.Facts.extract(transcripts, step_context(step), existing_facts: existing_facts)
         end)
 
       socket =

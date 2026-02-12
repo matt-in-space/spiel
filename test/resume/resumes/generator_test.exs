@@ -21,7 +21,7 @@ defmodule Resume.Resumes.GeneratorTest do
           "Worked at Acme Corp as a Senior Software Engineer"
         ])
 
-      {:ok, data} = Generator.generate(user)
+      {:ok, data, _tailoring_notes} = Generator.generate(user)
 
       assert is_map(data)
       assert is_binary(data["summary"])
@@ -40,18 +40,19 @@ defmodule Resume.Resumes.GeneratorTest do
       {:ok, user} =
         Resume.Accounts.update_user_facts(user, ["5 years of Elixir experience"])
 
-      {:ok, data} =
+      {:ok, data, tailoring_notes} =
         Generator.generate(user, job_posting_text: "Looking for a senior Elixir developer")
 
       assert is_map(data)
       assert is_binary(data["summary"])
+      assert is_binary(tailoring_notes)
     end
 
     test "works with minimal user data (no facts)" do
       user = user_fixture()
       {:ok, user} = Resume.Accounts.update_user_profile(user, %{"name" => "Test User"})
 
-      {:ok, data} = Generator.generate(user)
+      {:ok, data, _tailoring_notes} = Generator.generate(user)
 
       assert is_map(data)
     end

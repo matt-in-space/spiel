@@ -23,7 +23,8 @@ defmodule Resume.Resumes.Generator do
       {:ok, response} ->
         case parse_response(response) do
           {:ok, data} ->
-            {:ok, Map.put(data, "contact_info", build_contact_info(user))}
+            {tailoring_notes, data} = Map.pop(data, "tailoring_notes")
+            {:ok, Map.put(data, "contact_info", build_contact_info(user)), tailoring_notes}
 
           {:error, reason} ->
             Logger.error("Resume generation failed to parse LLM response: #{inspect(reason)}")
@@ -215,7 +216,8 @@ defmodule Resume.Resumes.Generator do
     - Each work experience accomplishment should be a concise, action-oriented bullet point
     - Group skills into logical categories
     - Include languages if mentioned (fluency: "Native", "Fluent", "Conversational", or "Basic")
-    - Include awards or honors if mentioned\
+    - Include awards or honors if mentioned
+    - If a job posting was provided, include a "tailoring_notes" field — a concise summary (3-5 bullet points, each on its own line starting with "- ") of how you tailored the resume: which skills were emphasized, what experience was highlighted, what was reworded or reordered to match the posting. Omit this field if no job posting was provided.\
     """
   end
 

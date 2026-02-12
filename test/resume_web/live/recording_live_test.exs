@@ -66,5 +66,110 @@ defmodule ResumeWeb.RecordingLiveTest do
       assert html =~ "mock transcript for testing"
       refute html =~ "Transcribing..."
     end
+
+    test "shows Extract Facts button after transcription completes", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/record")
+
+      render_hook(view, "audio_data", %{
+        "data" => Base.encode64("fake audio data"),
+        "size" => 1234,
+        "type" => "audio/webm"
+      })
+
+      Process.sleep(50)
+      html = render(view)
+
+      assert html =~ "Extract Facts"
+    end
+
+    test "extract facts advances to review phase", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/record")
+
+      render_hook(view, "audio_data", %{
+        "data" => Base.encode64("fake audio data"),
+        "size" => 1234,
+        "type" => "audio/webm"
+      })
+
+      Process.sleep(50)
+
+      view |> element(~s(button[phx-click="extract_facts"])) |> render_click()
+
+      # Wait for async LLM extraction (mock is very fast)
+      Process.sleep(100)
+      html = render(view)
+
+      assert html =~ "Review Extracted Facts"
+      assert html =~ "Mock fact about career"
+      assert html =~ "Mock fact about skills"
+    end
+
+    test "remove fact from review list", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/record")
+
+      render_hook(view, "audio_data", %{
+        "data" => Base.encode64("fake audio data"),
+        "size" => 1234,
+        "type" => "audio/webm"
+      })
+
+      Process.sleep(50)
+      view |> element(~s(button[phx-click="extract_facts"])) |> render_click()
+      Process.sleep(100)
+
+      html = render(view)
+      assert html =~ "Mock fact about career"
+
+      view |> element(~s(button[phx-click="remove_fact"][phx-value-index="0"])) |> render_click()
+      html = render(view)
+
+      refute html =~ "Mock fact about career"
+      assert html =~ "Mock fact about skills"
+    end
+
+    test "save facts redirects to / with flash", %{conn: conn, user: user} do
+      {:ok, view, _html} = live(conn, ~p"/record")
+
+      render_hook(view, "audio_data", %{
+        "data" => Base.encode64("fake audio data"),
+        "size" => 1234,
+        "type" => "audio/webm"
+      })
+
+      Process.sleep(50)
+      view |> element(~s(button[phx-click="extract_facts"])) |> render_click()
+      Process.sleep(100)
+
+      view |> element(~s(button[phx-click="save_facts"])) |> render_click()
+      flash = assert_redirect(view, ~p"/")
+      assert flash["info"] =~ "Saved 2 facts"
+
+      updated_user = Resume.Accounts.get_user!(user.id)
+      assert "Mock fact about career" in updated_user.facts
+      assert "Mock fact about skills" in updated_user.facts
+    end
+
+    test "start over resets to recording phase", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/record")
+
+      render_hook(view, "audio_data", %{
+        "data" => Base.encode64("fake audio data"),
+        "size" => 1234,
+        "type" => "audio/webm"
+      })
+
+      Process.sleep(50)
+      view |> element(~s(button[phx-click="extract_facts"])) |> render_click()
+      Process.sleep(100)
+
+      assert render(view) =~ "Review Extracted Facts"
+
+      view |> element(~s(button[phx-click="start_over"])) |> render_click()
+      html = render(view)
+
+      assert html =~ "Record Audio"
+      refute html =~ "Review Extracted Facts"
+      refute html =~ "Recording #1"
+    end
   end
 end

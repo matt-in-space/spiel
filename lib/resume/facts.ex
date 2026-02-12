@@ -11,23 +11,25 @@ defmodule Resume.Facts do
 
   Returns `{:ok, facts}` or `{:error, reason}`.
   """
-  def extract(texts, context) when is_list(texts) do
+  def extract(texts, context, opts \\ []) when is_list(texts) do
     combined = Enum.join(texts, "\n\n")
+    existing_facts = Keyword.get(opts, :existing_facts, [])
 
     prompt = """
     You are extracting career facts from text. The source is: #{context}
-
+    #{existing_facts_section(existing_facts)}
     Text:
     #{combined}
 
-    Extract career facts from this text. These facts will later be used to build a resume, so each fact must include enough context to be placed correctly:
+    Extract NEW career facts from this text. These facts will later be used to build a resume, so each fact must include enough context to be placed correctly:
 
     1. **Anchor facts to a place and time.** Always mention the company/organization name and dates or timeframe when available. Start accomplishment facts with "At [Company]," or "While at [Company] (dates),".
     2. **Include role/title facts.** When someone's role or title at a company is mentioned, emit a dedicated fact for it, e.g. "Worked at Bonusly from 2020 to present as a Senior and then Staff Software Engineer."
     3. **Group related accomplishments.** If several details describe the same initiative (e.g. migrated tooling, cut test time, reduced CI time), combine them into one fact covering the initiative and its outcomes.
     4. **Be specific.** Include technologies, numbers, team sizes, and impact when available. Each fact should be 1-3 sentences.
+    5. **Do not duplicate existing facts.** If the text repeats information already captured in the existing facts listed above, skip it. Only extract genuinely new information. If the text adds detail to an existing fact, extract only the new detail as a standalone fact.
 
-    Return ONLY a JSON array of strings, no other text.
+    Return ONLY a JSON array of strings, no other text. If there are no new facts to extract, return an empty array [].
 
     Example output:
     [
@@ -68,6 +70,22 @@ defmodule Resume.Facts do
         |> Enum.map(&strip_json_string_wrapper/1)
         |> Enum.reject(&(&1 == ""))
     end
+  end
+
+  defp existing_facts_section([]), do: ""
+
+  defp existing_facts_section(facts) do
+    numbered =
+      facts
+      |> Enum.with_index(1)
+      |> Enum.map(fn {fact, i} -> "#{i}. #{fact}" end)
+      |> Enum.join("\n")
+
+    """
+
+    ## Existing Facts (already captured — do not re-extract these)
+    #{numbered}
+    """
   end
 
   defp strip_code_fence(text) do

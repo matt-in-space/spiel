@@ -45,7 +45,7 @@ defmodule ResumeWeb.ResumePDFControllerTest do
       assert response_content_type(conn, :pdf) =~ "application/pdf"
 
       assert get_resp_header(conn, "content-disposition") == [
-               ~s(attachment; filename="Jane_Doe Resume.pdf")
+               ~s(attachment; filename="Jane_Doe - Test_Resume Resume.pdf")
              ]
 
       assert response(conn, 200) == "%PDF-1.4 mock"

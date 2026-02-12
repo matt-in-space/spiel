@@ -186,6 +186,17 @@ defmodule ResumeWeb.ResumesLive.Show do
           </div>
         </details>
 
+        <details :if={@resume.tailoring_notes} class="collapse collapse-arrow bg-base-200" open>
+          <summary class="collapse-title text-sm font-medium">
+            Tailoring Notes
+          </summary>
+          <div class="collapse-content">
+            <ul class="list-disc list-inside space-y-1 text-sm">
+              <li :for={line <- parse_tailoring_notes(@resume.tailoring_notes)}>{line}</li>
+            </ul>
+          </div>
+        </details>
+
         <div :if={@editing && @resume.data} id="edit-panel-wrapper" phx-hook=".DetailsState">
           <.form
             for={@data_form}
@@ -372,7 +383,8 @@ defmodule ResumeWeb.ResumesLive.Show do
   def handle_event("clear_targeting", _params, socket) do
     case Resumes.update_resume(socket.assigns.resume, %{
            job_posting_url: nil,
-           job_posting_text: nil
+           job_posting_text: nil,
+           tailoring_notes: nil
          }) do
       {:ok, resume} ->
         {:noreply,
@@ -558,6 +570,13 @@ defmodule ResumeWeb.ResumesLive.Show do
           acc
       end
     end)
+  end
+
+  defp parse_tailoring_notes(notes) do
+    notes
+    |> String.split("\n")
+    |> Enum.map(fn line -> String.replace_leading(line, "- ", "") |> String.trim() end)
+    |> Enum.reject(&(&1 == ""))
   end
 
   defp non_blank(nil), do: nil

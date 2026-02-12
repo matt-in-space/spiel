@@ -33,13 +33,17 @@ defmodule ResumeWeb.ResumePDFController do
     </html>
     """
 
-    name =
+    person_name =
       case resume.data do
         %{contact_info: %{name: name}} when is_binary(name) and name != "" -> name
-        _ -> "Resume"
+        _ -> nil
       end
 
-    filename = sanitize_filename(name) <> " Resume.pdf"
+    filename =
+      [person_name, resume.title]
+      |> Enum.reject(&is_nil/1)
+      |> Enum.map_join(" - ", &sanitize_filename/1)
+      |> Kernel.<>(" Resume.pdf")
 
     case PDF.render(full_html, css, filename: filename) do
       {:ok, pdf_binary} ->

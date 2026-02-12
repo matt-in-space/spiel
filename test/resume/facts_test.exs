@@ -3,7 +3,7 @@ defmodule Resume.FactsTest do
 
   alias Resume.Facts
 
-  describe "extract/2" do
+  describe "extract/3" do
     test "returns parsed facts via LLM" do
       assert {:ok, facts} = Facts.extract(["I worked at Acme Corp"], "their career background")
       assert is_list(facts)

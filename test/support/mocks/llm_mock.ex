@@ -48,7 +48,9 @@ defmodule Resume.LLM.Mock do
       "certifications" => [],
       "projects" => [],
       "publications" => [],
-      "volunteer_work" => []
+      "volunteer_work" => [],
+      "tailoring_notes" =>
+        "- Emphasized web development and Elixir/Phoenix skills\n- Highlighted microservices migration experience\n- Reordered skills to prioritize relevant technologies"
     })
   end
 end

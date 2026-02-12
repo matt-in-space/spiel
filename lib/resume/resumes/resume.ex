@@ -9,6 +9,7 @@ defmodule Resume.Resumes.Resume do
     field :template, :string, default: "default"
     field :job_posting_url, :string
     field :job_posting_text, :string
+    field :tailoring_notes, :string
 
     embeds_one :data, ResumeData, on_replace: :update
 
@@ -19,7 +20,14 @@ defmodule Resume.Resumes.Resume do
 
   def changeset(resume, attrs) do
     resume
-    |> cast(attrs, [:title, :template, :job_posting_url, :job_posting_text, :user_id])
+    |> cast(attrs, [
+      :title,
+      :template,
+      :job_posting_url,
+      :job_posting_text,
+      :tailoring_notes,
+      :user_id
+    ])
     |> validate_required([:title, :user_id])
     |> cast_embed(:data)
     |> foreign_key_constraint(:user_id)
