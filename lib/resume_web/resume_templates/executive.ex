@@ -99,7 +99,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
       <h2 class="exec-sidebar-title">Languages</h2>
       <div :for={lang <- @languages} class="exec-sidebar-language">
         {lang.name}
-        <span :if={lang.fluency} class="exec-sidebar-lang-fluency"> —  {lang.fluency}</span>
+        <span :if={lang.fluency} class="exec-sidebar-lang-fluency"> —   {lang.fluency}</span>
       </div>
     </div>
     """
@@ -183,7 +183,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
         <div class="exec-entry-header">
           <span class="exec-entry-title">
             {cert.name}
-            <span :if={cert.issuer} class="exec-entry-meta"> —  {cert.issuer}</span>
+            <span :if={cert.issuer} class="exec-entry-meta"> —   {cert.issuer}</span>
           </span>
           <span :if={cert.date} class="exec-entry-date">{format_flex_date(cert.date)}</span>
         </div>
@@ -202,7 +202,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
         <div class="exec-entry-header">
           <span class="exec-entry-title">
             {award.title}
-            <span :if={award.issuer} class="exec-entry-meta"> —  {award.issuer}</span>
+            <span :if={award.issuer} class="exec-entry-meta"> —   {award.issuer}</span>
           </span>
           <span :if={award.date} class="exec-entry-date">{format_flex_date(award.date)}</span>
         </div>
@@ -222,7 +222,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
         <div class="exec-entry-header">
           <span class="exec-entry-title">
             {pub.title}
-            <span :if={pub.publisher} class="exec-entry-meta"> —  {pub.publisher}</span>
+            <span :if={pub.publisher} class="exec-entry-meta"> —   {pub.publisher}</span>
             <a :if={pub.url} href={pub.url} class="exec-link">Link</a>
           </span>
           <span :if={pub.date} class="exec-entry-date">{format_flex_date(pub.date)}</span>

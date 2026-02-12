@@ -134,7 +134,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">
             {cert.name}
-            <span :if={cert.issuer} class="fresh-entry-meta"> —  {cert.issuer}</span>
+            <span :if={cert.issuer} class="fresh-entry-meta"> —   {cert.issuer}</span>
           </span>
           <span :if={cert.date} class="fresh-entry-date">{format_flex_date(cert.date)}</span>
         </div>
@@ -175,7 +175,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">
             {pub.title}
-            <span :if={pub.publisher} class="fresh-entry-meta"> —  {pub.publisher}</span>
+            <span :if={pub.publisher} class="fresh-entry-meta"> —   {pub.publisher}</span>
             <a :if={pub.url} href={pub.url} class="fresh-link">Link</a>
           </span>
           <span :if={pub.date} class="fresh-entry-date">{format_flex_date(pub.date)}</span>
@@ -230,7 +230,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">
             {award.title}
-            <span :if={award.issuer} class="fresh-entry-meta"> —  {award.issuer}</span>
+            <span :if={award.issuer} class="fresh-entry-meta"> —   {award.issuer}</span>
           </span>
           <span :if={award.date} class="fresh-entry-date">{format_flex_date(award.date)}</span>
         </div>
