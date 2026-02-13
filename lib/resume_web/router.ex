@@ -23,6 +23,8 @@ defmodule ResumeWeb.Router do
     get "/", PageController, :home
   end
 
+  get "/health", ResumeWeb.HealthController, :index
+
   # Other scopes may use custom stacks.
   # scope "/api", ResumeWeb do
   #   pipe_through :api
