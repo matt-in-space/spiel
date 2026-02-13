@@ -5,7 +5,9 @@ defmodule ResumeWeb.PageController do
     if conn.assigns[:current_scope] do
       redirect(conn, to: ~p"/home")
     else
-      render(conn, :home)
+      conn
+      |> put_root_layout(html: {ResumeWeb.Layouts, :landing})
+      |> render(:home)
     end
   end
 end
