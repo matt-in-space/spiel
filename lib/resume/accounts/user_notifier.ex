@@ -9,7 +9,10 @@ defmodule Resume.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Resume", "contact@example.com"})
+      |> from(
+        {"Resume Thinker",
+         Application.get_env(:resume, Resume.Mailer)[:from_email] || "contact@example.com"}
+      )
       |> subject(subject)
       |> text_body(body)
 
