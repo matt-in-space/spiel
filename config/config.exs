@@ -44,7 +44,9 @@ config :resume,
   whisper_url: "http://localhost:9000"
 
 # PDF adapter
-config :resume, pdf_adapter: Resume.PDF.WeasyPrint
+config :resume,
+  pdf_adapter: Resume.PDF.WeasyPrint,
+  weasyprint_url: "http://localhost:8080"
 
 # Configure the mailer
 #

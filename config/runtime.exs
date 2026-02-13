@@ -109,4 +109,8 @@ if config_env() == :prod do
     adapter: Swoosh.Adapters.Resend,
     api_key: System.get_env("RESEND_API_KEY"),
     from_email: System.get_env("FROM_EMAIL")
+
+  if weasyprint_url = System.get_env("WEASYPRINT_URL") do
+    config :resume, weasyprint_url: weasyprint_url
+  end
 end
