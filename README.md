@@ -56,7 +56,7 @@ Create a `.env` or export these:
 | `DATABASE_URL` | Production | PostgreSQL connection string |
 | `SECRET_KEY_BASE` | Production | Phoenix secret (generate with `mix phx.gen.secret`) |
 | `PHX_HOST` | Production | Hostname for URL generation |
-| `POSTMARK_API_KEY` | Production | Postmark API key for transactional email delivery |
+| `RESEND_API_KEY` | Production | Resend API key for transactional email delivery |
 | `FROM_EMAIL` | Production | Sender email address for outbound emails |
 
 ## External Services
