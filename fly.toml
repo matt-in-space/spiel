@@ -8,7 +8,7 @@ release_command = "/app/bin/migrate"
 
 [env]
 FROM_EMAIL = "thinker@giveyourspiel.app"
-PHX_HOST = "giveyourspiel.app"
+PHX_HOST = "www.giveyourspiel.app"
 PORT = "8080"
 
 [http_service]
