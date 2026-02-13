@@ -21,11 +21,17 @@ defmodule Resume.Accounts.UserNotifier do
 
     case Mailer.deliver(email) do
       {:ok, metadata} ->
-        Logger.info("Email sent to #{recipient}, subject: #{subject}, metadata: #{inspect(metadata)}")
+        Logger.info(
+          "Email sent to #{recipient}, subject: #{subject}, metadata: #{inspect(metadata)}"
+        )
+
         {:ok, email}
 
       {:error, reason} ->
-        Logger.error("Failed to send email to #{recipient}, subject: #{subject}, error: #{inspect(reason)}")
+        Logger.error(
+          "Failed to send email to #{recipient}, subject: #{subject}, error: #{inspect(reason)}"
+        )
+
         {:error, reason}
     end
   end
