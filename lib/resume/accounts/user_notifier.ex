@@ -1,6 +1,8 @@
 defmodule Resume.Accounts.UserNotifier do
   import Swoosh.Email
 
+  require Logger
+
   alias Resume.Mailer
   alias Resume.Accounts.User
 
@@ -17,8 +19,14 @@ defmodule Resume.Accounts.UserNotifier do
       |> text_body(body)
       |> put_provider_option(:message_stream, "outbound")
 
-    with {:ok, _metadata} <- Mailer.deliver(email) do
-      {:ok, email}
+    case Mailer.deliver(email) do
+      {:ok, metadata} ->
+        Logger.info("Email sent to #{recipient}, subject: #{subject}, metadata: #{inspect(metadata)}")
+        {:ok, email}
+
+      {:error, reason} ->
+        Logger.error("Failed to send email to #{recipient}, subject: #{subject}, error: #{inspect(reason)}")
+        {:error, reason}
     end
   end
 
