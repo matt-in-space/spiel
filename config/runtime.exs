@@ -113,4 +113,10 @@ if config_env() == :prod do
   if weasyprint_url = System.get_env("WEASYPRINT_URL") do
     config :resume, weasyprint_url: weasyprint_url
   end
+
+  if openai_api_key = System.get_env("OPENAI_API_KEY") do
+    config :resume,
+      transcription_adapter: Resume.Transcription.OpenAIWhisper,
+      openai_api_key: openai_api_key
+  end
 end
