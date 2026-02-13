@@ -15,6 +15,7 @@ defmodule Resume.Accounts.UserNotifier do
       )
       |> subject(subject)
       |> text_body(body)
+      |> put_provider_option(:message_stream, "outbound")
 
     with {:ok, _metadata} <- Mailer.deliver(email) do
       {:ok, email}
