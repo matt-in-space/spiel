@@ -88,6 +88,7 @@ defmodule ResumeWeb.OnboardingLive do
           recording={@recording}
           transcribing={@transcribing}
           interview_processing={@interview_processing}
+          turn_number={@turn_number}
         />
 
         <.recap_step
@@ -302,9 +303,14 @@ defmodule ResumeWeb.OnboardingLive do
     ~H"""
     <div class="flex flex-col h-[60vh]">
       <h1 class="text-2xl font-bold mb-2">Career Interview</h1>
-      <p class="text-sm opacity-70 mb-4">
+      <p class="text-sm opacity-70 mb-2">
         Tell me about your career. I'll ask follow-up questions to build your profile.
       </p>
+
+      <div class="flex items-center gap-3 mb-4">
+        <progress class="progress progress-primary flex-1" value={@turn_number} max="10"></progress>
+        <span class="text-xs opacity-50 whitespace-nowrap">~{10 - @turn_number} questions left</span>
+      </div>
 
       <div
         id="chat-messages"
