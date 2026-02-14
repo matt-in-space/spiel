@@ -37,6 +37,17 @@ topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
+// Submit forms with Ctrl+Enter / Cmd+Enter from textareas
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && e.target.tagName === "TEXTAREA") {
+    const form = e.target.closest("form")
+    if (form) {
+      e.preventDefault()
+      form.dispatchEvent(new Event("submit", {bubbles: true, cancelable: true}))
+    }
+  }
+})
+
 // connect if there are any LiveViews on the page
 liveSocket.connect()
 
