@@ -166,6 +166,22 @@ defmodule ResumeWeb.OnboardingLive do
         },
       };
     </script>
+
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".AutoGrow">
+      export default {
+        mounted() {
+          this.el.addEventListener("input", () => this.resize());
+          this.resize();
+        },
+        updated() {
+          this.resize();
+        },
+        resize() {
+          this.el.style.height = "auto";
+          this.el.style.height = this.el.scrollHeight + "px";
+        },
+      };
+    </script>
     """
   end
 
@@ -351,12 +367,21 @@ defmodule ResumeWeb.OnboardingLive do
         <span class="loading loading-spinner loading-xs"></span> Transcribing...
       </div>
 
-      <.form for={@input_form} phx-submit="send_message" class="flex items-end gap-2">
+      <.form
+        for={@input_form}
+        phx-change="validate_chat"
+        phx-submit="send_message"
+        class="flex items-end gap-2"
+      >
         <div class="flex-1">
           <.input
             field={@input_form[:message]}
+            type="textarea"
             placeholder="Type your response..."
             autocomplete="off"
+            rows="1"
+            phx-hook=".AutoGrow"
+            class="w-full textarea resize-none overflow-hidden"
           />
         </div>
         <%= if @recording do %>
@@ -572,6 +597,11 @@ defmodule ResumeWeb.OnboardingLive do
   end
 
   # Interview step events
+
+  @impl true
+  def handle_event("validate_chat", %{"chat" => params}, socket) do
+    {:noreply, assign(socket, input_form: to_form(params, as: "chat"))}
+  end
 
   @impl true
   def handle_event("send_message", %{"chat" => %{"message" => message}}, socket) do
