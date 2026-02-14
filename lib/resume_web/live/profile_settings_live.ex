@@ -7,10 +7,12 @@ defmodule ResumeWeb.ProfileSettingsLive do
   def mount(_params, session, socket) do
     user = get_user(socket, session)
     profile_data = user.default_resume_data
+    career_goal = profile_data["career_goal"]
 
     {:ok,
      assign(socket,
        user: user,
+       career_goal: career_goal,
        profile_form: to_form(profile_data, as: "profile"),
        facts: user.facts || [],
        editing_index: nil,
@@ -56,17 +58,19 @@ defmodule ResumeWeb.ProfileSettingsLive do
             placeholder="https://linkedin.com/in/..."
           />
           <.input field={@profile_form[:github]} label="GitHub" placeholder="https://github.com/..." />
-          <.input
-            field={@profile_form[:career_goal]}
-            type="textarea"
-            label="Career Goal"
-            placeholder="e.g. I'm looking for a senior engineering role focused on system design"
-          />
 
           <div class="mt-6">
             <button type="submit" class="btn btn-primary">Save Changes</button>
           </div>
         </.form>
+
+        <div :if={@career_goal} class="card bg-base-200 p-4">
+          <h2 class="text-sm font-semibold opacity-70 mb-1">Career Goal</h2>
+          <p class="text-sm">{@career_goal}</p>
+          <p class="text-xs opacity-50 mt-2">
+            Extracted from your interview. Re-do the interview to update.
+          </p>
+        </div>
 
         <div class="divider"></div>
 

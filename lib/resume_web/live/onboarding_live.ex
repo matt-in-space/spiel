@@ -199,13 +199,6 @@ defmodule ResumeWeb.OnboardingLive do
           label="GitHub"
           placeholder="https://github.com/..."
         />
-        <.input
-          field={@profile_form[:career_goal]}
-          type="textarea"
-          label="Career Goal"
-          placeholder="e.g. I'm looking for a senior engineering role focused on system design"
-        />
-
         <div class="mt-6">
           <button type="submit" class="btn btn-primary">
             Next <.icon name="hero-arrow-right-micro" class="size-4" />
@@ -660,7 +653,14 @@ defmodule ResumeWeb.OnboardingLive do
   @impl true
   def handle_event("complete_onboarding", _params, socket) do
     user = socket.assigns.user
-    profile_data = socket.assigns.profile_data
+
+    profile_data =
+      if goal = socket.assigns[:career_goal] do
+        Map.put(socket.assigns.profile_data, "career_goal", goal)
+      else
+        socket.assigns.profile_data
+      end
+
     facts = socket.assigns.all_facts
 
     case Accounts.complete_onboarding(user, profile_data, facts) do
@@ -718,13 +718,16 @@ defmodule ResumeWeb.OnboardingLive do
          )}
 
       {{:interview_turn, _n},
-       {:ok, %{facts: new_facts, question: question, should_wrap_up: wrap}}} ->
+       {:ok, %{facts: new_facts, question: question, should_wrap_up: wrap} = turn}} ->
         messages = socket.assigns.messages ++ [%{role: :assistant, content: question}]
 
         socket =
           socket
           |> update(:all_facts, &(&1 ++ new_facts))
           |> update(:interview_facts, &(&1 ++ new_facts))
+          |> then(fn s ->
+            if turn[:career_goal], do: assign(s, :career_goal, turn.career_goal), else: s
+          end)
           |> assign(messages: messages, interview_processing: false)
 
         if wrap do

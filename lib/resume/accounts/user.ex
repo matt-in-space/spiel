@@ -16,7 +16,7 @@ defmodule Resume.Accounts.User do
     timestamps(type: :utc_datetime)
   end
 
-  @profile_keys ~w(name email phone location website linkedin github career_goal)
+  @profile_keys ~w(name email phone location website linkedin github)
 
   @doc """
   A changeset for updating profile data stored in `default_resume_data`.

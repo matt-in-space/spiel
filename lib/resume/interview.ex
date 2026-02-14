@@ -57,8 +57,11 @@ defmodule Resume.Interview do
 
     If the candidate says they're done, has nothing more to add, or we're at turn #{turn_number} of ~10, set should_wrap_up to true.
 
+    Also extract the candidate's career goal if one emerges from the conversation (e.g. what role they're
+    targeting, what kind of work they want). Return it as a string, or null if none is apparent yet.
+
     Return ONLY a JSON object:
-    {"facts": ["fact 1", "fact 2"], "question": "next question", "should_wrap_up": false}
+    {"facts": ["fact 1", "fact 2"], "question": "next question", "should_wrap_up": false, "career_goal": "...or null"}
     """
 
     case Resume.LLM.complete(prompt, system: turn_system_prompt()) do
@@ -162,11 +165,18 @@ defmodule Resume.Interview do
     with {:ok, data} <- decode_json(response),
          facts when is_list(facts) <- data["facts"],
          question when is_binary(question) <- data["question"] do
+      career_goal =
+        case data["career_goal"] do
+          g when is_binary(g) and g != "" -> g
+          _ -> nil
+        end
+
       {:ok,
        %{
          facts: Enum.filter(facts, &is_binary/1),
          question: question,
-         should_wrap_up: data["should_wrap_up"] == true
+         should_wrap_up: data["should_wrap_up"] == true,
+         career_goal: career_goal
        }}
     else
       _ -> {:error, :invalid_response}
