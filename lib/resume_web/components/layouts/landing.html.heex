@@ -7,6 +7,12 @@
     <.live_title default="Spiel">
       {assigns[:page_title]}
     </.live_title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
@@ -33,7 +39,7 @@
   <body>
     <nav class="navbar bg-transparent absolute top-0 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
-        <a href="/" class="btn btn-ghost text-xl font-bold">Spiel</a>
+        <a href="/" class="btn btn-ghost text-xl font-bold font-serif">Spiel</a>
       </div>
       <div class="flex-none flex items-center gap-2">
         <Layouts.theme_toggle />
@@ -44,7 +50,7 @@
 
     {@inner_content}
 
-    <footer class="footer footer-center bg-base-200 text-base-content p-10">
+    <footer class="footer footer-center bg-base-100 border-t border-base-300 text-base-content p-10">
       <aside>
         <p class="font-bold text-lg">Spiel</p>
         <p>Talk about your career. Get a resume.</p>
