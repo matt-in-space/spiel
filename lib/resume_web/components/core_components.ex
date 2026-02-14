@@ -55,6 +55,15 @@ defmodule ResumeWeb.CoreComponents do
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
+      phx-mounted={
+        not Map.has_key?(@rest, :hidden) &&
+          JS.push("lv:clear-flash", value: %{key: @kind})
+          |> JS.hide(
+            to: "##{@id}",
+            time: 5000,
+            transition: {"transition-opacity duration-500 delay-[4500ms]", "opacity-100", "opacity-0"}
+          )
+      }
       role="alert"
       class="toast toast-top toast-end z-50"
       {@rest}
