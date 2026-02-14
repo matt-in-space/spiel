@@ -119,7 +119,7 @@ defmodule ResumeWeb.ResumesLive.Show do
                   <div class="flex-1">
                     <.input
                       field={@targeting_form[:job_posting_url]}
-                      label="Job Posting URL"
+                      label="Job Posting URL (optional)"
                       type="url"
                       placeholder="https://..."
                     />
@@ -137,9 +137,9 @@ defmodule ResumeWeb.ResumesLive.Show do
                 </div>
                 <.input
                   field={@targeting_form[:job_posting_text]}
-                  label="Job Posting Text"
+                  label="Job Description or Desired Role"
                   type="textarea"
-                  placeholder="Paste the job description here, or fetch from URL above..."
+                  placeholder="Paste a job description, describe your desired role, or fetch from URL above..."
                   rows="4"
                 />
                 <div class="flex gap-2">

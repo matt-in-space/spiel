@@ -23,7 +23,7 @@ defmodule ResumeWeb.HomeLiveTest do
     test "renders for onboarded user", %{conn: conn, user: user} do
       complete_user_onboarding(user)
       {:ok, _view, html} = live(conn, ~p"/home")
-      assert html =~ "What job are you applying for?"
+      assert html =~ "What role are you targeting?"
     end
 
     test "shows existing resumes", %{conn: conn, user: user} do

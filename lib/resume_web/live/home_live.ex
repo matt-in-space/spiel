@@ -37,9 +37,9 @@ defmodule ResumeWeb.HomeLive do
     <Layouts.app flash={@flash}>
       <div class="space-y-8 max-w-2xl mx-auto">
         <div class="text-center space-y-2">
-          <h1 class="text-3xl font-bold">What job are you applying for?</h1>
+          <h1 class="text-3xl font-bold">What role are you targeting?</h1>
           <p class="text-sm opacity-70">
-            Paste a job URL, job description, or describe the role you're targeting.
+            Paste a job URL or description, or describe the kind of role you want.
           </p>
         </div>
 
@@ -52,7 +52,7 @@ defmodule ResumeWeb.HomeLive do
           <.input
             field={@form[:job_target]}
             type="textarea"
-            placeholder="e.g. https://... or paste the job description here"
+            placeholder="e.g. https://..., paste a job description, or describe your desired role"
             rows="4"
           />
           <div class="mt-4">

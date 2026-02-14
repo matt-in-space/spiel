@@ -56,15 +56,15 @@ defmodule ResumeWeb.ResumesLive.New do
             />
             <.input
               field={@form[:job_posting_url]}
-              label="Job Posting URL"
+              label="Job Posting URL (optional)"
               type="url"
               placeholder="https://..."
             />
             <.input
               field={@form[:job_posting_text]}
-              label="Job Posting Text"
+              label="Job Description or Desired Role"
               type="textarea"
-              placeholder="Paste the job description here to tailor your resume..."
+              placeholder="Paste a job description, or describe the kind of role you're targeting..."
               rows="6"
             />
 
