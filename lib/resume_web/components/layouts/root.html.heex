@@ -48,6 +48,11 @@
           <.link href={~p"/profile"} class="btn btn-ghost btn-sm hidden sm:inline-flex">
             Profile
           </.link>
+          <%= if Resume.Accounts.User.admin?(@current_scope.user) do %>
+            <.link href={~p"/admin"} class="btn btn-ghost btn-sm hidden sm:inline-flex">
+              Admin
+            </.link>
+          <% end %>
           <.link href={~p"/users/log-out"} method="delete" class="btn btn-ghost btn-sm">
             Log out
           </.link>

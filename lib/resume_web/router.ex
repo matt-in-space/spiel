@@ -77,6 +77,7 @@ defmodule ResumeWeb.Router do
   scope "/admin", ResumeWeb do
     pipe_through [:browser, :require_authenticated_user, :require_admin]
 
+    live "/", Admin.DashboardLive
     live "/costs", Admin.CostsLive
   end
 
