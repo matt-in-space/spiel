@@ -10,13 +10,21 @@ defmodule ResumeWeb.ResumePDFController do
     "executive" => ResumeWeb.ResumeTemplates.Executive
   }
 
-  def show(conn, %{"id" => id}) do
+  def show(conn, %{"id" => id} = params) do
     user = conn.assigns.current_scope.user
     resume = Resumes.get_user_resume!(user.id, id)
+
+    version =
+      case params["v"] do
+        nil -> Resumes.get_latest_version!(resume.id)
+        v -> Resumes.get_version!(resume.id, String.to_integer(v))
+      end
+
+    data = Resumes.dump_version_data(version)
     template_mod = Map.get(@templates, resume.template, ResumeWeb.ResumeTemplates.Default)
 
     html =
-      template_mod.render(%{data: resume.data})
+      template_mod.render(%{data: data})
       |> Phoenix.HTML.Safe.to_iodata()
       |> IO.iodata_to_binary()
 
@@ -34,7 +42,7 @@ defmodule ResumeWeb.ResumePDFController do
     """
 
     person_name =
-      case resume.data do
+      case data do
         %{contact_info: %{name: name}} when is_binary(name) and name != "" -> name
         _ -> nil
       end

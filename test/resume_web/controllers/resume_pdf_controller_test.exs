@@ -7,31 +7,34 @@ defmodule ResumeWeb.ResumePDFControllerTest do
 
   setup :register_and_log_in_user
 
+  @sample_data %{
+    "summary" => "A great engineer.",
+    "contact_info" => %{"name" => "Jane Doe", "email" => "jane@example.com"},
+    "work_experience" => [
+      %{
+        "role" => "Developer",
+        "company" => "Acme",
+        "current" => true,
+        "start_date" => %{"year" => 2020, "month" => 1},
+        "accomplishments" => ["Built things"]
+      }
+    ],
+    "education" => [],
+    "skills" => [%{"category" => "Languages", "skills" => ["Elixir", "Rust"]}],
+    "certifications" => [],
+    "projects" => [],
+    "publications" => [],
+    "volunteer_work" => []
+  }
+
   defp create_resume(%{user: user}) do
     {:ok, resume} =
       Resumes.create_resume(%{
         title: "Test Resume",
-        user_id: user.id,
-        data: %{
-          summary: "A great engineer.",
-          contact_info: %{name: "Jane Doe", email: "jane@example.com"},
-          work_experience: [
-            %{
-              role: "Developer",
-              company: "Acme",
-              current: true,
-              start_date: %{year: 2020, month: 1},
-              accomplishments: ["Built things"]
-            }
-          ],
-          education: [],
-          skills: [%{category: "Languages", skills: ["Elixir", "Rust"]}],
-          certifications: [],
-          projects: [],
-          publications: [],
-          volunteer_work: []
-        }
+        user_id: user.id
       })
+
+    {:ok, _version} = Resumes.create_version(resume, "generation", @sample_data)
 
     %{resume: resume}
   end
@@ -63,17 +66,19 @@ defmodule ResumeWeb.ResumePDFControllerTest do
       {:ok, other_resume} =
         Resumes.create_resume(%{
           title: "Other Resume",
-          user_id: other_user.id,
-          data: %{
-            contact_info: %{name: "Other"},
-            work_experience: [],
-            education: [],
-            skills: [],
-            certifications: [],
-            projects: [],
-            publications: [],
-            volunteer_work: []
-          }
+          user_id: other_user.id
+        })
+
+      {:ok, _version} =
+        Resumes.create_version(other_resume, "generation", %{
+          "contact_info" => %{"name" => "Other"},
+          "work_experience" => [],
+          "education" => [],
+          "skills" => [],
+          "certifications" => [],
+          "projects" => [],
+          "publications" => [],
+          "volunteer_work" => []
         })
 
       assert_raise Ecto.NoResultsError, fn ->

@@ -17,12 +17,16 @@ defmodule ResumeWeb.ResumesLive.Show do
   def mount(%{"id" => id}, session, socket) do
     user = get_user(socket, session)
     resume = Resumes.get_user_resume!(user.id, id)
+    versions = Resumes.list_versions(resume.id)
+    current_version = List.first(versions)
     template_mod = Map.get(@templates, resume.template, Default)
 
     {:ok,
      assign(socket,
        user: user,
        resume: resume,
+       versions: versions,
+       current_version: current_version,
        template_mod: template_mod,
        template_css: template_mod.css(),
        template_form: to_form(%{"template" => resume.template}, as: "template"),
@@ -53,8 +57,24 @@ defmodule ResumeWeb.ResumesLive.Show do
     end
   end
 
+  defp latest_version?(versions, current_version) do
+    current_version != nil and current_version.version == max_version(versions)
+  end
+
+  defp max_version([]), do: 0
+  defp max_version([v | _]), do: v.version
+
+  defp version_data(current_version) do
+    if current_version, do: Resumes.dump_version_data(current_version), else: nil
+  end
+
   @impl true
   def render(assigns) do
+    assigns =
+      assigns
+      |> assign(:is_latest, latest_version?(assigns.versions, assigns.current_version))
+      |> assign(:current_data, version_data(assigns.current_version))
+
     ~H"""
     <Layouts.app flash={@flash}>
       <div class="space-y-6">
@@ -73,7 +93,7 @@ defmodule ResumeWeb.ResumesLive.Show do
             <.link navigate={~p"/home"} class="btn btn-ghost btn-sm">
               <.icon name="hero-arrow-left-micro" class="size-4" /> Back
             </.link>
-            <.link href={~p"/resumes/#{@resume}/pdf"} class="btn btn-sm">
+            <.link :if={@current_version} href={~p"/resumes/#{@resume}/pdf"} class="btn btn-sm">
               <.icon name="hero-arrow-down-tray-micro" class="size-4" /> Download PDF
             </.link>
             <button
@@ -100,6 +120,27 @@ defmodule ResumeWeb.ResumesLive.Show do
               ]}
             />
           </.form>
+        </div>
+
+        <div :if={length(@versions) > 1} class="flex items-center gap-2">
+          <label class="text-sm font-medium">Version:</label>
+          <div class="flex flex-wrap gap-1">
+            <button
+              :for={v <- Enum.reverse(@versions)}
+              phx-click="select_version"
+              phx-value-version={v.version}
+              class={[
+                "btn btn-xs",
+                if(v.version == @current_version.version,
+                  do: "btn-primary",
+                  else: "btn-ghost"
+                )
+              ]}
+            >
+              v{v.version}
+              <span class="text-xs opacity-60">{v.trigger}</span>
+            </button>
+          </div>
         </div>
 
         <details class="collapse collapse-arrow bg-base-200">
@@ -158,16 +199,20 @@ defmodule ResumeWeb.ResumesLive.Show do
           </div>
         </details>
 
-        <details :if={@resume.explanation} class="collapse collapse-arrow bg-base-200" open>
+        <details
+          :if={@current_version && @current_version.explanation}
+          class="collapse collapse-arrow bg-base-200"
+          open
+        >
           <summary class="collapse-title text-sm font-medium">
             Notes
           </summary>
           <div class="collapse-content">
-            <p class="text-sm">{@resume.explanation}</p>
+            <p class="text-sm">{@current_version.explanation}</p>
           </div>
         </details>
 
-        <div :if={@resume.data} class="space-y-4">
+        <div :if={@current_data && @is_latest} class="space-y-4">
           <div
             :if={@feedback_messages != []}
             id="feedback-messages"
@@ -230,8 +275,12 @@ defmodule ResumeWeb.ResumesLive.Show do
             <div class="flex-1">
               <.input
                 field={@feedback_form[:message]}
+                type="textarea"
                 placeholder="Suggest changes to your resume..."
                 autocomplete="off"
+                rows="1"
+                phx-hook=".AutoGrow"
+                class="w-full textarea resize-none overflow-hidden"
               />
             </div>
             <%= if @recording do %>
@@ -263,7 +312,7 @@ defmodule ResumeWeb.ResumesLive.Show do
         </div>
 
         <div
-          :if={@resume.data}
+          :if={@current_data}
           class="mx-auto max-w-[8.5in] bg-white shadow-lg rounded-sm p-[0.85in] print:shadow-none print:p-0"
         >
           <div
@@ -274,7 +323,7 @@ defmodule ResumeWeb.ResumesLive.Show do
             <span class="text-sm font-medium text-warning">Preview — unsaved changes</span>
           </div>
           {raw("<style>" <> @template_css <> "</style>")}
-          {raw(render_template(@template_mod, display_data(@preview_data, @resume)))}
+          {raw(render_template(@template_mod, display_data(@preview_data, @current_data)))}
         </div>
       </div>
     </Layouts.app>
@@ -332,6 +381,22 @@ defmodule ResumeWeb.ResumesLive.Show do
       };
     </script>
 
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".AutoGrow">
+      export default {
+        mounted() {
+          this.el.addEventListener("input", () => this.resize());
+          this.resize();
+        },
+        updated() {
+          this.resize();
+        },
+        resize() {
+          this.el.style.height = "auto";
+          this.el.style.height = this.el.scrollHeight + "px";
+        },
+      };
+    </script>
+
     <script :type={Phoenix.LiveView.ColocatedHook} name=".ChatScroll">
       export default {
         mounted() {
@@ -346,6 +411,20 @@ defmodule ResumeWeb.ResumesLive.Show do
       };
     </script>
     """
+  end
+
+  @impl true
+  def handle_event("select_version", %{"version" => version_str}, socket) do
+    version_number = String.to_integer(version_str)
+    current_version = Resumes.get_version!(socket.assigns.resume.id, version_number)
+
+    {:noreply,
+     assign(socket,
+       current_version: current_version,
+       preview_data: nil,
+       preview_explanation: nil,
+       pending_directive: nil
+     )}
   end
 
   @impl true
@@ -446,16 +525,17 @@ defmodule ResumeWeb.ResumesLive.Show do
   def handle_event("confirm_changes", _params, socket) do
     preview_data = socket.assigns.preview_data
     explanation = socket.assigns.preview_explanation
+    resume = socket.assigns.resume
 
-    case Resumes.update_resume(socket.assigns.resume, %{
-           data: preview_data,
-           explanation: explanation
-         }) do
-      {:ok, resume} ->
+    case Resumes.confirm_feedback_changes(resume, preview_data, explanation) do
+      {:ok, version} ->
+        versions = Resumes.list_versions(resume.id)
+
         {:noreply,
          socket
          |> assign(
-           resume: resume,
+           versions: versions,
+           current_version: version,
            preview_data: nil,
            preview_explanation: nil
          )
@@ -638,9 +718,9 @@ defmodule ResumeWeb.ResumesLive.Show do
     end
   end
 
-  defp display_data(nil, resume), do: resume.data
+  defp display_data(nil, current_data), do: current_data
 
-  defp display_data(preview_data, _resume) do
+  defp display_data(preview_data, _current_data) do
     %Resume.Resumes.ResumeData{}
     |> Resume.Resumes.ResumeData.changeset(preview_data)
     |> Ecto.Changeset.apply_changes()
@@ -649,8 +729,8 @@ defmodule ResumeWeb.ResumesLive.Show do
   defp process_feedback_message(socket, message) do
     messages = socket.assigns.feedback_messages ++ [%{role: :user, content: message}]
     user = Accounts.get_user!(socket.assigns.user.id)
-    resume = socket.assigns.resume
-    current_data = socket.assigns.preview_data || resume_data_to_map(resume.data)
+    current_version = socket.assigns.current_version
+    current_data = socket.assigns.preview_data || version_data_to_map(current_version)
 
     task =
       Task.async(fn ->
@@ -769,11 +849,10 @@ defmodule ResumeWeb.ResumesLive.Show do
     end
   end
 
-  defp resume_data_to_map(nil), do: %{}
+  defp version_data_to_map(nil), do: %{}
 
-  defp resume_data_to_map(data) do
+  defp version_data_to_map(%{data: data}) do
     data
-    |> Ecto.embedded_dump(:json)
     |> Jason.encode!()
     |> Jason.decode!()
   end
