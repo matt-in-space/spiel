@@ -160,21 +160,10 @@ defmodule ResumeWeb.ResumesLive.Show do
 
         <details :if={@resume.explanation} class="collapse collapse-arrow bg-base-200" open>
           <summary class="collapse-title text-sm font-medium">
-            Writer's Notes
+            Notes
           </summary>
           <div class="collapse-content">
             <p class="text-sm">{@resume.explanation}</p>
-          </div>
-        </details>
-
-        <details :if={@resume.tailoring_notes} class="collapse collapse-arrow bg-base-200" open>
-          <summary class="collapse-title text-sm font-medium">
-            Tailoring Notes
-          </summary>
-          <div class="collapse-content">
-            <ul class="list-disc list-inside space-y-1 text-sm">
-              <li :for={line <- parse_tailoring_notes(@resume.tailoring_notes)}>{line}</li>
-            </ul>
           </div>
         </details>
 
@@ -422,8 +411,7 @@ defmodule ResumeWeb.ResumesLive.Show do
   def handle_event("clear_targeting", _params, socket) do
     case Resumes.update_resume(socket.assigns.resume, %{
            job_posting_url: nil,
-           job_posting_text: nil,
-           tailoring_notes: nil
+           job_posting_text: nil
          }) do
       {:ok, resume} ->
         {:noreply,
@@ -639,13 +627,6 @@ defmodule ResumeWeb.ResumesLive.Show do
       },
       as: "targeting"
     )
-  end
-
-  defp parse_tailoring_notes(notes) do
-    notes
-    |> String.split("\n")
-    |> Enum.map(fn line -> String.replace_leading(line, "- ", "") |> String.trim() end)
-    |> Enum.reject(&(&1 == ""))
   end
 
   defp non_blank(nil), do: nil

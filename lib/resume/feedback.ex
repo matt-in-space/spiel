@@ -175,7 +175,7 @@ defmodule Resume.Feedback do
 
     Additionally, include these fields alongside the resume data:
 
-    - "explanation": A brief description of what you changed and why (1-2 sentences)
+    - "explanation": A brief description of what you changed and why (2-5 sentences)
     - "classification": One of "resume", "directive", or "ambiguous"
       - "resume" — the feedback applies only to this specific resume
       - "directive" — the feedback is a standing instruction for all future resumes (e.g. "always emphasize leadership", "never include my GPA")

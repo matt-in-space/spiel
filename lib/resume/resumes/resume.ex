@@ -9,7 +9,6 @@ defmodule Resume.Resumes.Resume do
     field :template, :string, default: "default"
     field :job_posting_url, :string
     field :job_posting_text, :string
-    field :tailoring_notes, :string
     field :explanation, :string
 
     embeds_one :data, ResumeData, on_replace: :update
@@ -26,7 +25,6 @@ defmodule Resume.Resumes.Resume do
       :template,
       :job_posting_url,
       :job_posting_text,
-      :tailoring_notes,
       :explanation,
       :user_id
     ])

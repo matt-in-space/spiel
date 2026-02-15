@@ -92,7 +92,7 @@ defmodule ResumeWeb.ResumesLive.ShowTest do
     end
   end
 
-  describe "writer's notes" do
+  describe "notes" do
     setup [:create_resume]
 
     test "displays explanation when present", %{conn: conn, resume: resume} do
@@ -100,7 +100,7 @@ defmodule ResumeWeb.ResumesLive.ShowTest do
         Resumes.update_resume(resume, %{explanation: "Focused on web development skills."})
 
       {:ok, _view, html} = live(conn, ~p"/resumes/#{updated}")
-      assert html =~ "Writer&#39;s Notes" or html =~ "Writer's Notes"
+      assert html =~ "Notes"
       assert html =~ "Focused on web development skills"
     end
   end

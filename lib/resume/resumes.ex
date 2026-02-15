@@ -91,10 +91,9 @@ defmodule Resume.Resumes do
         else: []
 
     case Generator.generate(user, opts) do
-      {:ok, data, %{tailoring_notes: tailoring_notes, explanation: explanation}} ->
+      {:ok, data, %{explanation: explanation}} ->
         case update_resume(resume, %{
                data: data,
-               tailoring_notes: tailoring_notes,
                explanation: explanation
              }) do
           {:ok, resume} ->
@@ -121,12 +120,11 @@ defmodule Resume.Resumes do
   """
   def generate_resume(user, title, opts \\ []) do
     case Generator.generate(user, opts) do
-      {:ok, data, %{tailoring_notes: tailoring_notes, explanation: explanation}} ->
+      {:ok, data, %{explanation: explanation}} ->
         case create_resume(%{
                title: title,
                user_id: user.id,
                data: data,
-               tailoring_notes: tailoring_notes,
                explanation: explanation,
                job_posting_text: Keyword.get(opts, :job_posting_text),
                job_posting_url: Keyword.get(opts, :job_posting_url)
