@@ -74,6 +74,12 @@ defmodule ResumeWeb.Router do
     get "/users/settings/confirm-email/:token", UserSettingsController, :confirm_email
   end
 
+  scope "/admin", ResumeWeb do
+    pipe_through [:browser, :require_authenticated_user, :require_admin]
+
+    live "/costs", Admin.CostsLive
+  end
+
   scope "/", ResumeWeb do
     pipe_through [:browser]
 

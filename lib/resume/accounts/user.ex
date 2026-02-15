@@ -12,9 +12,13 @@ defmodule Resume.Accounts.User do
     field :default_resume_data, :map, default: %{}
     field :directives, {:array, :string}, default: []
     field :onboarding_completed_at, :utc_datetime
+    field :role, Ecto.Enum, values: [:admin, :member], default: :member
 
     timestamps(type: :utc_datetime)
   end
+
+  def admin?(%__MODULE__{role: :admin}), do: true
+  def admin?(_), do: false
 
   @profile_keys ~w(name email phone location website linkedin github)
 

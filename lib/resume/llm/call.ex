@@ -9,7 +9,7 @@ defmodule Resume.LLM.Call do
   import Ecto.Changeset
 
   schema "llm_calls" do
-    field :user_id, :id
+    belongs_to :user, Resume.Accounts.User
     field :caller, :string
     field :model, :string
     field :input_tokens, :integer, default: 0

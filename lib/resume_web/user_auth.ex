@@ -182,6 +182,21 @@ defmodule ResumeWeb.UserAuth do
   end
 
   @doc """
+  Plug for routes that require the user to be an admin.
+  """
+  def require_admin(conn, _opts) do
+    if conn.assigns.current_scope &&
+         Resume.Accounts.User.admin?(conn.assigns.current_scope.user) do
+      conn
+    else
+      conn
+      |> put_flash(:error, "You must be an admin to access this page.")
+      |> redirect(to: ~p"/home")
+      |> halt()
+    end
+  end
+
+  @doc """
   Plug for routes that require the user to not be authenticated.
   """
   def redirect_if_user_is_authenticated(conn, _opts) do
