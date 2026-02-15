@@ -39,11 +39,17 @@ defmodule Resume.Facts do
     ]
     """
 
-    case Resume.LLM.complete(prompt,
-           system:
-             "You are a career fact extraction assistant. Return only valid JSON arrays of strings. Every accomplishment fact must reference the company where it happened. Include dedicated role/tenure facts for each position mentioned."
+    tracking = %{user_id: Keyword.get(opts, :user_id), caller: "facts"}
+
+    case Resume.LLM.tracked_complete(
+           prompt,
+           [
+             system:
+               "You are a career fact extraction assistant. Return only valid JSON arrays of strings. Every accomplishment fact must reference the company where it happened. Include dedicated role/tenure facts for each position mentioned."
+           ],
+           tracking
          ) do
-      {:ok, response} -> {:ok, parse_facts(response)}
+      {:ok, response, _usage} -> {:ok, parse_facts(response)}
       {:error, reason} -> {:error, reason}
     end
   end

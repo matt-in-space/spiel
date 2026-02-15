@@ -36,8 +36,10 @@ defmodule Resume.Feedback do
     history = Keyword.get(opts, :history, [])
     prompt = build_prompt(resume_data, user, feedback, history)
 
-    case Resume.LLM.complete(prompt, system: system_prompt()) do
-      {:ok, response} ->
+    tracking = %{user_id: user.id, caller: "feedback"}
+
+    case Resume.LLM.tracked_complete(prompt, [system: system_prompt()], tracking) do
+      {:ok, response, _usage} ->
         case parse_response(response, user) do
           {:ok, result} ->
             {:ok, result}

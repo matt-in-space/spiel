@@ -19,8 +19,10 @@ defmodule Resume.Resumes.Generator do
     job_posting_text = Keyword.get(opts, :job_posting_text)
     prompt = build_prompt(user, job_posting_text)
 
-    case Resume.LLM.complete(prompt, system: system_prompt()) do
-      {:ok, response} ->
+    tracking = %{user_id: user.id, caller: "generator"}
+
+    case Resume.LLM.tracked_complete(prompt, [system: system_prompt()], tracking) do
+      {:ok, response, _usage} ->
         case parse_response(response) do
           {:ok, data} ->
             {tailoring_notes, data} = Map.pop(data, "tailoring_notes")

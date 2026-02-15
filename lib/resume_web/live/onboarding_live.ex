@@ -575,7 +575,8 @@ defmodule ResumeWeb.OnboardingLive do
         task =
           Task.async(fn ->
             Facts.extract([combined], "uploaded documents about their career",
-              existing_facts: socket.assigns.all_facts
+              existing_facts: socket.assigns.all_facts,
+              user_id: socket.assigns.user.id
             )
           end)
 
@@ -675,7 +676,8 @@ defmodule ResumeWeb.OnboardingLive do
       task =
         Task.async(fn ->
           Facts.extract([correction], "a user correction during onboarding recap",
-            existing_facts: socket.assigns.all_facts
+            existing_facts: socket.assigns.all_facts,
+            user_id: socket.assigns.user.id
           )
         end)
 
@@ -825,7 +827,9 @@ defmodule ResumeWeb.OnboardingLive do
 
     task =
       Task.async(fn ->
-        Interview.opening_question(socket.assigns.all_facts, profile)
+        Interview.opening_question(socket.assigns.all_facts, profile,
+          user_id: socket.assigns.user.id
+        )
       end)
 
     socket
@@ -842,7 +846,9 @@ defmodule ResumeWeb.OnboardingLive do
     else
       task =
         Task.async(fn ->
-          Interview.generate_recap(socket.assigns.all_facts, profile)
+          Interview.generate_recap(socket.assigns.all_facts, profile,
+            user_id: socket.assigns.user.id
+          )
         end)
 
       socket
@@ -868,7 +874,8 @@ defmodule ResumeWeb.OnboardingLive do
           history,
           socket.assigns.all_facts,
           turn,
-          profile
+          profile,
+          user_id: socket.assigns.user.id
         )
       end)
 

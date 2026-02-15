@@ -13,7 +13,7 @@ defmodule Resume.Interview do
 
   Returns `{:ok, question_string}` or `{:error, reason}`.
   """
-  def opening_question(existing_facts, profile) do
+  def opening_question(existing_facts, profile, opts \\ []) do
     prompt = """
     #{profile_context(profile)}
     #{existing_facts_context(existing_facts)}
@@ -25,8 +25,10 @@ defmodule Resume.Interview do
     Return ONLY a JSON object: {"question": "your question here"}
     """
 
-    case Resume.LLM.complete(prompt, system: opening_system_prompt()) do
-      {:ok, response} -> parse_question(response)
+    tracking = %{user_id: Keyword.get(opts, :user_id), caller: "interview"}
+
+    case Resume.LLM.tracked_complete(prompt, [system: opening_system_prompt()], tracking) do
+      {:ok, response, _usage} -> parse_question(response)
       {:error, reason} -> {:error, reason}
     end
   end
@@ -36,7 +38,7 @@ defmodule Resume.Interview do
 
   Returns `{:ok, %{facts: [...], question: "...", should_wrap_up: bool}}` or `{:error, reason}`.
   """
-  def process_turn(user_response, history, all_facts, turn_number, profile) do
+  def process_turn(user_response, history, all_facts, turn_number, profile, opts \\ []) do
     recent_history = Enum.take(history, -6)
 
     prompt = """
@@ -64,8 +66,10 @@ defmodule Resume.Interview do
     {"facts": ["fact 1", "fact 2"], "question": "next question", "should_wrap_up": false, "career_goal": "...or null"}
     """
 
-    case Resume.LLM.complete(prompt, system: turn_system_prompt()) do
-      {:ok, response} -> parse_turn(response)
+    tracking = %{user_id: Keyword.get(opts, :user_id), caller: "interview"}
+
+    case Resume.LLM.tracked_complete(prompt, [system: turn_system_prompt()], tracking) do
+      {:ok, response, _usage} -> parse_turn(response)
       {:error, reason} -> {:error, reason}
     end
   end
@@ -75,7 +79,7 @@ defmodule Resume.Interview do
 
   Returns `{:ok, recap_string}` or `{:error, reason}`.
   """
-  def generate_recap(facts, profile) do
+  def generate_recap(facts, profile, opts \\ []) do
     prompt = """
     #{profile_context(profile)}
 
@@ -89,8 +93,10 @@ defmodule Resume.Interview do
     Return ONLY a JSON object: {"recap": "your summary here"}
     """
 
-    case Resume.LLM.complete(prompt, system: recap_system_prompt()) do
-      {:ok, response} -> parse_recap(response)
+    tracking = %{user_id: Keyword.get(opts, :user_id), caller: "interview"}
+
+    case Resume.LLM.tracked_complete(prompt, [system: recap_system_prompt()], tracking) do
+      {:ok, response, _usage} -> parse_recap(response)
       {:error, reason} -> {:error, reason}
     end
   end

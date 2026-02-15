@@ -5,31 +5,39 @@ defmodule Resume.LLM.Mock do
 
   @behaviour Resume.LLM
 
+  alias Resume.LLM.Usage
+
   @impl true
   def complete(_prompt, opts \\ []) do
     system = Keyword.get(opts, :system, "")
 
     cond do
       String.contains?(system, "resume adjustment") ->
-        {:ok, feedback_json()}
+        {:ok, feedback_json(), mock_usage()}
 
       String.contains?(system, "resume generation") ->
-        {:ok, resume_json()}
+        {:ok, resume_json(), mock_usage()}
 
       String.contains?(system, "career interviewer") and String.contains?(system, "opening") ->
-        {:ok, ~s({"question": "Tell me about your current or most recent role."})}
+        {:ok, ~s({"question": "Tell me about your current or most recent role."}), mock_usage()}
 
       String.contains?(system, "career interviewer") ->
         {:ok,
-         ~s({"facts": ["Mock extracted fact from interview"], "question": "What technologies do you work with?", "should_wrap_up": false})}
+         ~s({"facts": ["Mock extracted fact from interview"], "question": "What technologies do you work with?", "should_wrap_up": false}),
+         mock_usage()}
 
       String.contains?(system, "summarizing") ->
         {:ok,
-         ~s({"recap": "You are an experienced professional with a strong background in software engineering."})}
+         ~s({"recap": "You are an experienced professional with a strong background in software engineering."}),
+         mock_usage()}
 
       true ->
-        {:ok, ~s(["Mock fact about career", "Mock fact about skills"])}
+        {:ok, ~s(["Mock fact about career", "Mock fact about skills"]), mock_usage()}
     end
+  end
+
+  defp mock_usage do
+    %Usage{model: "mock"}
   end
 
   defp feedback_json do

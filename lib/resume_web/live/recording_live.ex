@@ -293,7 +293,8 @@ defmodule ResumeWeb.RecordingLive do
     task =
       Task.async(fn ->
         Resume.Facts.extract(transcripts, "voice recordings about their career",
-          existing_facts: socket.assigns.user.facts
+          existing_facts: socket.assigns.user.facts,
+          user_id: socket.assigns.user.id
         )
       end)
 

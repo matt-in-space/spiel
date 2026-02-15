@@ -226,7 +226,8 @@ defmodule ResumeWeb.UploadLive do
     task =
       Task.async(fn ->
         Resume.Facts.extract([text], "an uploaded document about their career",
-          existing_facts: socket.assigns.user.facts
+          existing_facts: socket.assigns.user.facts,
+          user_id: socket.assigns.user.id
         )
       end)
 

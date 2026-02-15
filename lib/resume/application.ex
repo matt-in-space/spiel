@@ -8,6 +8,7 @@ defmodule Resume.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      Resume.PromEx,
       ResumeWeb.Telemetry,
       Resume.Repo,
       {DNSCluster, query: Application.get_env(:resume, :dns_cluster_query) || :ignore},
