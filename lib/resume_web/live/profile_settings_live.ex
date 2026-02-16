@@ -15,11 +15,14 @@ defmodule ResumeWeb.ProfileSettingsLive do
        career_goal: career_goal,
        profile_form: to_form(profile_data, as: "profile"),
        facts: user.facts || [],
-       editing_index: nil,
-       edit_form: to_form(%{"text" => ""}, as: "edit"),
-       new_fact_form: to_form(%{"text" => ""}, as: "new_fact"),
        directives: user.directives || [],
-       new_directive_form: to_form(%{"text" => ""}, as: "new_directive"),
+       active_tab: :profile,
+       input_form: to_form(%{"text" => ""}, as: "input"),
+       filter: "",
+       processing: false,
+       recording: false,
+       transcribing: false,
+       task_refs: %{},
        page_title: "Profile"
      )}
   end
@@ -42,193 +45,294 @@ defmodule ResumeWeb.ProfileSettingsLive do
     <Layouts.app flash={@flash}>
       <div class="space-y-6">
         <h1 class="text-2xl font-bold">Profile Settings</h1>
-        <p class="text-sm opacity-70">
-          This information appears on the contact section of your resumes.
-        </p>
 
-        <.form for={@profile_form} phx-change="validate" phx-submit="save">
-          <.input field={@profile_form[:name]} label="Full Name" required />
-          <.input field={@profile_form[:email]} label="Email" type="email" />
-          <.input field={@profile_form[:phone]} label="Phone" type="tel" />
-          <.input field={@profile_form[:location]} label="Location" placeholder="City, State" />
-          <.input field={@profile_form[:website]} label="Website" type="url" placeholder="https://" />
-          <.input
-            field={@profile_form[:linkedin]}
-            label="LinkedIn"
-            placeholder="https://linkedin.com/in/..."
-          />
-          <.input field={@profile_form[:github]} label="GitHub" placeholder="https://github.com/..." />
-
-          <div class="mt-6">
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-          </div>
-        </.form>
-
-        <div :if={@career_goal} class="card bg-base-200 p-4">
-          <h2 class="text-sm font-semibold opacity-70 mb-1">Career Goal</h2>
-          <p class="text-sm">{@career_goal}</p>
-          <p class="text-xs opacity-50 mt-2">
-            Extracted from your interview. Re-do the interview to update.
-          </p>
+        <div role="tablist" class="tabs tabs-bordered">
+          <button
+            role="tab"
+            class={"tab #{if @active_tab == :profile, do: "tab-active"}"}
+            phx-click="switch_tab"
+            phx-value-tab="profile"
+          >
+            Profile
+          </button>
+          <button
+            role="tab"
+            class={"tab #{if @active_tab == :facts_directives, do: "tab-active"}"}
+            phx-click="switch_tab"
+            phx-value-tab="facts_directives"
+          >
+            Facts & Directives
+            <span class="badge badge-sm ml-1">{length(@facts) + length(@directives)}</span>
+          </button>
         </div>
 
-        <div class="divider"></div>
+        <%!-- Profile Tab --%>
+        <div :if={@active_tab == :profile} class="space-y-6">
+          <p class="text-sm opacity-70">
+            This information appears on the contact section of your resumes.
+          </p>
 
-        <div class="space-y-4">
-          <div class="flex items-center gap-2">
-            <h2 class="text-xl font-bold">Your Facts</h2>
-            <span class="badge badge-neutral">{length(@facts)}</span>
+          <.form for={@profile_form} phx-change="validate" phx-submit="save">
+            <.input field={@profile_form[:name]} label="Full Name" required />
+            <.input field={@profile_form[:email]} label="Email" type="email" />
+            <.input field={@profile_form[:phone]} label="Phone" type="tel" />
+            <.input field={@profile_form[:location]} label="Location" placeholder="City, State" />
+            <.input
+              field={@profile_form[:website]}
+              label="Website"
+              type="url"
+              placeholder="https://"
+            />
+            <.input
+              field={@profile_form[:linkedin]}
+              label="LinkedIn"
+              placeholder="https://linkedin.com/in/..."
+            />
+            <.input
+              field={@profile_form[:github]}
+              label="GitHub"
+              placeholder="https://github.com/..."
+            />
+
+            <div class="mt-6">
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+          </.form>
+
+          <div :if={@career_goal} class="card bg-base-200 p-4">
+            <h2 class="text-sm font-semibold opacity-70 mb-1">Career Goal</h2>
+            <p class="text-sm">{@career_goal}</p>
+            <p class="text-xs opacity-50 mt-2">
+              Extracted from your interview. Re-do the interview to update.
+            </p>
           </div>
+        </div>
 
-          <div :if={@facts == []} class="text-sm opacity-50">
-            No facts yet. Add some below, or record yourself talking about your experience.
-          </div>
-
-          <ul :if={@facts != []} class="space-y-2">
-            <li
-              :for={{fact, index} <- Enum.with_index(@facts)}
-              class="card bg-base-200 p-3 flex flex-row items-center gap-3"
-            >
-              <div :if={@editing_index != index} class="flex-1">{fact}</div>
-              <div :if={@editing_index != index} class="flex gap-1">
+        <%!-- Facts & Directives Tab --%>
+        <div :if={@active_tab == :facts_directives} class="space-y-6">
+          <%!-- Agentic Input --%>
+          <div class="space-y-3">
+            <.form for={@input_form} phx-change="validate_input" phx-submit="process_input">
+              <div class="flex items-end gap-2">
+                <div class="flex-1">
+                  <.input
+                    field={@input_form[:text]}
+                    type="textarea"
+                    placeholder="Add facts or directives — just type naturally, e.g. 'I worked at Google for 3 years as a senior engineer' or 'always emphasize leadership skills'"
+                    autocomplete="off"
+                    rows="2"
+                    phx-hook=".AutoGrow"
+                    class="w-full textarea resize-none overflow-hidden"
+                  />
+                </div>
+                <%= if @recording do %>
+                  <button type="button" phx-click="stop_recording" class="btn btn-error btn-sm">
+                    <.icon name="hero-stop-solid" class="size-4" />
+                  </button>
+                <% else %>
+                  <button type="button" phx-click="start_recording" class="btn btn-ghost btn-sm">
+                    <.icon name="hero-microphone-solid" class="size-4" />
+                  </button>
+                <% end %>
                 <button
-                  type="button"
-                  phx-click="edit_fact"
-                  phx-value-index={index}
-                  class="btn btn-ghost btn-xs"
-                  aria-label="Edit fact"
+                  type="submit"
+                  class="btn btn-primary btn-sm"
+                  disabled={@processing || @transcribing}
                 >
-                  <.icon name="hero-pencil-square" class="size-4" />
+                  <.icon name="hero-sparkles-micro" class="size-4" /> Process
                 </button>
+              </div>
+            </.form>
+
+            <div
+              id="audio-recorder"
+              phx-hook=".AudioRecorder"
+              phx-update="ignore"
+              data-recording={to_string(@recording)}
+            >
+            </div>
+
+            <div :if={@transcribing} class="flex items-center gap-2 text-sm">
+              <span class="loading loading-spinner loading-xs"></span> Transcribing audio...
+            </div>
+
+            <div :if={@processing} class="flex items-center gap-2 text-sm">
+              <span class="loading loading-spinner loading-xs"></span> Processing input...
+            </div>
+          </div>
+
+          <%!-- Filter --%>
+          <div :if={length(@facts) + length(@directives) > 0}>
+            <input
+              type="text"
+              placeholder="Filter items..."
+              value={@filter}
+              phx-change="filter_items"
+              phx-debounce="300"
+              name="filter"
+              class="input input-bordered input-sm w-full max-w-xs"
+            />
+          </div>
+
+          <%!-- Card Grid --%>
+          <div
+            :if={combined_items(@facts, @directives, @filter) != []}
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+          >
+            <div
+              :for={item <- combined_items(@facts, @directives, @filter)}
+              class="card bg-base-200 p-3 flex flex-col gap-2"
+            >
+              <div class="flex items-center justify-between">
+                <span class={[
+                  "badge badge-sm",
+                  if(item.type == :fact, do: "badge-info", else: "badge-warning")
+                ]}>
+                  {if item.type == :fact, do: "Fact", else: "Directive"}
+                </span>
                 <button
                   type="button"
-                  phx-click="delete_fact"
-                  phx-value-index={index}
+                  phx-click="delete_item"
+                  phx-value-type={item.type}
+                  phx-value-index={item.index}
                   class="btn btn-ghost btn-xs"
-                  aria-label="Delete fact"
+                  aria-label={"Delete #{item.type}"}
                 >
                   <.icon name="hero-x-mark" class="size-4" />
                 </button>
               </div>
-
-              <.form
-                :if={@editing_index == index}
-                for={@edit_form}
-                phx-change="update_edit"
-                phx-submit="save_edit"
-                class="flex-1 flex items-center gap-2"
-              >
-                <.input field={@edit_form[:text]} class="flex-1" />
-                <button type="submit" class="btn btn-ghost btn-xs" aria-label="Save edit">
-                  <.icon name="hero-check" class="size-4" />
-                </button>
-                <button
-                  type="button"
-                  phx-click="cancel_edit"
-                  class="btn btn-ghost btn-xs"
-                  aria-label="Cancel edit"
-                >
-                  <.icon name="hero-x-mark" class="size-4" />
-                </button>
-              </.form>
-            </li>
-          </ul>
-
-          <.form
-            for={@new_fact_form}
-            phx-change="validate_new_fact"
-            phx-submit="add_fact"
-            class="flex items-center gap-2"
-          >
-            <.input field={@new_fact_form[:text]} placeholder="Add a new fact..." class="flex-1" />
-            <button type="submit" class="btn btn-primary btn-sm">Add</button>
-          </.form>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="space-y-4">
-          <div class="flex items-center gap-2">
-            <h2 class="text-xl font-bold">Your Directives</h2>
-            <span class="badge badge-neutral">{length(@directives)}</span>
+              <p class="text-sm">{item.text}</p>
+            </div>
           </div>
 
-          <div :if={@directives == []} class="text-sm opacity-50">
-            No directives yet. Directives are standing instructions that apply to all your resumes,
-            like "always emphasize leadership" or "keep it to one page."
+          <div
+            :if={@facts == [] && @directives == []}
+            class="text-sm opacity-50 text-center py-8"
+          >
+            No facts or directives yet. Use the input above to add some — just describe your
+            experience or instructions naturally.
           </div>
 
-          <ul :if={@directives != []} class="space-y-2">
-            <li
-              :for={{directive, index} <- Enum.with_index(@directives)}
-              class="card bg-base-200 p-3 flex flex-row items-center gap-3"
-            >
-              <div class="flex-1">{directive}</div>
-              <button
-                type="button"
-                phx-click="delete_directive"
-                phx-value-index={index}
-                class="btn btn-ghost btn-xs"
-                aria-label="Delete directive"
-              >
-                <.icon name="hero-x-mark" class="size-4" />
-              </button>
-            </li>
-          </ul>
-
-          <.form
-            for={@new_directive_form}
-            phx-change="validate_new_directive"
-            phx-submit="add_directive"
-            class="flex items-center gap-2"
+          <div
+            :if={
+              (@facts != [] || @directives != []) &&
+                combined_items(@facts, @directives, @filter) == [] && @filter != ""
+            }
+            class="text-sm opacity-50 text-center py-4"
           >
-            <.input
-              field={@new_directive_form[:text]}
-              placeholder="Add a directive, e.g. 'Always emphasize leadership'"
-              class="flex-1"
-            />
-            <button type="submit" class="btn btn-primary btn-sm">Add</button>
-          </.form>
+            No items match your filter.
+          </div>
         </div>
       </div>
     </Layouts.app>
+
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".AutoGrow">
+      export default {
+        mounted() {
+          this.el.addEventListener("input", () => this.resize());
+          this.resize();
+        },
+        updated() {
+          this.resize();
+        },
+        resize() {
+          this.el.style.height = "auto";
+          this.el.style.height = this.el.scrollHeight + "px";
+        },
+      };
+    </script>
+
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".AudioRecorder">
+      export default {
+        mounted() {
+          this.mediaRecorder = null;
+          this.audioChunks = [];
+
+          this.handleEvent("start_recording", () => this.startRecording());
+          this.handleEvent("stop_recording", () => this.stopRecording());
+        },
+
+        async startRecording() {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.audioChunks = [];
+            this.mediaRecorder = new MediaRecorder(stream);
+
+            this.mediaRecorder.ondataavailable = (event) => {
+              if (event.data.size > 0) {
+                this.audioChunks.push(event.data);
+              }
+            };
+
+            this.mediaRecorder.onstop = () => {
+              const blob = new Blob(this.audioChunks, { type: this.mediaRecorder.mimeType });
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const base64 = reader.result.split(",")[1];
+                this.pushEvent("audio_data", {
+                  data: base64,
+                  size: blob.size,
+                  type: blob.type,
+                });
+              };
+              reader.readAsDataURL(blob);
+
+              stream.getTracks().forEach((track) => track.stop());
+            };
+
+            this.mediaRecorder.start();
+          } catch (error) {
+            console.error("Recording error:", error);
+            this.pushEvent("recording_error", { reason: error.message });
+          }
+        },
+
+        stopRecording() {
+          if (this.mediaRecorder && this.mediaRecorder.state === "recording") {
+            this.mediaRecorder.stop();
+          }
+        },
+      };
+    </script>
     """
   end
 
-  @impl true
-  def handle_event("edit_fact", %{"index" => index}, socket) do
-    index = String.to_integer(index)
-    text = Enum.at(socket.assigns.facts, index)
+  defp combined_items(facts, directives, filter) do
+    fact_items =
+      facts
+      |> Enum.with_index()
+      |> Enum.map(fn {text, idx} -> %{type: :fact, text: text, index: idx} end)
 
-    {:noreply,
-     assign(socket, editing_index: index, edit_form: to_form(%{"text" => text}, as: "edit"))}
+    directive_items =
+      directives
+      |> Enum.with_index()
+      |> Enum.map(fn {text, idx} -> %{type: :directive, text: text, index: idx} end)
+
+    (fact_items ++ directive_items)
+    |> Enum.filter(fn item ->
+      filter == "" || String.contains?(String.downcase(item.text), String.downcase(filter))
+    end)
   end
 
+  # Tab switching
+
   @impl true
-  def handle_event("cancel_edit", _params, socket) do
-    {:noreply, assign(socket, editing_index: nil)}
+  def handle_event("switch_tab", %{"tab" => tab}, socket) do
+    tab = String.to_existing_atom(tab)
+    {:noreply, assign(socket, active_tab: tab)}
   end
 
+  # Filter
+
   @impl true
-  def handle_event("update_edit", %{"edit" => params}, socket) do
-    {:noreply, assign(socket, edit_form: to_form(params, as: "edit"))}
+  def handle_event("filter_items", %{"filter" => filter}, socket) do
+    {:noreply, assign(socket, filter: filter)}
   end
 
-  @impl true
-  def handle_event("save_edit", %{"edit" => %{"text" => text}}, socket) do
-    text = String.trim(text)
-
-    if text == "" do
-      {:noreply, socket}
-    else
-      facts = List.replace_at(socket.assigns.facts, socket.assigns.editing_index, text)
-      {:ok, user} = Accounts.update_user_facts(socket.assigns.user, facts)
-      {:noreply, assign(socket, facts: user.facts, editing_index: nil, user: user)}
-    end
-  end
+  # Delete unified
 
   @impl true
-  def handle_event("delete_fact", %{"index" => index}, socket) do
+  def handle_event("delete_item", %{"type" => "fact", "index" => index}, socket) do
     index = String.to_integer(index)
     facts = List.delete_at(socket.assigns.facts, index)
     {:ok, user} = Accounts.update_user_facts(socket.assigns.user, facts)
@@ -236,62 +340,90 @@ defmodule ResumeWeb.ProfileSettingsLive do
   end
 
   @impl true
-  def handle_event("validate_new_fact", %{"new_fact" => params}, socket) do
-    {:noreply, assign(socket, new_fact_form: to_form(params, as: "new_fact"))}
-  end
-
-  @impl true
-  def handle_event("add_fact", %{"new_fact" => %{"text" => text}}, socket) do
-    text = String.trim(text)
-
-    if text == "" do
-      {:noreply, socket}
-    else
-      facts = socket.assigns.facts ++ [text]
-      {:ok, user} = Accounts.update_user_facts(socket.assigns.user, facts)
-
-      {:noreply,
-       assign(socket,
-         facts: user.facts,
-         user: user,
-         new_fact_form: to_form(%{"text" => ""}, as: "new_fact")
-       )}
-    end
-  end
-
-  # Directive events
-
-  @impl true
-  def handle_event("validate_new_directive", %{"new_directive" => params}, socket) do
-    {:noreply, assign(socket, new_directive_form: to_form(params, as: "new_directive"))}
-  end
-
-  @impl true
-  def handle_event("add_directive", %{"new_directive" => %{"text" => text}}, socket) do
-    text = String.trim(text)
-
-    if text == "" do
-      {:noreply, socket}
-    else
-      directives = socket.assigns.directives ++ [text]
-      {:ok, user} = Accounts.update_user_directives(socket.assigns.user, directives)
-
-      {:noreply,
-       assign(socket,
-         directives: user.directives,
-         user: user,
-         new_directive_form: to_form(%{"text" => ""}, as: "new_directive")
-       )}
-    end
-  end
-
-  @impl true
-  def handle_event("delete_directive", %{"index" => index}, socket) do
+  def handle_event("delete_item", %{"type" => "directive", "index" => index}, socket) do
     index = String.to_integer(index)
     directives = List.delete_at(socket.assigns.directives, index)
     {:ok, user} = Accounts.update_user_directives(socket.assigns.user, directives)
     {:noreply, assign(socket, directives: user.directives, user: user)}
   end
+
+  # Agentic input
+
+  @impl true
+  def handle_event("validate_input", %{"input" => params}, socket) do
+    {:noreply, assign(socket, input_form: to_form(params, as: "input"))}
+  end
+
+  @impl true
+  def handle_event("process_input", %{"input" => %{"text" => text}}, socket) do
+    text = String.trim(text)
+
+    if text == "" do
+      {:noreply, socket}
+    else
+      task =
+        Task.async(fn ->
+          Resume.Facts.process_input(
+            text,
+            socket.assigns.facts,
+            socket.assigns.directives,
+            user_id: socket.assigns.user.id
+          )
+        end)
+
+      {:noreply,
+       socket
+       |> assign(processing: true)
+       |> update(:task_refs, &Map.put(&1, task.ref, :process_input))}
+    end
+  end
+
+  # Audio recording
+
+  @impl true
+  def handle_event("start_recording", _params, socket) do
+    socket =
+      socket
+      |> assign(:recording, true)
+      |> push_event("start_recording", %{})
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("stop_recording", _params, socket) do
+    socket =
+      socket
+      |> assign(:recording, false)
+      |> push_event("stop_recording", %{})
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("audio_data", %{"data" => data, "type" => type}, socket) do
+    audio_binary = Base.decode64!(data)
+
+    task =
+      Task.async(fn ->
+        Resume.Transcription.transcribe(audio_binary, content_type: type)
+      end)
+
+    {:noreply,
+     socket
+     |> assign(transcribing: true)
+     |> update(:task_refs, &Map.put(&1, task.ref, :transcribe_input))}
+  end
+
+  @impl true
+  def handle_event("recording_error", %{"reason" => reason}, socket) do
+    {:noreply,
+     socket
+     |> assign(recording: false)
+     |> put_flash(:error, "Recording failed: #{reason}")}
+  end
+
+  # Profile form
 
   @impl true
   def handle_event("validate", %{"profile" => params}, socket) do
@@ -315,5 +447,75 @@ defmodule ResumeWeb.ProfileSettingsLive do
          |> assign(profile_form: to_form(params, as: "profile"))
          |> put_flash(:error, "Please fill in your name.")}
     end
+  end
+
+  # Task results
+
+  @impl true
+  def handle_info({ref, result}, socket) when is_reference(ref) do
+    Process.demonitor(ref, [:flush])
+    {tag, task_refs} = Map.pop(socket.assigns.task_refs, ref)
+    socket = assign(socket, task_refs: task_refs)
+
+    case {tag, result} do
+      {:process_input, {:ok, %{fact_operations: fact_ops, directive_operations: dir_ops}}} ->
+        user = socket.assigns.user
+        facts = socket.assigns.facts
+        directives = socket.assigns.directives
+
+        {updated_facts, fact_descs} = Resume.Facts.apply_changes(facts, fact_ops)
+        {updated_directives, dir_descs} = Resume.Facts.apply_changes(directives, dir_ops)
+
+        all_descs = fact_descs ++ dir_descs
+
+        socket =
+          socket
+          |> assign(processing: false, input_form: to_form(%{"text" => ""}, as: "input"))
+
+        socket =
+          if all_descs == [] do
+            put_flash(socket, :info, "No changes detected from your input.")
+          else
+            {:ok, user} = Accounts.update_user_facts(user, updated_facts)
+            {:ok, user} = Accounts.update_user_directives(user, updated_directives)
+
+            socket
+            |> assign(facts: user.facts, directives: user.directives, user: user)
+            |> put_flash(:info, Enum.join(all_descs, "; "))
+          end
+
+        {:noreply, socket}
+
+      {:process_input, {:error, _reason}} ->
+        {:noreply,
+         socket
+         |> assign(processing: false)
+         |> put_flash(:error, "Failed to process input. Please try again.")}
+
+      {:transcribe_input, {:ok, transcript}} ->
+        current = socket.assigns.input_form.params["text"] || ""
+        new_text = if current == "", do: transcript, else: current <> "\n" <> transcript
+
+        {:noreply,
+         socket
+         |> assign(
+           transcribing: false,
+           input_form: to_form(%{"text" => new_text}, as: "input")
+         )}
+
+      {:transcribe_input, {:error, _reason}} ->
+        {:noreply,
+         socket
+         |> assign(transcribing: false)
+         |> put_flash(:error, "Transcription failed. Please try again.")}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info({:DOWN, _ref, :process, _pid, _reason}, socket) do
+    {:noreply, socket}
   end
 end

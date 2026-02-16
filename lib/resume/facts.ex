@@ -132,6 +132,55 @@ defmodule Resume.Facts do
     end)
   end
 
+  @doc """
+  Processes freeform text input, classifying extracted items as facts or directives.
+
+  Makes a single LLM call that considers both existing facts and directives to
+  produce structured operations for each.
+
+  Returns `{:ok, %{fact_operations: [...], directive_operations: [...]}}`.
+  """
+  def process_input(text, existing_facts, existing_directives, opts \\ []) do
+    prompt = """
+    You are processing user input about their career profile. The user may be adding,
+    updating, or describing career facts and/or standing directives for resume generation.
+    #{existing_facts_section(existing_facts)}
+    #{existing_directives_section(existing_directives)}
+    User input:
+    #{text}
+
+    Classify each piece of information from the user's input:
+    - **Facts**: concrete career information — roles, accomplishments, skills, metrics, dates, companies, education, certifications
+    - **Directives**: standing instructions for resume generation — preferences, emphasis areas, formatting rules, tone guidance
+
+    Return ONLY a JSON object with two keys, no other text:
+    {
+      "fact_operations": [... operations for facts ...],
+      "directive_operations": [... operations for directives ...]
+    }
+
+    Each operation is one of:
+    - `{"type": "add", "text": "New item text"}` — for genuinely new items
+    - `{"type": "update", "index": N, "text": "Updated text"}` — to replace existing item #N
+
+    If the input contains no facts, use an empty array for fact_operations. Same for directives.
+    """
+
+    tracking = %{user_id: Keyword.get(opts, :user_id), caller: "facts_input"}
+
+    case Resume.LLM.tracked_complete(
+           prompt,
+           [
+             system:
+               "You are a career profile assistant that can classify user input into facts and directives. Return only valid JSON with fact_operations and directive_operations arrays."
+           ],
+           tracking
+         ) do
+      {:ok, response, _usage} -> {:ok, parse_combined_operations(response)}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
   defp valid_operation?(%{"type" => "add", "text" => t}) when is_binary(t), do: true
 
   defp valid_operation?(%{"type" => "update", "index" => i, "text" => t})
@@ -139,6 +188,29 @@ defmodule Resume.Facts do
 
   defp valid_operation?(%{"type" => "remove", "index" => i}) when is_integer(i), do: true
   defp valid_operation?(_), do: false
+
+  defp parse_combined_operations(response) do
+    cleaned = strip_code_fence(response)
+
+    case Jason.decode(cleaned) do
+      {:ok, %{"fact_operations" => facts, "directive_operations" => directives}}
+      when is_list(facts) and is_list(directives) ->
+        %{
+          fact_operations: Enum.filter(facts, &valid_operation?/1),
+          directive_operations: Enum.filter(directives, &valid_operation?/1)
+        }
+
+      {:ok, items} when is_list(items) ->
+        # Fallback: flat array treated as fact adds
+        %{
+          fact_operations: Enum.filter(items, &valid_operation?/1),
+          directive_operations: []
+        }
+
+      _ ->
+        %{fact_operations: [], directive_operations: []}
+    end
+  end
 
   defp existing_facts_section([]), do: ""
 
@@ -152,6 +224,22 @@ defmodule Resume.Facts do
     """
 
     ## Existing Facts (already captured — merge with these when the new text refines them)
+    #{numbered}
+    """
+  end
+
+  defp existing_directives_section([]), do: ""
+
+  defp existing_directives_section(directives) do
+    numbered =
+      directives
+      |> Enum.with_index(1)
+      |> Enum.map(fn {directive, i} -> "#{i}. #{directive}" end)
+      |> Enum.join("\n")
+
+    """
+
+    ## Existing Directives (standing instructions — merge with these when input refines them)
     #{numbered}
     """
   end

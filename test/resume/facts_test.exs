@@ -81,6 +81,28 @@ defmodule Resume.FactsTest do
     end
   end
 
+  describe "process_input/4" do
+    test "returns fact and directive operations" do
+      assert {:ok, result} =
+               Facts.process_input(
+                 "I worked at Google for 5 years. Always emphasize leadership.",
+                 ["Existing fact"],
+                 ["Existing directive"]
+               )
+
+      assert %{fact_operations: fact_ops, directive_operations: dir_ops} = result
+      assert is_list(fact_ops)
+      assert is_list(dir_ops)
+      assert Enum.any?(fact_ops, &(&1["type"] == "add"))
+      assert Enum.any?(dir_ops, &(&1["type"] == "add"))
+    end
+
+    test "returns empty operations when no input is relevant" do
+      assert {:ok, %{fact_operations: _, directive_operations: _}} =
+               Facts.process_input("test", [], [])
+    end
+  end
+
   describe "apply_changes/2" do
     test "applies add operations" do
       {facts, descriptions} =
