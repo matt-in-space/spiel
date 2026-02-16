@@ -38,7 +38,7 @@ defmodule ResumeWeb.ResumesLive.New do
       <div class="space-y-6">
         <.header>
           New Resume
-          <:subtitle>Generate a resume from your profile and facts.</:subtitle>
+          <:subtitle>We'll build a resume from what we know about you.</:subtitle>
         </.header>
 
         <div :if={@generating} class="flex flex-col items-center gap-3 py-12">

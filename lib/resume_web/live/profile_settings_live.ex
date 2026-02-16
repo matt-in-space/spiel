@@ -67,11 +67,11 @@ defmodule ResumeWeb.ProfileSettingsLive do
           </button>
           <button
             role="tab"
-            class={"tab #{if @active_tab == :facts_directives, do: "tab-active"}"}
+            class={"tab #{if @active_tab == :details_rules, do: "tab-active"}"}
             phx-click="switch_tab"
-            phx-value-tab="facts_directives"
+            phx-value-tab="details_rules"
           >
-            Facts & Directives
+            Details & Rules
             <span class="badge badge-sm ml-1">{length(@facts) + length(@directives)}</span>
           </button>
         </div>
@@ -156,8 +156,8 @@ defmodule ResumeWeb.ProfileSettingsLive do
           </div>
         </div>
 
-        <%!-- Facts & Directives Tab --%>
-        <div :if={@active_tab == :facts_directives} class="space-y-6">
+        <%!-- Details & Rules Tab --%>
+        <div :if={@active_tab == :details_rules} class="space-y-6">
           <%!-- Agentic Input --%>
           <div class="space-y-3">
             <.form for={@input_form} phx-change="validate_input" phx-submit="process_input">
@@ -166,7 +166,7 @@ defmodule ResumeWeb.ProfileSettingsLive do
                   <.input
                     field={@input_form[:text]}
                     type="textarea"
-                    placeholder="Add facts or directives — just type naturally, e.g. 'I worked at Google for 3 years as a senior engineer' or 'always emphasize leadership skills'"
+                    placeholder="Add details or rules — just type naturally, e.g. 'I worked at Google for 3 years as a senior engineer' or 'always emphasize leadership skills'"
                     autocomplete="off"
                     rows="2"
                     phx-hook=".AutoGrow"
@@ -210,17 +210,29 @@ defmodule ResumeWeb.ProfileSettingsLive do
           </div>
 
           <%!-- Filter --%>
-          <div :if={length(@facts) + length(@directives) > 0}>
+          <form
+            :if={length(@facts) + length(@directives) > 0}
+            phx-change="filter_items"
+            phx-submit="filter_items"
+            class="flex items-center gap-2"
+          >
             <input
               type="text"
               placeholder="Filter items..."
               value={@filter}
-              phx-change="filter_items"
-              phx-debounce="300"
+              phx-debounce="200"
               name="filter"
               class="input input-bordered input-sm w-full max-w-xs"
             />
-          </div>
+            <button
+              :if={@filter != ""}
+              type="button"
+              phx-click="clear_filter"
+              class="btn btn-ghost btn-xs"
+            >
+              <.icon name="hero-x-mark-micro" class="size-4" /> Clear
+            </button>
+          </form>
 
           <%!-- Card Grid --%>
           <div
@@ -236,7 +248,7 @@ defmodule ResumeWeb.ProfileSettingsLive do
                   "badge badge-sm",
                   if(item.type == :fact, do: "badge-info", else: "badge-warning")
                 ]}>
-                  {if item.type == :fact, do: "Fact", else: "Directive"}
+                  {if item.type == :fact, do: "Detail", else: "Rule"}
                 </span>
                 <button
                   type="button"
@@ -257,7 +269,7 @@ defmodule ResumeWeb.ProfileSettingsLive do
             :if={@facts == [] && @directives == []}
             class="text-sm opacity-50 text-center py-8"
           >
-            No facts or directives yet. Use the input above to add some — just describe your
+            No details or rules yet. Use the input above to add some — just describe your
             experience or instructions naturally.
           </div>
 
@@ -375,6 +387,11 @@ defmodule ResumeWeb.ProfileSettingsLive do
   @impl true
   def handle_event("filter_items", %{"filter" => filter}, socket) do
     {:noreply, assign(socket, filter: filter)}
+  end
+
+  @impl true
+  def handle_event("clear_filter", _params, socket) do
+    {:noreply, assign(socket, filter: "")}
   end
 
   # Delete unified

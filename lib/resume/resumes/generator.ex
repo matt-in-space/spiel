@@ -250,6 +250,7 @@ defmodule Resume.Resumes.Generator do
     - Group skills into logical categories
     - Include languages if mentioned (fluency: "Native", "Fluent", "Conversational", or "Basic")
     - Include awards or honors if mentioned
+    - If the person has no work experience, lean on education, projects, skills, volunteer work, and goals to build a compelling resume
     - Include an "explanation" field — 2-5 sentences about what makes this resume unique: what was emphasized or tailored, and why, considering the target role or job posting (if provided) and any directives that were followed.\
     """
   end

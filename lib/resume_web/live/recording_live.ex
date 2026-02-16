@@ -104,7 +104,7 @@ defmodule ResumeWeb.RecordingLive do
                   disabled={any_transcribing?(@recordings)}
                   class="btn btn-primary"
                 >
-                  Extract Facts <.icon name="hero-sparkles-micro" class="size-4" />
+                  Extract Details <.icon name="hero-sparkles-micro" class="size-4" />
                 </button>
                 <button phx-click="start_over" class="btn btn-ghost">
                   Start Over
@@ -116,17 +116,17 @@ defmodule ResumeWeb.RecordingLive do
 
         <div :if={@phase == :extracting} class="flex flex-col items-center gap-3 py-12">
           <span class="loading loading-spinner loading-lg"></span>
-          <p class="text-sm opacity-70">Extracting facts from your recordings...</p>
+          <p class="text-sm opacity-70">Extracting details from your recordings...</p>
         </div>
 
         <div :if={@phase == :review}>
-          <h2 class="text-lg font-semibold mb-2">Review Extracted Facts</h2>
+          <h2 class="text-lg font-semibold mb-2">Review Extracted Details</h2>
           <p class="text-sm opacity-70 mb-4">
             Remove any facts that don't look right, then save.
           </p>
 
           <div :if={@pending_operations == []} class="text-sm opacity-50 mb-6">
-            No facts were extracted. Try again with different recordings.
+            No details were extracted. Try again with different recordings.
           </div>
 
           <ul :if={@pending_operations != []} class="space-y-2 mb-6">

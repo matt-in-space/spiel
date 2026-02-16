@@ -600,7 +600,7 @@ defmodule ResumeWeb.ResumesLive.Show do
            pending_directive: nil,
            feedback_messages:
              socket.assigns.feedback_messages ++
-               [%{role: :assistant, content: "Saved as a standing directive: \"#{directive}\""}]
+               [%{role: :assistant, content: "Saved as a standing rule: \"#{directive}\""}]
          )}
 
       {:error, _} ->
@@ -796,7 +796,7 @@ defmodule ResumeWeb.ResumesLive.Show do
                     [
                       %{
                         role: :assistant,
-                        content: "Saved as a standing directive: \"#{result.directive}\""
+                        content: "Saved as a standing rule: \"#{result.directive}\""
                       }
                     ]
               )

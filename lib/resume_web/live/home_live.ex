@@ -39,7 +39,7 @@ defmodule ResumeWeb.HomeLive do
         <div class="text-center space-y-2">
           <h1 class="text-3xl font-semibold tracking-tight">What role are you targeting?</h1>
           <p class="text-sm opacity-70">
-            Paste a job URL or description, or describe the kind of role you want.
+            Paste a job URL or description, or just describe the kind of role you're looking for.
           </p>
         </div>
 

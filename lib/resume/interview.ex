@@ -20,7 +20,8 @@ defmodule Resume.Interview do
 
     Generate your opening question to start the career interview.
     If the candidate has existing facts, ask about gaps or areas that need more detail.
-    If they have no facts, ask about their current or most recent role.
+    If they have no facts, ask what they do now or what kind of work they're looking for.
+    The candidate may be experienced, a student, a career changer, or entering the workforce for the first time.
 
     Return ONLY a JSON object: {"question": "your question here"}
     """
@@ -54,7 +55,8 @@ defmodule Resume.Interview do
     Candidate: #{user_response}
 
     Extract career facts from the latest response and generate the next interview question.
-    Each fact should be specific, anchored to a company/role, and include details like dates, technologies, and impact.
+    Each fact should be specific and include details like dates, technologies, and impact when available.
+    Facts can come from work experience, education, projects, volunteer work, or goals and interests — not just employment.
 
     If new information refines or extends an existing fact, emit an "update" operation referencing that fact's number instead of adding a duplicate. Only emit "add" for genuinely new facts.
 
@@ -105,11 +107,11 @@ defmodule Resume.Interview do
   # System prompts
 
   defp opening_system_prompt do
-    "You are a career interviewer conducting an opening interview to gather career facts for a resume. Be conversational and encouraging. Return only valid JSON."
+    "You are a friendly interviewer gathering facts for a resume. The candidate may be experienced or just starting out — they could be a student, career changer, or entering the workforce for the first time. Facts include work history, education, projects, skills, volunteer work, and goals. Be conversational and encouraging. Return only valid JSON."
   end
 
   defp turn_system_prompt do
-    "You are a career interviewer extracting facts and asking follow-up questions. Be conversational. Return only valid JSON."
+    "You are a friendly interviewer extracting facts and asking follow-up questions. The candidate may be experienced or just starting out. Facts include work history, education, projects, skills, volunteer work, and goals — not just employment. Be conversational and encouraging. Return only valid JSON."
   end
 
   defp recap_system_prompt do

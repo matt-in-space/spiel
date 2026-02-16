@@ -279,14 +279,15 @@ defmodule ResumeWeb.OnboardingLive do
   defp import_step(assigns) do
     ~H"""
     <div>
-      <h1 class="text-2xl font-semibold tracking-tight mb-2">Import Your Experience</h1>
+      <h1 class="text-2xl font-semibold tracking-tight mb-2">Share Your Background</h1>
       <p class="text-sm opacity-70 mb-6">
-        Upload resumes, LinkedIn exports, or paste text to quickly import your career history.
+        Have an existing resume, LinkedIn profile, or notes about your experience?
+        Upload or paste them here — this is totally optional.
       </p>
 
       <div :if={@import_status == :processing} class="flex flex-col items-center gap-3 py-12">
         <span class="loading loading-spinner loading-lg"></span>
-        <p class="text-sm opacity-70">Extracting facts from your documents...</p>
+        <p class="text-sm opacity-70">Reading through your documents...</p>
       </div>
 
       <div :if={@import_status == :done} class="text-center py-8">
@@ -294,10 +295,10 @@ defmodule ResumeWeb.OnboardingLive do
           <.icon name="hero-check-circle" class="size-12 text-success mx-auto" />
         </div>
         <p class="text-lg font-medium mb-1">
-          Extracted {@import_fact_count} facts
+          Extracted {@import_fact_count} details
         </p>
         <p class="text-sm opacity-70 mb-6">
-          These will be used alongside your interview responses.
+          We'll use these alongside your interview answers to build your resume.
         </p>
         <button phx-click="advance_from_import" class="btn btn-primary">
           Continue <.icon name="hero-arrow-right-micro" class="size-4" />
@@ -346,7 +347,7 @@ defmodule ResumeWeb.OnboardingLive do
               field={@text_form[:text]}
               type="textarea"
               label="Or paste text"
-              placeholder="Paste your resume, LinkedIn summary, or any career-related text..."
+              placeholder="Paste anything — a resume, LinkedIn summary, class projects, volunteer work, or just notes about what you've done or want to do..."
               rows="6"
             />
 
@@ -357,6 +358,9 @@ defmodule ResumeWeb.OnboardingLive do
               <button type="button" phx-click="skip_import" class="btn btn-ghost">
                 Skip
               </button>
+              <span class="text-xs opacity-50">
+                No documents? No problem — skip ahead and we'll figure it out together.
+              </span>
             </div>
           </div>
         </.form>
@@ -370,7 +374,7 @@ defmodule ResumeWeb.OnboardingLive do
     <div class="flex flex-col h-[60vh]">
       <h1 class="text-2xl font-semibold tracking-tight mb-2">Career Interview</h1>
       <p class="text-sm opacity-70 mb-2">
-        Tell me about your career. I'll ask follow-up questions to build your profile.
+        Tell me about yourself — your experience, interests, or what you're looking for. No wrong answers.
       </p>
 
       <div class="flex items-center gap-3 mb-4">
@@ -467,9 +471,9 @@ defmodule ResumeWeb.OnboardingLive do
   defp recap_step(assigns) do
     ~H"""
     <div>
-      <h1 class="text-2xl font-semibold tracking-tight mb-2">Your Career Summary</h1>
+      <h1 class="text-2xl font-semibold tracking-tight mb-2">Your Profile Summary</h1>
       <p class="text-sm opacity-70 mb-6">
-        Here's what we know about you. Add corrections below if anything is missing or wrong.
+        Here's what we've gathered so far. Add anything that's missing or needs correcting.
       </p>
 
       <div :if={@recap_loading} class="flex flex-col items-center gap-3 py-12">
@@ -488,7 +492,7 @@ defmodule ResumeWeb.OnboardingLive do
         :if={!@recap_loading && !@recap_text}
         class="card bg-base-200 border border-base-300 p-6 mb-6"
       >
-        <p class="text-sm opacity-50">No facts collected yet. You can always add more later.</p>
+        <p class="text-sm opacity-50">No details collected yet. You can always add more later.</p>
       </div>
 
       <.form
@@ -842,7 +846,8 @@ defmodule ResumeWeb.OnboardingLive do
            messages: [
              %{
                role: :assistant,
-               content: "Tell me about your current or most recent role — what do you do?"
+               content:
+                 "Tell me a bit about yourself — what do you do now, or what kind of work are you looking for?"
              }
            ],
            interview_processing: false

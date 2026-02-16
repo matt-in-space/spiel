@@ -70,7 +70,7 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       html = render(view)
@@ -82,7 +82,7 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       view
@@ -111,38 +111,38 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       html = render(view)
       assert html =~ "5 years of Elixir experience"
-      assert html =~ "Fact"
+      assert html =~ "Detail"
     end
 
-    test "displays directives with Directive badge", %{conn: conn, user: user} do
+    test "displays directives with Rule badge", %{conn: conn, user: user} do
       {:ok, _} =
         Resume.Accounts.update_user_directives(user, ["Always emphasize leadership"])
 
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       html = render(view)
       assert html =~ "Always emphasize leadership"
-      assert html =~ "Directive"
+      assert html =~ "Rule"
     end
 
     test "shows empty state when no items", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       html = render(view)
-      assert html =~ "No facts or directives yet"
+      assert html =~ "No details or rules yet"
     end
 
     test "shows facts and directives together", %{conn: conn, user: user} do
@@ -152,14 +152,14 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       html = render(view)
       assert html =~ "Worked at Google"
       assert html =~ "Keep it brief"
-      assert html =~ "Fact"
-      assert html =~ "Directive"
+      assert html =~ "Detail"
+      assert html =~ "Rule"
     end
   end
 
@@ -176,7 +176,7 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       view
@@ -201,7 +201,7 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       view
@@ -235,13 +235,13 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       # Filter for "elixir" — should match the fact only
       view
-      |> element(~s(input[name="filter"]))
-      |> render_change(%{"filter" => "elixir"})
+      |> form(~s(form[phx-change="filter_items"]), %{"filter" => "elixir"})
+      |> render_change()
 
       html = render(view)
       assert html =~ "5 years of Elixir experience"
@@ -255,12 +255,12 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       view
-      |> element(~s(input[name="filter"]))
-      |> render_change(%{"filter" => "elixir"})
+      |> form(~s(form[phx-change="filter_items"]), %{"filter" => "elixir"})
+      |> render_change()
 
       html = render(view)
       assert html =~ "Expert in ELIXIR"
@@ -274,7 +274,7 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       view
@@ -295,7 +295,7 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/profile")
 
       view
-      |> element(~s(button[phx-value-tab="facts_directives"]))
+      |> element(~s(button[phx-value-tab="details_rules"]))
       |> render_click()
 
       view

@@ -59,7 +59,7 @@ defmodule ResumeWeb.OnboardingLiveTest do
       |> render_submit()
 
       html = render(view)
-      assert html =~ "Import Your Experience"
+      assert html =~ "Share Your Background"
     end
   end
 
@@ -80,7 +80,7 @@ defmodule ResumeWeb.OnboardingLiveTest do
 
     test "renders import step", %{view: view} do
       html = render(view)
-      assert html =~ "Import Your Experience"
+      assert html =~ "Share Your Background"
       assert html =~ "Skip"
     end
 
@@ -102,7 +102,7 @@ defmodule ResumeWeb.OnboardingLiveTest do
       Process.sleep(100)
       html = render(view)
       assert html =~ "Extracted"
-      assert html =~ "facts"
+      assert html =~ "details"
     end
 
     test "continue after import advances to interview", %{view: view} do
@@ -146,7 +146,7 @@ defmodule ResumeWeb.OnboardingLiveTest do
     test "displays opening question", %{view: view} do
       html = render(view)
       assert html =~ "Career Interview"
-      assert html =~ "current or most recent role"
+      assert html =~ "what do you do now"
     end
 
     test "sending a message gets a response", %{view: view} do
@@ -165,14 +165,14 @@ defmodule ResumeWeb.OnboardingLiveTest do
       view |> element("button", "Skip") |> render_click()
 
       html = render(view)
-      assert html =~ "Your Career Summary"
+      assert html =~ "Your Profile Summary"
     end
 
     test "I'm done advances to recap", %{view: view} do
       view |> element(~s(button[phx-click="interview_done"])) |> render_click()
 
       html = render(view)
-      assert html =~ "Your Career Summary"
+      assert html =~ "Your Profile Summary"
     end
   end
 
@@ -213,7 +213,7 @@ defmodule ResumeWeb.OnboardingLiveTest do
 
     test "shows recap summary", %{view: view} do
       html = render(view)
-      assert html =~ "Your Career Summary"
+      assert html =~ "Your Profile Summary"
       assert html =~ "experienced professional" || html =~ "Complete Setup"
     end
 
@@ -242,7 +242,7 @@ defmodule ResumeWeb.OnboardingLiveTest do
       # Skip interview
       view |> element("button", "Skip") |> render_click()
 
-      assert render(view) =~ "Your Career Summary"
+      assert render(view) =~ "Your Profile Summary"
 
       view |> element("button", "Complete Setup") |> render_click()
       flash = assert_redirect(view, ~p"/home")

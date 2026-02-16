@@ -45,7 +45,7 @@ defmodule ResumeWeb.UploadLiveTest do
       html = render(view)
       assert html =~ "Preview"
       assert html =~ "I worked at Acme Corp for 5 years as a senior engineer."
-      assert html =~ "Extract Facts"
+      assert html =~ "Extract Details"
     end
 
     test "upload .txt file advances to preview phase", %{view: view} do
@@ -141,7 +141,7 @@ defmodule ResumeWeb.UploadLiveTest do
       Process.sleep(100)
       html = render(view)
 
-      assert html =~ "Review Extracted Facts"
+      assert html =~ "Review Extracted Details"
       assert html =~ "Mock fact about career"
       assert html =~ "Mock fact about skills"
     end
@@ -178,7 +178,7 @@ defmodule ResumeWeb.UploadLiveTest do
     end
 
     test "save applies operations to user facts and redirects", %{view: view, user: user} do
-      assert render(view) =~ "Review Extracted Facts"
+      assert render(view) =~ "Review Extracted Details"
 
       view |> element(~s(button[phx-click="save_facts"])) |> render_click()
       flash = assert_redirect(view, ~p"/")
@@ -193,7 +193,7 @@ defmodule ResumeWeb.UploadLiveTest do
       view |> element(~s(button[phx-click="start_over"])) |> render_click()
       html = render(view)
       assert html =~ "Paste text"
-      refute html =~ "Review Extracted Facts"
+      refute html =~ "Review Extracted Details"
     end
   end
 end

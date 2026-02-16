@@ -79,7 +79,7 @@ defmodule ResumeWeb.RecordingLiveTest do
       Process.sleep(50)
       html = render(view)
 
-      assert html =~ "Extract Facts"
+      assert html =~ "Extract Details"
     end
 
     test "extract facts advances to review phase", %{conn: conn} do
@@ -99,7 +99,7 @@ defmodule ResumeWeb.RecordingLiveTest do
       Process.sleep(100)
       html = render(view)
 
-      assert html =~ "Review Extracted Facts"
+      assert html =~ "Review Extracted Details"
       assert html =~ "Mock fact about career"
       assert html =~ "Mock fact about skills"
     end
@@ -165,13 +165,13 @@ defmodule ResumeWeb.RecordingLiveTest do
       view |> element(~s(button[phx-click="extract_facts"])) |> render_click()
       Process.sleep(100)
 
-      assert render(view) =~ "Review Extracted Facts"
+      assert render(view) =~ "Review Extracted Details"
 
       view |> element(~s(button[phx-click="start_over"])) |> render_click()
       html = render(view)
 
       assert html =~ "Record Audio"
-      refute html =~ "Review Extracted Facts"
+      refute html =~ "Review Extracted Details"
       refute html =~ "Recording #1"
     end
   end
