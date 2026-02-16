@@ -37,7 +37,7 @@ defmodule ResumeWeb.HomeLive do
     <Layouts.app flash={@flash}>
       <div class="space-y-8 max-w-2xl mx-auto">
         <div class="text-center space-y-2">
-          <h1 class="text-3xl font-bold">What role are you targeting?</h1>
+          <h1 class="text-3xl font-semibold tracking-tight">What role are you targeting?</h1>
           <p class="text-sm opacity-70">
             Paste a job URL or description, or describe the kind of role you want.
           </p>
@@ -68,7 +68,7 @@ defmodule ResumeWeb.HomeLive do
           <div
             :for={{dom_id, resume} <- @streams.resumes}
             id={dom_id}
-            class="card bg-base-200 shadow"
+            class="card bg-base-200 border border-base-300"
           >
             <div class="card-body py-3 px-4 flex-row items-center justify-between">
               <div>

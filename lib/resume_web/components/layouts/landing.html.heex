@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@500;600&display=swap"
       rel="stylesheet"
     />
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
@@ -39,7 +39,7 @@
   <body>
     <nav class="navbar bg-transparent absolute top-0 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
-        <a href="/" class="btn btn-ghost text-xl font-bold font-serif">Spiel</a>
+        <a href="/" class="btn btn-ghost text-lg font-semibold font-serif">Spiel</a>
       </div>
       <div class="flex-none flex items-center gap-2">
         <Layouts.theme_toggle />
@@ -50,9 +50,9 @@
 
     {@inner_content}
 
-    <footer class="footer footer-center bg-base-100 border-t border-base-300 text-base-content p-10">
+    <footer class="footer footer-center bg-base-100 border-t border-base-300 text-base-content p-6">
       <aside>
-        <p class="font-bold text-lg">Spiel</p>
+        <p class="font-semibold text-lg">Spiel</p>
         <p>Talk about your career. Get a resume.</p>
         <p class="text-sm text-base-content/60">
           &copy; {DateTime.utc_now().year} Spiel. All rights reserved.

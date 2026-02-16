@@ -325,7 +325,7 @@ defmodule ResumeWeb.CoreComponents do
     ~H"""
     <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
       <div>
-        <h1 class="text-xl font-semibold leading-8">
+        <h1 class="text-lg font-medium tracking-tight leading-8">
           {render_slot(@inner_block)}
         </h1>
         <p :if={@subtitle != []} class="text-sm text-base-content/70">
@@ -419,7 +419,7 @@ defmodule ResumeWeb.CoreComponents do
     <ul class="list">
       <li :for={item <- @item} class="list-row">
         <div class="list-col-grow">
-          <div class="font-bold">{item.title}</div>
+          <div class="font-medium">{item.title}</div>
           <div>{render_slot(item)}</div>
         </div>
       </li>

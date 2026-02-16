@@ -20,7 +20,7 @@ defmodule ResumeWeb.Admin.DashboardLive do
       <div class="grid gap-4">
         <.link
           navigate={~p"/admin/costs"}
-          class="card bg-base-200 shadow hover:shadow-md transition-shadow"
+          class="card bg-base-200 border border-base-300 hover:border-base-content/20 transition-colors"
         >
           <div class="card-body">
             <h2 class="card-title">

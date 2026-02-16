@@ -190,7 +190,7 @@ defmodule ResumeWeb.OnboardingLive do
   defp contact_step(assigns) do
     ~H"""
     <div>
-      <h1 class="text-2xl font-bold mb-2">Tell us about yourself</h1>
+      <h1 class="text-2xl font-semibold tracking-tight mb-2">Tell us about yourself</h1>
       <p class="text-sm opacity-70 mb-6">
         This information will appear on your resume's contact section.
       </p>
@@ -229,7 +229,7 @@ defmodule ResumeWeb.OnboardingLive do
   defp import_step(assigns) do
     ~H"""
     <div>
-      <h1 class="text-2xl font-bold mb-2">Import Your Experience</h1>
+      <h1 class="text-2xl font-semibold tracking-tight mb-2">Import Your Experience</h1>
       <p class="text-sm opacity-70 mb-6">
         Upload resumes, LinkedIn exports, or paste text to quickly import your career history.
       </p>
@@ -318,7 +318,7 @@ defmodule ResumeWeb.OnboardingLive do
   defp interview_step(assigns) do
     ~H"""
     <div class="flex flex-col h-[60vh]">
-      <h1 class="text-2xl font-bold mb-2">Career Interview</h1>
+      <h1 class="text-2xl font-semibold tracking-tight mb-2">Career Interview</h1>
       <p class="text-sm opacity-70 mb-2">
         Tell me about your career. I'll ask follow-up questions to build your profile.
       </p>
@@ -417,7 +417,7 @@ defmodule ResumeWeb.OnboardingLive do
   defp recap_step(assigns) do
     ~H"""
     <div>
-      <h1 class="text-2xl font-bold mb-2">Your Career Summary</h1>
+      <h1 class="text-2xl font-semibold tracking-tight mb-2">Your Career Summary</h1>
       <p class="text-sm opacity-70 mb-6">
         Here's what we know about you. Add corrections below if anything is missing or wrong.
       </p>
@@ -427,11 +427,17 @@ defmodule ResumeWeb.OnboardingLive do
         <p class="text-sm opacity-70">Generating your summary...</p>
       </div>
 
-      <div :if={!@recap_loading && @recap_text} class="card bg-base-200 p-6 mb-6">
+      <div
+        :if={!@recap_loading && @recap_text}
+        class="card bg-base-200 border border-base-300 p-6 mb-6"
+      >
         <p class="whitespace-pre-wrap text-sm">{@recap_text}</p>
       </div>
 
-      <div :if={!@recap_loading && !@recap_text} class="card bg-base-200 p-6 mb-6">
+      <div
+        :if={!@recap_loading && !@recap_text}
+        class="card bg-base-200 border border-base-300 p-6 mb-6"
+      >
         <p class="text-sm opacity-50">No facts collected yet. You can always add more later.</p>
       </div>
 

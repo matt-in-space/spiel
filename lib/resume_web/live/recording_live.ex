@@ -37,7 +37,7 @@ defmodule ResumeWeb.RecordingLive do
       <div class="space-y-6">
         <div :if={@phase == :recording}>
           <div class="space-y-6">
-            <h1 class="text-2xl font-bold">Record Audio</h1>
+            <h1 class="text-2xl font-semibold tracking-tight">Record Audio</h1>
             <p class="text-sm opacity-70">
               Just talk naturally about your career — jobs you've held, projects you worked on,
               skills you've picked up, accomplishments you're proud of. Stream of consciousness
@@ -70,7 +70,7 @@ defmodule ResumeWeb.RecordingLive do
               <ul class="space-y-2">
                 <li
                   :for={rec <- @recordings}
-                  class="card bg-base-200 p-4 flex flex-col gap-2"
+                  class="card bg-base-200 border border-base-300 p-4 flex flex-col gap-2"
                 >
                   <div class="flex items-center gap-4">
                     <.icon name="hero-musical-note" class="size-5 text-primary" />
@@ -132,7 +132,7 @@ defmodule ResumeWeb.RecordingLive do
           <ul :if={@pending_operations != []} class="space-y-2 mb-6">
             <li
               :for={{op, index} <- Enum.with_index(@pending_operations)}
-              class="card bg-base-200 p-3 flex flex-row items-center gap-3"
+              class="card bg-base-200 border border-base-300 p-3 flex flex-row items-center gap-3"
             >
               <span
                 :if={op["type"] == "update"}

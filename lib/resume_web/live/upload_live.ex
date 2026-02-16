@@ -37,7 +37,7 @@ defmodule ResumeWeb.UploadLive do
     ~H"""
     <Layouts.app flash={@flash}>
       <div class="space-y-6">
-        <h1 class="text-2xl font-bold">Upload or Paste Text</h1>
+        <h1 class="text-2xl font-semibold tracking-tight">Upload or Paste Text</h1>
         <p class="text-sm opacity-70">
           Upload a .txt or .pdf file, or paste text from your resume, LinkedIn, or other source.
         </p>
@@ -124,7 +124,7 @@ defmodule ResumeWeb.UploadLive do
           <ul :if={@pending_operations != []} class="space-y-2 mb-6">
             <li
               :for={{op, index} <- Enum.with_index(@pending_operations)}
-              class="card bg-base-200 p-3 flex flex-row items-center gap-3"
+              class="card bg-base-200 border border-base-300 p-3 flex flex-row items-center gap-3"
             >
               <span
                 :if={op["type"] == "update"}

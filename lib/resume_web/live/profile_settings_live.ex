@@ -44,7 +44,7 @@ defmodule ResumeWeb.ProfileSettingsLive do
     ~H"""
     <Layouts.app flash={@flash}>
       <div class="space-y-6">
-        <h1 class="text-2xl font-bold">Profile Settings</h1>
+        <h1 class="text-2xl font-semibold tracking-tight">Profile Settings</h1>
 
         <div role="tablist" class="tabs tabs-bordered">
           <button
@@ -99,7 +99,7 @@ defmodule ResumeWeb.ProfileSettingsLive do
             </div>
           </.form>
 
-          <div :if={@career_goal} class="card bg-base-200 p-4">
+          <div :if={@career_goal} class="card bg-base-200 border border-base-300 p-4">
             <h2 class="text-sm font-semibold opacity-70 mb-1">Career Goal</h2>
             <p class="text-sm">{@career_goal}</p>
             <p class="text-xs opacity-50 mt-2">
@@ -181,7 +181,7 @@ defmodule ResumeWeb.ProfileSettingsLive do
           >
             <div
               :for={item <- combined_items(@facts, @directives, @filter)}
-              class="card bg-base-200 p-3 flex flex-col gap-2"
+              class="card bg-base-200 border border-base-300 p-3 flex flex-col gap-2"
             >
               <div class="flex items-center justify-between">
                 <span class={[

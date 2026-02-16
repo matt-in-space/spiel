@@ -101,7 +101,7 @@ defmodule ResumeWeb.Admin.CostsLive do
         </button>
       </div>
 
-      <div class="stats stats-vertical sm:stats-horizontal shadow w-full mb-6">
+      <div class="stats stats-vertical sm:stats-horizontal border border-base-300 w-full mb-6">
         <div class="stat">
           <div class="stat-title">Total Cost</div>
           <div class="stat-value text-lg">{format_dollars(@total_cents)}</div>

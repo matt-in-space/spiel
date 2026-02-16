@@ -313,7 +313,7 @@ defmodule ResumeWeb.ResumesLive.Show do
 
         <div
           :if={@current_data}
-          class="mx-auto max-w-[8.5in] bg-white shadow-lg rounded-sm p-[0.85in] print:shadow-none print:p-0"
+          class="mx-auto max-w-[8.5in] bg-white border border-base-300 rounded-sm p-[0.85in] print:border-none print:p-0"
         >
           <div
             :if={@preview_data}
