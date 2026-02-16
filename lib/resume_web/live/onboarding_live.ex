@@ -722,11 +722,17 @@ defmodule ResumeWeb.OnboardingLive do
     socket = assign(socket, task_refs: task_refs)
 
     case {tag, result} do
-      {{:import_extract, :batch}, {:ok, facts}} ->
+      {{:import_extract, :batch}, {:ok, operations}} ->
+        {updated_facts, _descriptions} = Facts.apply_changes(socket.assigns.all_facts, operations)
+        new_count = length(updated_facts) - length(socket.assigns.all_facts)
+
         {:noreply,
          socket
-         |> update(:all_facts, &(&1 ++ facts))
-         |> assign(import_status: :done, import_fact_count: length(facts))}
+         |> assign(
+           all_facts: updated_facts,
+           import_status: :done,
+           import_fact_count: max(new_count, length(operations))
+         )}
 
       {{:import_extract, :batch}, {:error, _reason}} ->
         {:noreply,
@@ -756,13 +762,22 @@ defmodule ResumeWeb.OnboardingLive do
          )}
 
       {{:interview_turn, _n},
-       {:ok, %{facts: new_facts, question: question, should_wrap_up: wrap} = turn}} ->
+       {:ok, %{fact_operations: operations, question: question, should_wrap_up: wrap} = turn}} ->
         messages = socket.assigns.messages ++ [%{role: :assistant, content: question}]
+
+        {updated_facts, _descriptions} =
+          Facts.apply_changes(socket.assigns.all_facts, operations)
+
+        new_fact_texts =
+          Enum.flat_map(operations, fn
+            %{"type" => "add", "text" => t} -> [t]
+            _ -> []
+          end)
 
         socket =
           socket
-          |> update(:all_facts, &(&1 ++ new_facts))
-          |> update(:interview_facts, &(&1 ++ new_facts))
+          |> assign(all_facts: updated_facts)
+          |> update(:interview_facts, &(&1 ++ new_fact_texts))
           |> then(fn s ->
             if turn[:career_goal], do: assign(s, :career_goal, turn.career_goal), else: s
           end)
@@ -801,11 +816,19 @@ defmodule ResumeWeb.OnboardingLive do
          |> assign(recap_loading: false)
          |> put_flash(:error, "Failed to generate summary.")}
 
-      {{:correction, nil}, {:ok, new_facts}} ->
+      {{:correction, nil}, {:ok, operations}} ->
+        {updated_facts, descriptions} =
+          Facts.apply_changes(socket.assigns.all_facts, operations)
+
+        flash_msg =
+          if descriptions == [],
+            do: "No new facts found.",
+            else: Enum.join(descriptions, ". ") <> "."
+
         {:noreply,
          socket
-         |> update(:all_facts, &(&1 ++ new_facts))
-         |> put_flash(:info, "Added #{length(new_facts)} fact(s).")}
+         |> assign(all_facts: updated_facts)
+         |> put_flash(:info, flash_msg)}
 
       {{:correction, nil}, {:error, _reason}} ->
         {:noreply, put_flash(socket, :error, "Failed to process correction.")}

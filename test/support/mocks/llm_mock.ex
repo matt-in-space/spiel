@@ -23,7 +23,7 @@ defmodule Resume.LLM.Mock do
 
       String.contains?(system, "career interviewer") ->
         {:ok,
-         ~s({"facts": ["Mock extracted fact from interview"], "question": "What technologies do you work with?", "should_wrap_up": false}),
+         ~s({"fact_operations": [{"type": "add", "text": "Mock extracted fact from interview"}], "question": "What technologies do you work with?", "should_wrap_up": false}),
          mock_usage()}
 
       String.contains?(system, "summarizing") ->
@@ -32,7 +32,9 @@ defmodule Resume.LLM.Mock do
          mock_usage()}
 
       true ->
-        {:ok, ~s(["Mock fact about career", "Mock fact about skills"]), mock_usage()}
+        {:ok,
+         ~s([{"type": "add", "text": "Mock fact about career"}, {"type": "add", "text": "Mock fact about skills"}]),
+         mock_usage()}
     end
   end
 

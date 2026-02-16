@@ -29,7 +29,7 @@ defmodule Resume.InterviewTest do
           %{"name" => "Jane"}
         )
 
-      assert is_list(result.facts)
+      assert is_list(result.fact_operations)
       assert is_binary(result.question)
       assert is_boolean(result.should_wrap_up)
     end

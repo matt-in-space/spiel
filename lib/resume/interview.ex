@@ -53,9 +53,10 @@ defmodule Resume.Interview do
     ## Latest Response (Turn #{turn_number})
     Candidate: #{user_response}
 
-    Extract any NEW career facts from the latest response and generate the next interview question.
+    Extract career facts from the latest response and generate the next interview question.
     Each fact should be specific, anchored to a company/role, and include details like dates, technologies, and impact.
-    Do not duplicate facts already in the accumulated list.
+
+    If new information refines or extends an existing fact, emit an "update" operation referencing that fact's number instead of adding a duplicate. Only emit "add" for genuinely new facts.
 
     If the candidate says they're done, has nothing more to add, or we're at turn #{turn_number} of ~10, set should_wrap_up to true.
 
@@ -63,7 +64,7 @@ defmodule Resume.Interview do
     targeting, what kind of work they want). Return it as a string, or null if none is apparent yet.
 
     Return ONLY a JSON object:
-    {"facts": ["fact 1", "fact 2"], "question": "next question", "should_wrap_up": false, "career_goal": "...or null"}
+    {"fact_operations": [{"type": "add", "text": "..."}, {"type": "update", "index": N, "text": "..."}], "question": "next question", "should_wrap_up": false, "career_goal": "...or null"}
     """
 
     tracking = %{user_id: Keyword.get(opts, :user_id), caller: "interview"}
@@ -169,7 +170,6 @@ defmodule Resume.Interview do
 
   defp parse_turn(response) do
     with {:ok, data} <- decode_json(response),
-         facts when is_list(facts) <- data["facts"],
          question when is_binary(question) <- data["question"] do
       career_goal =
         case data["career_goal"] do
@@ -177,9 +177,26 @@ defmodule Resume.Interview do
           _ -> nil
         end
 
+      # Support both new "fact_operations" and legacy "facts" formats
+      operations =
+        cond do
+          is_list(data["fact_operations"]) ->
+            data["fact_operations"]
+            |> Enum.filter(&is_map/1)
+
+          is_list(data["facts"]) ->
+            # Legacy flat array — convert to add operations
+            data["facts"]
+            |> Enum.filter(&is_binary/1)
+            |> Enum.map(&%{"type" => "add", "text" => &1})
+
+          true ->
+            []
+        end
+
       {:ok,
        %{
-         facts: Enum.filter(facts, &is_binary/1),
+         fact_operations: operations,
          question: question,
          should_wrap_up: data["should_wrap_up"] == true,
          career_goal: career_goal

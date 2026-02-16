@@ -799,35 +799,7 @@ defmodule ResumeWeb.ResumesLive.Show do
     user = Accounts.get_user!(socket.assigns.user.id)
     facts = user.facts || []
 
-    {facts, descriptions} =
-      Enum.reduce(changes, {facts, []}, fn change, {facts_acc, descs} ->
-        case change do
-          %{"type" => "add", "text" => text} ->
-            {facts_acc ++ [text], descs ++ ["Added fact: \"#{text}\""]}
-
-          %{"type" => "update", "index" => idx, "text" => text} when is_integer(idx) ->
-            zero_idx = idx - 1
-
-            if zero_idx >= 0 and zero_idx < length(facts_acc) do
-              {List.replace_at(facts_acc, zero_idx, text),
-               descs ++ ["Updated fact ##{idx}: \"#{text}\""]}
-            else
-              {facts_acc, descs}
-            end
-
-          %{"type" => "remove", "index" => idx} when is_integer(idx) ->
-            zero_idx = idx - 1
-
-            if zero_idx >= 0 and zero_idx < length(facts_acc) do
-              {List.delete_at(facts_acc, zero_idx), descs ++ ["Removed fact ##{idx}"]}
-            else
-              {facts_acc, descs}
-            end
-
-          _ ->
-            {facts_acc, descs}
-        end
-      end)
+    {facts, descriptions} = Resume.Facts.apply_changes(facts, changes)
 
     case Accounts.update_user_facts(user, facts) do
       {:ok, user} ->

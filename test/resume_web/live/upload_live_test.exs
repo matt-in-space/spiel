@@ -163,23 +163,26 @@ defmodule ResumeWeb.UploadLiveTest do
       %{view: view, user: user}
     end
 
-    test "remove fact button works", %{view: view} do
+    test "remove operation button works", %{view: view} do
       html = render(view)
       assert html =~ "Mock fact about career"
 
-      view |> element(~s(button[phx-click="remove_fact"][phx-value-index="0"])) |> render_click()
+      view
+      |> element(~s(button[phx-click="remove_operation"][phx-value-index="0"]))
+      |> render_click()
+
       html = render(view)
 
       refute html =~ "Mock fact about career"
       assert html =~ "Mock fact about skills"
     end
 
-    test "save appends facts to user and redirects", %{view: view, user: user} do
+    test "save applies operations to user facts and redirects", %{view: view, user: user} do
       assert render(view) =~ "Review Extracted Facts"
 
       view |> element(~s(button[phx-click="save_facts"])) |> render_click()
       flash = assert_redirect(view, ~p"/")
-      assert flash["info"] =~ "Saved 2 facts"
+      assert flash["info"] =~ "Saved 2 changes"
 
       updated_user = Resume.Accounts.get_user!(user.id)
       assert "Mock fact about career" in updated_user.facts

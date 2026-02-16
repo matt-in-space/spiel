@@ -14,7 +14,7 @@ defmodule ResumeWeb.RecordingLive do
        recordings: [],
        task_refs: %{},
        phase: :recording,
-       pending_facts: []
+       pending_operations: []
      )}
   end
 
@@ -125,18 +125,27 @@ defmodule ResumeWeb.RecordingLive do
             Remove any facts that don't look right, then save.
           </p>
 
-          <div :if={@pending_facts == []} class="text-sm opacity-50 mb-6">
+          <div :if={@pending_operations == []} class="text-sm opacity-50 mb-6">
             No facts were extracted. Try again with different recordings.
           </div>
 
-          <ul :if={@pending_facts != []} class="space-y-2 mb-6">
+          <ul :if={@pending_operations != []} class="space-y-2 mb-6">
             <li
-              :for={{fact, index} <- Enum.with_index(@pending_facts)}
+              :for={{op, index} <- Enum.with_index(@pending_operations)}
               class="card bg-base-200 p-3 flex flex-row items-center gap-3"
             >
-              <span class="flex-1 text-sm">{fact}</span>
+              <span
+                :if={op["type"] == "update"}
+                class="badge badge-warning badge-sm shrink-0"
+              >
+                Updating #{op["index"]}
+              </span>
+              <span :if={op["type"] == "add"} class="badge badge-success badge-sm shrink-0">
+                New
+              </span>
+              <span class="flex-1 text-sm">{op["text"]}</span>
               <button
-                phx-click="remove_fact"
+                phx-click="remove_operation"
                 phx-value-index={index}
                 class="btn btn-ghost btn-xs text-error"
               >
@@ -147,11 +156,12 @@ defmodule ResumeWeb.RecordingLive do
 
           <div class="flex items-center gap-3">
             <button
-              :if={@pending_facts != []}
+              :if={@pending_operations != []}
               phx-click="save_facts"
               class="btn btn-primary"
             >
-              Save {length(@pending_facts)} Facts <.icon name="hero-check-micro" class="size-4" />
+              Save {length(@pending_operations)} Changes
+              <.icon name="hero-check-micro" class="size-4" />
             </button>
             <button phx-click="start_over" class="btn btn-ghost">
               Start Over
@@ -307,22 +317,25 @@ defmodule ResumeWeb.RecordingLive do
   end
 
   @impl true
-  def handle_event("remove_fact", %{"index" => index}, socket) do
+  def handle_event("remove_operation", %{"index" => index}, socket) do
     index = String.to_integer(index)
-    facts = List.delete_at(socket.assigns.pending_facts, index)
-    {:noreply, assign(socket, pending_facts: facts)}
+    ops = List.delete_at(socket.assigns.pending_operations, index)
+    {:noreply, assign(socket, pending_operations: ops)}
   end
 
   @impl true
   def handle_event("save_facts", _params, socket) do
     user = socket.assigns.user
-    facts = socket.assigns.pending_facts
+    operations = socket.assigns.pending_operations
+    existing_facts = user.facts || []
 
-    case Accounts.append_user_facts(user, facts) do
+    {updated_facts, _descriptions} = Resume.Facts.apply_changes(existing_facts, operations)
+
+    case Accounts.update_user_facts(user, updated_facts) do
       {:ok, _user} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Saved #{length(facts)} facts!")
+         |> put_flash(:info, "Saved #{length(operations)} changes!")
          |> redirect(to: ~p"/")}
 
       {:error, _reason} ->
@@ -337,7 +350,7 @@ defmodule ResumeWeb.RecordingLive do
        phase: :recording,
        recording: false,
        recordings: [],
-       pending_facts: [],
+       pending_operations: [],
        task_refs: %{}
      )}
   end
@@ -367,8 +380,8 @@ defmodule ResumeWeb.RecordingLive do
 
         {:noreply, assign(socket, recordings: recordings)}
 
-      {:extract, {:ok, facts}} ->
-        {:noreply, assign(socket, phase: :review, pending_facts: facts)}
+      {:extract, {:ok, operations}} ->
+        {:noreply, assign(socket, phase: :review, pending_operations: operations)}
 
       {:extract, {:error, _reason}} ->
         {:noreply,
