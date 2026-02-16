@@ -3,7 +3,7 @@ defmodule ResumeWeb.ResumesLive.Show do
 
   require Logger
 
-  alias Resume.{Accounts, Feedback, JobPostings, Resumes}
+  alias Resume.{Accounts, Feedback, Resumes}
   alias ResumeWeb.ResumeTemplates.Default
 
   @templates %{
@@ -30,9 +30,6 @@ defmodule ResumeWeb.ResumesLive.Show do
        template_mod: template_mod,
        template_css: template_mod.css(),
        template_form: to_form(%{"template" => resume.template}, as: "template"),
-       targeting_form: build_targeting_form(resume),
-       targeting_params: nil,
-       fetching_url: false,
        feedback_messages: [],
        feedback_form: to_form(%{"message" => ""}, as: "feedback"),
        preview_data: nil,
@@ -41,6 +38,8 @@ defmodule ResumeWeb.ResumesLive.Show do
        processing_feedback: false,
        recording: false,
        transcribing: false,
+       editing_title: false,
+       title_form: to_form(%{"title" => resume.title}, as: "title"),
        task_refs: %{}
      )}
   end
@@ -78,33 +77,71 @@ defmodule ResumeWeb.ResumesLive.Show do
     ~H"""
     <Layouts.app flash={@flash}>
       <div class="space-y-6">
-        <.header>
-          {@resume.title}
-          <:subtitle>
-            <span
+        <div class="space-y-1">
+          <div class="text-sm breadcrumbs p-0">
+            <ul>
+              <li><.link navigate={~p"/home"}>Home</.link></li>
+              <li>{@resume.title}</li>
+            </ul>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div :if={!@editing_title} class="flex items-center gap-2 group">
+              <h1 class="text-2xl font-bold">{@resume.title}</h1>
+              <button
+                phx-click="edit_title"
+                class="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
+              >
+                <.icon name="hero-pencil-square-micro" class="size-4" />
+              </button>
+            </div>
+            <.form
+              :if={@editing_title}
+              for={@title_form}
+              phx-submit="save_title"
+              class="flex items-center gap-2"
+            >
+              <input
+                type="text"
+                name="title[title]"
+                value={@title_form[:title].value}
+                class="input input-sm w-full max-w-md"
+                autofocus
+                phx-key="Escape"
+                phx-keydown="cancel_edit_title"
+              />
+              <button type="submit" class="btn btn-primary btn-sm">Save</button>
+              <button type="button" phx-click="cancel_edit_title" class="btn btn-ghost btn-sm">
+                Cancel
+              </button>
+            </.form>
+            <div class="flex items-center gap-2">
+              <.link :if={@current_version} href={~p"/resumes/#{@resume}/pdf"} class="btn btn-sm">
+                <.icon name="hero-arrow-down-tray-micro" class="size-4" /> Download PDF
+              </.link>
+              <button
+                phx-click="delete"
+                data-confirm="Are you sure you want to delete this resume?"
+                class="btn btn-ghost btn-sm text-error"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 text-sm text-base-content/60">
+            <div
               :if={@resume.job_posting_text || @resume.job_posting_url}
-              class="badge badge-accent badge-sm"
+              class="tooltip tooltip-bottom"
+              data-tip={
+                String.slice(@resume.job_posting_text || @resume.job_posting_url || "", 0, 200)
+              }
             >
-              Targeted
-            </span>
-            Created {Calendar.strftime(@resume.inserted_at, "%b %d, %Y")}
-          </:subtitle>
-          <:actions>
-            <.link navigate={~p"/home"} class="btn btn-ghost btn-sm">
-              <.icon name="hero-arrow-left-micro" class="size-4" /> Back
-            </.link>
-            <.link :if={@current_version} href={~p"/resumes/#{@resume}/pdf"} class="btn btn-sm">
-              <.icon name="hero-arrow-down-tray-micro" class="size-4" /> Download PDF
-            </.link>
-            <button
-              phx-click="delete"
-              data-confirm="Are you sure you want to delete this resume?"
-              class="btn btn-ghost btn-sm text-error"
-            >
-              Delete
-            </button>
-          </:actions>
-        </.header>
+              <span class="badge badge-accent badge-sm cursor-default">Targeted</span>
+            </div>
+            <span>Created {Calendar.strftime(@resume.inserted_at, "%b %d, %Y")}</span>
+          </div>
+        </div>
 
         <div class="flex items-center gap-3">
           <.form for={@template_form} phx-change="change_template" class="flex items-center gap-2">
@@ -142,62 +179,6 @@ defmodule ResumeWeb.ResumesLive.Show do
             </button>
           </div>
         </div>
-
-        <details class="collapse collapse-arrow bg-base-200">
-          <summary class="collapse-title text-sm font-medium">
-            Job Targeting
-            <span
-              :if={@resume.job_posting_text || @resume.job_posting_url}
-              class="badge badge-accent badge-xs ml-2"
-            >
-              Active
-            </span>
-          </summary>
-          <div class="collapse-content">
-            <.form for={@targeting_form} phx-submit="save_targeting" phx-change="validate_targeting">
-              <div class="space-y-3">
-                <div class="flex gap-2 items-end">
-                  <div class="flex-1">
-                    <.input
-                      field={@targeting_form[:job_posting_url]}
-                      label="Job Posting URL (optional)"
-                      type="url"
-                      placeholder="https://..."
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    phx-click="fetch_url"
-                    disabled={@fetching_url}
-                    class="btn btn-sm btn-outline mb-2"
-                  >
-                    <span :if={@fetching_url} class="loading loading-spinner loading-xs"></span>
-                    <.icon :if={!@fetching_url} name="hero-arrow-down-tray-micro" class="size-4" />
-                    Fetch
-                  </button>
-                </div>
-                <.input
-                  field={@targeting_form[:job_posting_text]}
-                  label="Job Description or Desired Role"
-                  type="textarea"
-                  placeholder="Paste a job description, describe your desired role, or fetch from URL above..."
-                  rows="4"
-                />
-                <div class="flex gap-2">
-                  <button type="submit" class="btn btn-sm btn-primary">Save Targeting</button>
-                  <button
-                    :if={@resume.job_posting_text || @resume.job_posting_url}
-                    type="button"
-                    phx-click="clear_targeting"
-                    class="btn btn-sm btn-ghost"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-            </.form>
-          </div>
-        </details>
 
         <details
           :if={@current_version && @current_version.explanation}
@@ -428,6 +409,42 @@ defmodule ResumeWeb.ResumesLive.Show do
   end
 
   @impl true
+  def handle_event("edit_title", _params, socket) do
+    {:noreply, assign(socket, editing_title: true)}
+  end
+
+  @impl true
+  def handle_event("cancel_edit_title", _params, socket) do
+    {:noreply,
+     assign(socket,
+       editing_title: false,
+       title_form: to_form(%{"title" => socket.assigns.resume.title}, as: "title")
+     )}
+  end
+
+  @impl true
+  def handle_event("save_title", %{"title" => %{"title" => title}}, socket) do
+    title = String.trim(title)
+
+    if title == "" do
+      {:noreply, put_flash(socket, :error, "Title can't be blank.")}
+    else
+      case Resumes.update_resume(socket.assigns.resume, %{title: title}) do
+        {:ok, resume} ->
+          {:noreply,
+           assign(socket,
+             resume: resume,
+             editing_title: false,
+             title_form: to_form(%{"title" => resume.title}, as: "title")
+           )}
+
+        {:error, _changeset} ->
+          {:noreply, put_flash(socket, :error, "Failed to update title.")}
+      end
+    end
+  end
+
+  @impl true
   def handle_event("change_template", %{"template" => %{"template" => template}}, socket) do
     {:ok, resume} = Resumes.update_resume(socket.assigns.resume, %{template: template})
     template_mod = Map.get(@templates, template, Default)
@@ -440,67 +457,6 @@ defmodule ResumeWeb.ResumesLive.Show do
        template_css: template_mod.css(),
        template_form: to_form(%{"template" => template}, as: "template")
      )}
-  end
-
-  @impl true
-  def handle_event("validate_targeting", %{"targeting" => params}, socket) do
-    {:noreply, assign(socket, targeting_params: params)}
-  end
-
-  @impl true
-  def handle_event("save_targeting", %{"targeting" => params}, socket) do
-    url = non_blank(params["job_posting_url"])
-    text = non_blank(params["job_posting_text"])
-
-    case Resumes.update_resume(socket.assigns.resume, %{
-           job_posting_url: url,
-           job_posting_text: text
-         }) do
-      {:ok, resume} ->
-        {:noreply,
-         socket
-         |> assign(resume: resume, targeting_form: build_targeting_form(resume))
-         |> put_flash(:info, "Job targeting saved.")}
-
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Failed to save targeting.")}
-    end
-  end
-
-  @impl true
-  def handle_event("fetch_url", _params, socket) do
-    url =
-      (socket.assigns[:targeting_params]["job_posting_url"] ||
-         socket.assigns.targeting_form.params["job_posting_url"])
-      |> non_blank()
-
-    if url do
-      task = Task.async(fn -> JobPostings.fetch_text(url) end)
-
-      {:noreply,
-       socket
-       |> assign(fetching_url: true)
-       |> update(:task_refs, &Map.put(&1, task.ref, :fetch_url))}
-    else
-      {:noreply, put_flash(socket, :error, "Enter a URL first.")}
-    end
-  end
-
-  @impl true
-  def handle_event("clear_targeting", _params, socket) do
-    case Resumes.update_resume(socket.assigns.resume, %{
-           job_posting_url: nil,
-           job_posting_text: nil
-         }) do
-      {:ok, resume} ->
-        {:noreply,
-         socket
-         |> assign(resume: resume, targeting_form: build_targeting_form(resume))
-         |> put_flash(:info, "Job targeting cleared.")}
-
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Failed to clear targeting.")}
-    end
   end
 
   # Feedback events
@@ -648,20 +604,6 @@ defmodule ResumeWeb.ResumesLive.Show do
     socket = assign(socket, task_refs: task_refs)
 
     case {tag, result} do
-      {:fetch_url, {:ok, text}} ->
-        params = Map.put(socket.assigns.targeting_form.params, "job_posting_text", text)
-
-        {:noreply,
-         socket
-         |> assign(fetching_url: false, targeting_form: to_form(params, as: "targeting"))
-         |> put_flash(:info, "Job posting content fetched.")}
-
-      {:fetch_url, {:error, _reason}} ->
-        {:noreply,
-         socket
-         |> assign(fetching_url: false)
-         |> put_flash(:error, "Failed to fetch job posting. Try pasting the text instead.")}
-
       {:feedback, {:ok, result}} ->
         {:noreply, handle_feedback_result(socket, result)}
 
@@ -697,25 +639,6 @@ defmodule ResumeWeb.ResumesLive.Show do
     template_mod.render(%{data: data})
     |> Phoenix.HTML.Safe.to_iodata()
     |> IO.iodata_to_binary()
-  end
-
-  defp build_targeting_form(resume) do
-    to_form(
-      %{
-        "job_posting_url" => resume.job_posting_url || "",
-        "job_posting_text" => resume.job_posting_text || ""
-      },
-      as: "targeting"
-    )
-  end
-
-  defp non_blank(nil), do: nil
-
-  defp non_blank(str) when is_binary(str) do
-    case String.trim(str) do
-      "" -> nil
-      trimmed -> trimmed
-    end
   end
 
   defp display_data(nil, current_data), do: current_data
