@@ -40,6 +40,7 @@ defmodule ResumeWeb.ResumesLive.Show do
        transcribing: false,
        editing_title: false,
        title_form: to_form(%{"title" => resume.title}, as: "title"),
+       sidebar_open: false,
        task_refs: %{}
      )}
   end
@@ -76,235 +77,277 @@ defmodule ResumeWeb.ResumesLive.Show do
 
     ~H"""
     <Layouts.app flash={@flash}>
-      <div class="space-y-6">
-        <div class="space-y-1">
-          <div class="text-sm breadcrumbs p-0">
-            <ul>
-              <li><.link navigate={~p"/home"}>Home</.link></li>
-              <li>{@resume.title}</li>
-            </ul>
-          </div>
-
-          <div class="flex items-center justify-between">
-            <div :if={!@editing_title} class="flex items-center gap-2 group">
-              <h1 class="text-2xl font-bold">{@resume.title}</h1>
-              <button
-                phx-click="edit_title"
-                class="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
-              >
-                <.icon name="hero-pencil-square-micro" class="size-4" />
-              </button>
-            </div>
-            <.form
-              :if={@editing_title}
-              for={@title_form}
-              phx-submit="save_title"
-              class="flex items-center gap-2"
-            >
-              <input
-                type="text"
-                name="title[title]"
-                value={@title_form[:title].value}
-                class="input input-sm w-full max-w-md"
-                autofocus
-                phx-key="Escape"
-                phx-keydown="cancel_edit_title"
-              />
-              <button type="submit" class="btn btn-primary btn-sm">Save</button>
-              <button type="button" phx-click="cancel_edit_title" class="btn btn-ghost btn-sm">
-                Cancel
-              </button>
-            </.form>
-            <div class="flex items-center gap-2">
-              <.link :if={@current_version} href={~p"/resumes/#{@resume}/pdf"} class="btn btn-sm">
-                <.icon name="hero-arrow-down-tray-micro" class="size-4" /> Download PDF
-              </.link>
-              <button
-                phx-click="delete"
-                data-confirm="Are you sure you want to delete this resume?"
-                class="btn btn-ghost btn-sm text-error"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-3 text-sm text-base-content/60">
-            <div
-              :if={@resume.job_posting_text || @resume.job_posting_url}
-              class="tooltip tooltip-bottom"
-              data-tip={
-                String.slice(@resume.job_posting_text || @resume.job_posting_url || "", 0, 200)
-              }
-            >
-              <span class="badge badge-accent badge-sm cursor-default">Targeted</span>
-            </div>
-            <span>Created {Calendar.strftime(@resume.inserted_at, "%b %d, %Y")}</span>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <.form for={@template_form} phx-change="change_template" class="flex items-center gap-2">
-            <label class="text-sm font-medium">Template:</label>
-            <.input
-              field={@template_form[:template]}
-              type="select"
-              options={[
-                {"Default", "default"},
-                {"Mono", "mono"},
-                {"Fresh", "fresh"},
-                {"Executive", "executive"}
-              ]}
-            />
-          </.form>
-        </div>
-
-        <div :if={length(@versions) > 1} class="flex items-center gap-2">
-          <label class="text-sm font-medium">Version:</label>
-          <div class="flex flex-wrap gap-1">
-            <button
-              :for={v <- Enum.reverse(@versions)}
-              phx-click="select_version"
-              phx-value-version={v.version}
-              class={[
-                "btn btn-xs",
-                if(v.version == @current_version.version,
-                  do: "btn-primary",
-                  else: "btn-ghost"
-                )
-              ]}
-            >
-              v{v.version}
-              <span class="text-xs opacity-60">{v.trigger}</span>
-            </button>
-          </div>
-        </div>
-
-        <details
-          :if={@current_version && @current_version.explanation}
-          class="collapse collapse-arrow bg-base-200"
-          open
-        >
-          <summary class="collapse-title text-sm font-medium">
-            Notes
-          </summary>
-          <div class="collapse-content">
-            <p class="text-sm">{@current_version.explanation}</p>
-          </div>
-        </details>
-
-        <div :if={@current_data && @is_latest} class="space-y-4">
-          <div
-            :if={@feedback_messages != []}
-            id="feedback-messages"
-            phx-hook=".ChatScroll"
-            class="max-h-80 overflow-y-auto space-y-3 p-3 bg-base-200 rounded-lg"
+      <div class="drawer drawer-end">
+        <input
+          id="sidebar-toggle"
+          type="checkbox"
+          class="drawer-toggle"
+          checked={@sidebar_open}
+          phx-click="toggle_sidebar"
+        />
+        <div class="drawer-content space-y-6">
+          <label
+            for="sidebar-toggle"
+            class="fixed right-0 top-1/2 -translate-y-1/2 z-10 bg-base-200 hover:bg-base-300 transition-colors rounded-l-lg px-1 py-3 cursor-pointer shadow-md"
           >
-            <div
-              :for={msg <- @feedback_messages}
-              class={[
-                "chat",
-                if(msg.role == :user, do: "chat-end", else: "chat-start")
-              ]}
-            >
-              <div class={[
-                "chat-bubble",
-                if(msg.role == :assistant, do: "chat-bubble-primary", else: "")
-              ]}>
-                {msg.content}
+            <.icon name="hero-chevron-left-micro" class="size-4" />
+          </label>
+
+          <div class="space-y-1">
+            <div class="text-sm breadcrumbs p-0">
+              <ul>
+                <li><.link navigate={~p"/home"}>Home</.link></li>
+                <li>{@resume.title}</li>
+              </ul>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div :if={!@editing_title} class="flex items-center gap-2 group">
+                <h1 class="text-2xl font-bold">{@resume.title}</h1>
+                <button
+                  phx-click="edit_title"
+                  class="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
+                >
+                  <.icon name="hero-pencil-square-micro" class="size-4" />
+                </button>
+              </div>
+              <.form
+                :if={@editing_title}
+                for={@title_form}
+                phx-submit="save_title"
+                class="flex items-center gap-2"
+              >
+                <input
+                  type="text"
+                  name="title[title]"
+                  value={@title_form[:title].value}
+                  class="input input-sm w-full max-w-md"
+                  autofocus
+                  phx-key="Escape"
+                  phx-keydown="cancel_edit_title"
+                />
+                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                <button type="button" phx-click="cancel_edit_title" class="btn btn-ghost btn-sm">
+                  Cancel
+                </button>
+              </.form>
+              <div class="flex items-center gap-2">
+                <.link
+                  :if={@current_version}
+                  href={~p"/resumes/#{@resume}/pdf"}
+                  class="btn btn-sm"
+                >
+                  <.icon name="hero-arrow-down-tray-micro" class="size-4" /> Download PDF
+                </.link>
+                <button
+                  phx-click="delete"
+                  data-confirm="Are you sure you want to delete this resume?"
+                  class="btn btn-ghost btn-sm text-error"
+                >
+                  Delete
+                </button>
               </div>
             </div>
 
-            <div :if={@pending_directive} class="chat chat-start">
-              <div class="chat-bubble chat-bubble-primary">
-                <p class="mb-2">Should this always apply?</p>
-                <p class="text-xs opacity-80 mb-3">"{@pending_directive}"</p>
-                <div class="flex gap-2">
-                  <button phx-click="always_directive" class="btn btn-xs btn-accent">Always</button>
-                  <button phx-click="just_this_resume" class="btn btn-xs btn-ghost">
-                    Just this resume
-                  </button>
+            <div class="flex items-center gap-3 text-sm text-base-content/60">
+              <span
+                :if={@resume.job_posting_text || @resume.job_posting_url}
+                class="badge badge-accent badge-sm cursor-default"
+              >
+                Targeted
+              </span>
+              <span>Created {Calendar.strftime(@resume.inserted_at, "%b %d, %Y")}</span>
+            </div>
+          </div>
+
+          <div :if={@current_data && @is_latest} class="space-y-4">
+            <div
+              :if={@feedback_messages != []}
+              id="feedback-messages"
+              phx-hook=".ChatScroll"
+              class="max-h-80 overflow-y-auto space-y-3 p-3 bg-base-200 rounded-lg"
+            >
+              <div
+                :for={msg <- @feedback_messages}
+                class={[
+                  "chat",
+                  if(msg.role == :user, do: "chat-end", else: "chat-start")
+                ]}
+              >
+                <div class={[
+                  "chat-bubble",
+                  if(msg.role == :assistant, do: "chat-bubble-primary", else: "")
+                ]}>
+                  {msg.content}
+                </div>
+              </div>
+
+              <div :if={@pending_directive} class="chat chat-start">
+                <div class="chat-bubble chat-bubble-primary">
+                  <p class="mb-2">Should this always apply?</p>
+                  <p class="text-xs opacity-80 mb-3">"{@pending_directive}"</p>
+                  <div class="flex gap-2">
+                    <button phx-click="always_directive" class="btn btn-xs btn-accent">
+                      Always
+                    </button>
+                    <button phx-click="just_this_resume" class="btn btn-xs btn-ghost">
+                      Just this resume
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div :if={@processing_feedback} class="chat chat-start">
+                <div class="chat-bubble chat-bubble-primary">
+                  <span class="loading loading-dots loading-sm"></span>
                 </div>
               </div>
             </div>
 
-            <div :if={@processing_feedback} class="chat chat-start">
-              <div class="chat-bubble chat-bubble-primary">
-                <span class="loading loading-dots loading-sm"></span>
+            <div
+              id="audio-recorder"
+              phx-hook=".AudioRecorder"
+              phx-update="ignore"
+              data-recording={to_string(@recording)}
+            >
+            </div>
+
+            <div :if={@transcribing} class="flex items-center gap-2 text-sm">
+              <span class="loading loading-spinner loading-xs"></span> Transcribing...
+            </div>
+
+            <.form
+              for={@feedback_form}
+              phx-submit="send_feedback"
+              phx-change="validate_feedback"
+              class="flex items-end gap-2"
+            >
+              <div class="flex-1">
+                <.input
+                  field={@feedback_form[:message]}
+                  type="textarea"
+                  placeholder="Suggest changes to your resume..."
+                  autocomplete="off"
+                  rows="1"
+                  phx-hook=".AutoGrow"
+                  class="w-full textarea resize-none overflow-hidden"
+                />
               </div>
+              <%= if @recording do %>
+                <button type="button" phx-click="stop_recording" class="btn btn-error btn-sm">
+                  <.icon name="hero-stop-solid" class="size-4" />
+                </button>
+              <% else %>
+                <button type="button" phx-click="start_recording" class="btn btn-ghost btn-sm">
+                  <.icon name="hero-microphone-solid" class="size-4" />
+                </button>
+              <% end %>
+              <button
+                type="submit"
+                class="btn btn-primary btn-sm"
+                disabled={@processing_feedback || @transcribing}
+              >
+                <.icon name="hero-paper-airplane-solid" class="size-4" />
+              </button>
+            </.form>
+
+            <div :if={@preview_data} class="flex items-center gap-2">
+              <button phx-click="confirm_changes" class="btn btn-primary btn-sm">
+                <.icon name="hero-check-micro" class="size-4" /> Confirm Changes
+              </button>
+              <button phx-click="revert_changes" class="btn btn-ghost btn-sm">
+                <.icon name="hero-arrow-uturn-left-micro" class="size-4" /> Revert
+              </button>
             </div>
           </div>
 
           <div
-            id="audio-recorder"
-            phx-hook=".AudioRecorder"
-            phx-update="ignore"
-            data-recording={to_string(@recording)}
+            :if={@current_data}
+            class="mx-auto max-w-[8.5in] bg-white border border-base-300 rounded-sm p-[0.85in] print:border-none print:p-0"
           >
-          </div>
-
-          <div :if={@transcribing} class="flex items-center gap-2 text-sm">
-            <span class="loading loading-spinner loading-xs"></span> Transcribing...
-          </div>
-
-          <.form
-            for={@feedback_form}
-            phx-submit="send_feedback"
-            phx-change="validate_feedback"
-            class="flex items-end gap-2"
-          >
-            <div class="flex-1">
-              <.input
-                field={@feedback_form[:message]}
-                type="textarea"
-                placeholder="Suggest changes to your resume..."
-                autocomplete="off"
-                rows="1"
-                phx-hook=".AutoGrow"
-                class="w-full textarea resize-none overflow-hidden"
-              />
-            </div>
-            <%= if @recording do %>
-              <button type="button" phx-click="stop_recording" class="btn btn-error btn-sm">
-                <.icon name="hero-stop-solid" class="size-4" />
-              </button>
-            <% else %>
-              <button type="button" phx-click="start_recording" class="btn btn-ghost btn-sm">
-                <.icon name="hero-microphone-solid" class="size-4" />
-              </button>
-            <% end %>
-            <button
-              type="submit"
-              class="btn btn-primary btn-sm"
-              disabled={@processing_feedback || @transcribing}
+            <div
+              :if={@preview_data}
+              class="flex items-center gap-2 mb-4 -mt-4 -mx-4 px-4 py-2 bg-warning/10 border-b border-warning/30"
             >
-              <.icon name="hero-paper-airplane-solid" class="size-4" />
-            </button>
-          </.form>
-
-          <div :if={@preview_data} class="flex items-center gap-2">
-            <button phx-click="confirm_changes" class="btn btn-primary btn-sm">
-              <.icon name="hero-check-micro" class="size-4" /> Confirm Changes
-            </button>
-            <button phx-click="revert_changes" class="btn btn-ghost btn-sm">
-              <.icon name="hero-arrow-uturn-left-micro" class="size-4" /> Revert
-            </button>
+              <.icon name="hero-eye-micro" class="size-4 text-warning" />
+              <span class="text-sm font-medium text-warning">Preview — unsaved changes</span>
+            </div>
+            {raw("<style>" <> @template_css <> "</style>")}
+            {raw(render_template(@template_mod, display_data(@preview_data, @current_data)))}
           </div>
         </div>
 
-        <div
-          :if={@current_data}
-          class="mx-auto max-w-[8.5in] bg-white border border-base-300 rounded-sm p-[0.85in] print:border-none print:p-0"
-        >
-          <div
-            :if={@preview_data}
-            class="flex items-center gap-2 mb-4 -mt-4 -mx-4 px-4 py-2 bg-warning/10 border-b border-warning/30"
-          >
-            <.icon name="hero-eye-micro" class="size-4 text-warning" />
-            <span class="text-sm font-medium text-warning">Preview — unsaved changes</span>
+        <div class="drawer-side z-10">
+          <label for="sidebar-toggle" class="drawer-overlay" aria-label="Close sidebar"></label>
+          <div class="bg-base-200 min-h-full w-80 p-4 space-y-6">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-semibold">Settings</h2>
+              <label for="sidebar-toggle" class="btn btn-ghost btn-sm btn-square">
+                <.icon name="hero-x-mark-micro" class="size-4" />
+              </label>
+            </div>
+
+            <div :if={@resume.job_posting_text || @resume.job_posting_url} class="space-y-2">
+              <h3 class="text-sm font-medium">Job Targeting</h3>
+              <div
+                :if={@resume.job_posting_text}
+                class="text-sm bg-base-100 rounded-lg p-3 max-h-40 overflow-y-auto"
+              >
+                {@resume.job_posting_text}
+              </div>
+              <.link
+                :if={@resume.job_posting_url}
+                href={@resume.job_posting_url}
+                target="_blank"
+                class="link link-primary text-sm"
+              >
+                {URI.parse(@resume.job_posting_url).host || @resume.job_posting_url}
+                <.icon name="hero-arrow-top-right-on-square-micro" class="size-3 inline" />
+              </.link>
+            </div>
+
+            <div :if={@current_version && @current_version.explanation} class="space-y-2">
+              <h3 class="text-sm font-medium">Notes</h3>
+              <p class="text-sm bg-base-100 rounded-lg p-3">{@current_version.explanation}</p>
+            </div>
+
+            <div class="space-y-2">
+              <h3 class="text-sm font-medium">Template</h3>
+              <.form for={@template_form} phx-change="change_template">
+                <.input
+                  field={@template_form[:template]}
+                  type="select"
+                  options={[
+                    {"Default", "default"},
+                    {"Mono", "mono"},
+                    {"Fresh", "fresh"},
+                    {"Executive", "executive"}
+                  ]}
+                />
+              </.form>
+            </div>
+
+            <div :if={length(@versions) > 1} class="space-y-2">
+              <h3 class="text-sm font-medium">Version</h3>
+              <div class="flex flex-wrap gap-1">
+                <button
+                  :for={v <- Enum.reverse(@versions)}
+                  phx-click="select_version"
+                  phx-value-version={v.version}
+                  class={[
+                    "btn btn-xs",
+                    if(v.version == @current_version.version,
+                      do: "btn-primary",
+                      else: "btn-ghost"
+                    )
+                  ]}
+                >
+                  v{v.version}
+                  <span class="text-xs opacity-60">{v.trigger}</span>
+                </button>
+              </div>
+            </div>
           </div>
-          {raw("<style>" <> @template_css <> "</style>")}
-          {raw(render_template(@template_mod, display_data(@preview_data, @current_data)))}
         </div>
       </div>
     </Layouts.app>
@@ -392,6 +435,11 @@ defmodule ResumeWeb.ResumesLive.Show do
       };
     </script>
     """
+  end
+
+  @impl true
+  def handle_event("toggle_sidebar", _params, socket) do
+    {:noreply, assign(socket, sidebar_open: !socket.assigns.sidebar_open)}
   end
 
   @impl true
