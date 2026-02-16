@@ -13,6 +13,13 @@ defmodule ResumeWeb.ResumesLive.Show do
     "executive" => ResumeWeb.ResumeTemplates.Executive
   }
 
+  @template_options [
+    {"Default", "default"},
+    {"Mono", "mono"},
+    {"Fresh", "fresh"},
+    {"Executive", "executive"}
+  ]
+
   @impl true
   def mount(%{"id" => id}, session, socket) do
     user = get_user(socket, session)
@@ -20,6 +27,7 @@ defmodule ResumeWeb.ResumesLive.Show do
     versions = Resumes.list_versions(resume.id)
     current_version = List.first(versions)
     template_mod = Map.get(@templates, resume.template, Default)
+    current_data = version_data(current_version)
 
     {:ok,
      assign(socket,
@@ -29,7 +37,8 @@ defmodule ResumeWeb.ResumesLive.Show do
        current_version: current_version,
        template_mod: template_mod,
        template_css: template_mod.css(),
-       template_form: to_form(%{"template" => resume.template}, as: "template"),
+       template_options: @template_options,
+       template_previews: build_template_previews(current_data),
        feedback_messages: [],
        feedback_form: to_form(%{"message" => ""}, as: "feedback"),
        preview_data: nil,
@@ -88,9 +97,9 @@ defmodule ResumeWeb.ResumesLive.Show do
         <div class="drawer-content space-y-6">
           <label
             for="sidebar-toggle"
-            class="fixed right-0 top-1/2 -translate-y-1/2 z-10 bg-base-200 hover:bg-base-300 transition-colors rounded-l-lg px-1 py-3 cursor-pointer shadow-md"
+            class="fixed right-0 top-1/2 -translate-y-1/2 z-10 bg-base-200 hover:bg-base-300 transition-colors rounded-l-lg px-2.5 py-5 cursor-pointer shadow-md"
           >
-            <.icon name="hero-chevron-left-micro" class="size-4" />
+            <.icon name="hero-chevron-left-micro" class="size-5" />
           </label>
 
           <div class="space-y-1">
@@ -263,7 +272,10 @@ defmodule ResumeWeb.ResumesLive.Show do
 
           <div
             :if={@current_data}
-            class="mx-auto max-w-[8.5in] bg-white border border-base-300 rounded-sm p-[0.85in] print:border-none print:p-0"
+            class={[
+              "mx-auto max-w-[8.5in] bg-white border border-base-300 rounded-sm print:border-none print:p-0",
+              if(@resume.template == "executive", do: "p-0 overflow-hidden", else: "p-[0.85in]")
+            ]}
           >
             <div
               :if={@preview_data}
@@ -285,6 +297,27 @@ defmodule ResumeWeb.ResumesLive.Show do
               <label for="sidebar-toggle" class="btn btn-ghost btn-sm btn-square">
                 <.icon name="hero-x-mark-micro" class="size-4" />
               </label>
+            </div>
+
+            <div :if={length(@versions) > 1} class="space-y-2">
+              <h3 class="text-sm font-medium">Version</h3>
+              <div class="flex flex-wrap gap-1">
+                <button
+                  :for={v <- Enum.reverse(@versions)}
+                  phx-click="select_version"
+                  phx-value-version={v.version}
+                  class={[
+                    "btn btn-xs",
+                    if(v.version == @current_version.version,
+                      do: "btn-primary",
+                      else: "btn-ghost"
+                    )
+                  ]}
+                >
+                  v{v.version}
+                  <span class="text-xs opacity-60">{v.trigger}</span>
+                </button>
+              </div>
             </div>
 
             <div :if={@resume.job_posting_text || @resume.job_posting_url} class="space-y-2">
@@ -313,37 +346,29 @@ defmodule ResumeWeb.ResumesLive.Show do
 
             <div class="space-y-2">
               <h3 class="text-sm font-medium">Template</h3>
-              <.form for={@template_form} phx-change="change_template">
-                <.input
-                  field={@template_form[:template]}
-                  type="select"
-                  options={[
-                    {"Default", "default"},
-                    {"Mono", "mono"},
-                    {"Fresh", "fresh"},
-                    {"Executive", "executive"}
-                  ]}
-                />
-              </.form>
-            </div>
-
-            <div :if={length(@versions) > 1} class="space-y-2">
-              <h3 class="text-sm font-medium">Version</h3>
-              <div class="flex flex-wrap gap-1">
+              <div class="grid grid-cols-2 gap-3">
                 <button
-                  :for={v <- Enum.reverse(@versions)}
-                  phx-click="select_version"
-                  phx-value-version={v.version}
+                  :for={{name, key} <- @template_options}
+                  phx-click="change_template"
+                  phx-value-template={key}
                   class={[
-                    "btn btn-xs",
-                    if(v.version == @current_version.version,
-                      do: "btn-primary",
-                      else: "btn-ghost"
+                    "rounded-lg overflow-hidden border-2 transition-colors cursor-pointer",
+                    if(key == @resume.template,
+                      do: "border-primary",
+                      else: "border-base-300 hover:border-base-content/30"
                     )
                   ]}
                 >
-                  v{v.version}
-                  <span class="text-xs opacity-60">{v.trigger}</span>
+                  <div class="relative w-full aspect-[8.5/11] overflow-hidden">
+                    <iframe
+                      srcdoc={@template_previews[key]}
+                      class="absolute top-0 left-0 w-[8.5in] h-[11in] origin-top-left pointer-events-none"
+                      style="transform: scale(calc(1/6));"
+                      scrolling="no"
+                      tabindex="-1"
+                    />
+                  </div>
+                  <div class="text-xs text-center py-1.5 bg-base-100">{name}</div>
                 </button>
               </div>
             </div>
@@ -450,6 +475,7 @@ defmodule ResumeWeb.ResumesLive.Show do
     {:noreply,
      assign(socket,
        current_version: current_version,
+       template_previews: build_template_previews(version_data(current_version)),
        preview_data: nil,
        preview_explanation: nil,
        pending_directive: nil
@@ -493,17 +519,15 @@ defmodule ResumeWeb.ResumesLive.Show do
   end
 
   @impl true
-  def handle_event("change_template", %{"template" => %{"template" => template}}, socket) do
+  def handle_event("change_template", %{"template" => template}, socket) do
     {:ok, resume} = Resumes.update_resume(socket.assigns.resume, %{template: template})
     template_mod = Map.get(@templates, template, Default)
 
     {:noreply,
-     socket
-     |> assign(
+     assign(socket,
        resume: resume,
        template_mod: template_mod,
-       template_css: template_mod.css(),
-       template_form: to_form(%{"template" => template}, as: "template")
+       template_css: template_mod.css()
      )}
   end
 
@@ -540,6 +564,7 @@ defmodule ResumeWeb.ResumesLive.Show do
          |> assign(
            versions: versions,
            current_version: version,
+           template_previews: build_template_previews(version_data(version)),
            preview_data: nil,
            preview_explanation: nil
          )
@@ -681,6 +706,33 @@ defmodule ResumeWeb.ResumesLive.Show do
   @impl true
   def handle_info({:DOWN, _ref, :process, _pid, _reason}, socket) do
     {:noreply, socket}
+  end
+
+  defp build_template_previews(nil), do: %{}
+
+  defp build_template_previews(data) do
+    Map.new(@templates, fn {key, mod} ->
+      html = render_template(mod, data)
+      css = mod.css()
+      full_bleed? = key == "executive"
+      body_padding = if full_bleed?, do: "0", else: "0.85in"
+
+      srcdoc = """
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+      <meta charset="UTF-8">
+      <style>#{css}
+      html { width: 8.5in; }
+      body { margin: 0; padding: #{body_padding}; overflow: hidden; }
+      </style>
+      </head>
+      <body>#{html}</body>
+      </html>
+      """
+
+      {key, srcdoc}
+    end)
   end
 
   defp render_template(template_mod, data) do
