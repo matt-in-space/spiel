@@ -68,10 +68,10 @@ defmodule ResumeWeb.HomeLive do
           <div
             :for={{dom_id, resume} <- @streams.resumes}
             id={dom_id}
-            class="card bg-base-200 border border-base-300"
+            class="card bg-base-200 border border-base-300 hover:border-base-content/20 transition-colors relative"
           >
             <div class="card-body py-3 px-4 flex-row items-center justify-between">
-              <div>
+              <.link navigate={~p"/resumes/#{resume}"} class="after:absolute after:inset-0">
                 <h2 class="font-medium text-sm">
                   {resume.title}
                   <span
@@ -84,20 +84,15 @@ defmodule ResumeWeb.HomeLive do
                 <p class="text-xs opacity-50">
                   {Calendar.strftime(resume.inserted_at, "%b %d, %Y")}
                 </p>
-              </div>
-              <div class="flex items-center gap-1">
-                <.link navigate={~p"/resumes/#{resume}"} class="btn btn-ghost btn-xs">
-                  View
-                </.link>
-                <button
-                  phx-click="delete"
-                  phx-value-id={resume.id}
-                  data-confirm="Delete this resume?"
-                  class="btn btn-ghost btn-xs text-error"
-                >
-                  <.icon name="hero-trash-micro" class="size-3.5" />
-                </button>
-              </div>
+              </.link>
+              <button
+                phx-click="delete"
+                phx-value-id={resume.id}
+                data-confirm="Delete this resume?"
+                class="btn btn-ghost btn-xs text-error relative z-10"
+              >
+                <.icon name="hero-trash-micro" class="size-3.5" />
+              </button>
             </div>
           </div>
         </div>
@@ -192,7 +187,9 @@ defmodule ResumeWeb.HomeLive do
     if String.starts_with?(first_line, "http") do
       "Resume - #{Calendar.strftime(DateTime.utc_now(), "%b %d, %Y")}"
     else
-      String.slice(first_line, 0, 50)
+      first_line
+      |> String.replace(~r/^(a job (?:as|for|at|in)|looking for|applying (?:for|to))\s+/i, "")
+      |> String.slice(0, 60)
     end
   end
 

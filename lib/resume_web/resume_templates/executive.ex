@@ -46,14 +46,8 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
         <div :if={@contact.email}>{@contact.email}</div>
         <div :if={@contact.phone}>{@contact.phone}</div>
         <div :if={@contact.location}>{@contact.location}</div>
-        <div :if={@contact.website}>
-          <a href={@contact.website}>{@contact.website}</a>
-        </div>
-        <div :if={@contact.linkedin}>
-          <a href={@contact.linkedin}>LinkedIn</a>
-        </div>
-        <div :if={@contact.github}>
-          <a href={@contact.github}>GitHub</a>
+        <div :for={w <- @contact.websites || []}>
+          <a href={w.url}>{website_display(w)}</a>
         </div>
       </div>
     </div>

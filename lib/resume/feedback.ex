@@ -124,12 +124,20 @@ defmodule Resume.Feedback do
   defp profile_section(profile) when profile == %{}, do: nil
 
   defp profile_section(profile) do
-    lines =
-      ["name", "email", "phone", "location", "website", "linkedin", "github", "career_goal"]
+    basic_lines =
+      ["name", "email", "phone", "location", "career_goal"]
       |> Enum.map(fn key -> {key, profile[key]} end)
       |> Enum.reject(fn {_k, v} -> is_nil(v) or v == "" end)
       |> Enum.map(fn {k, v} -> "- #{String.capitalize(k)}: #{v}" end)
-      |> Enum.join("\n")
+
+    website_lines =
+      (profile["websites"] || [])
+      |> Enum.map(fn w ->
+        label = website_label(w)
+        "- #{label}: #{w["url"]}"
+      end)
+
+    lines = Enum.join(basic_lines ++ website_lines, "\n")
 
     if lines == "" do
       nil
@@ -140,6 +148,12 @@ defmodule Resume.Feedback do
       """
     end
   end
+
+  defp website_label(%{"type" => "linkedin"}), do: "LinkedIn"
+  defp website_label(%{"type" => "github"}), do: "GitHub"
+  defp website_label(%{"type" => "custom", "label" => label}) when is_binary(label), do: label
+  defp website_label(%{"type" => "website", "label" => label}) when is_binary(label), do: label
+  defp website_label(_), do: "Website"
 
   defp history_section([]), do: nil
 
@@ -250,9 +264,7 @@ defmodule Resume.Feedback do
       "email" => profile["email"],
       "phone" => profile["phone"],
       "location" => profile["location"],
-      "website" => profile["website"],
-      "linkedin" => profile["linkedin"],
-      "github" => profile["github"]
+      "websites" => profile["websites"] || []
     }
   end
 end

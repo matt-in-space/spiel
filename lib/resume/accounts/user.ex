@@ -20,7 +20,7 @@ defmodule Resume.Accounts.User do
   def admin?(%__MODULE__{role: :admin}), do: true
   def admin?(_), do: false
 
-  @profile_keys ~w(name email phone location website linkedin github)
+  @profile_keys ~w(name email phone location websites)
 
   @doc """
   A changeset for updating profile data stored in `default_resume_data`.

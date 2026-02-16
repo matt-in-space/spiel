@@ -13,6 +13,7 @@ defmodule ResumeWeb.OnboardingLive do
       {:ok, redirect(socket, to: ~p"/home")}
     else
       profile_data = Map.merge(%{"email" => user.email}, user.default_resume_data)
+      websites = profile_data["websites"] || []
 
       {:ok,
        socket
@@ -21,6 +22,13 @@ defmodule ResumeWeb.OnboardingLive do
          step: :contact,
          profile_form: to_form(profile_data, as: "profile"),
          profile_data: profile_data,
+         websites: websites,
+         add_website_type: "linkedin",
+         website_types: [
+           {"LinkedIn", "linkedin"},
+           {"GitHub", "github"},
+           {"Custom", "custom"}
+         ],
          # import
          text_form: to_form(%{"text" => ""}, as: "paste"),
          import_status: nil,
@@ -71,6 +79,9 @@ defmodule ResumeWeb.OnboardingLive do
         <.contact_step
           :if={@step == :contact}
           profile_form={@profile_form}
+          websites={@websites}
+          website_types={@website_types}
+          add_website_type={@add_website_type}
         />
 
         <.import_step
@@ -200,28 +211,67 @@ defmodule ResumeWeb.OnboardingLive do
         <.input field={@profile_form[:email]} label="Email" type="email" />
         <.input field={@profile_form[:phone]} label="Phone" type="tel" />
         <.input field={@profile_form[:location]} label="Location" placeholder="City, State" />
-        <.input
-          field={@profile_form[:website]}
-          label="Website"
-          type="url"
-          placeholder="https://"
-        />
-        <.input
-          field={@profile_form[:linkedin]}
-          label="LinkedIn"
-          placeholder="https://linkedin.com/in/..."
-        />
-        <.input
-          field={@profile_form[:github]}
-          label="GitHub"
-          placeholder="https://github.com/..."
-        />
+
+        <div class="mt-4 space-y-3">
+          <label class="label">Websites</label>
+          <div :for={{w, i} <- Enum.with_index(@websites)} class="flex items-end gap-2">
+            <span class="badge badge-sm badge-outline self-center">
+              {website_type_label(w["type"])}
+            </span>
+            <input type="hidden" name={"profile[websites][#{i}][type]"} value={w["type"]} />
+            <input
+              :if={w["type"] in ["custom", "website"]}
+              type="text"
+              name={"profile[websites][#{i}][label]"}
+              value={w["label"]}
+              placeholder="Label"
+              class="input input-bordered input-sm w-28"
+            />
+            <div class="flex-1">
+              <input
+                type="url"
+                name={"profile[websites][#{i}][url]"}
+                value={w["url"]}
+                placeholder="https://..."
+                class="input input-bordered input-sm w-full"
+              />
+            </div>
+            <button
+              type="button"
+              phx-click="remove_website"
+              phx-value-index={i}
+              class="btn btn-ghost btn-xs text-error"
+            >
+              <.icon name="hero-x-mark-micro" class="size-4" />
+            </button>
+          </div>
+        </div>
+
         <div class="mt-6">
           <button type="submit" class="btn btn-primary">
             Next <.icon name="hero-arrow-right-micro" class="size-4" />
           </button>
         </div>
       </.form>
+
+      <form
+        phx-change="select_website_type"
+        phx-submit="add_website"
+        class="flex items-center gap-2 mt-2"
+      >
+        <select name="type" class="select select-bordered select-sm">
+          <option
+            :for={{label, value} <- @website_types}
+            value={value}
+            selected={value == @add_website_type}
+          >
+            {label}
+          </option>
+        </select>
+        <button type="submit" class="btn btn-ghost btn-sm">
+          <.icon name="hero-plus-micro" class="size-4" /> Add Website
+        </button>
+      </form>
     </div>
     """
   end
@@ -509,18 +559,24 @@ defmodule ResumeWeb.OnboardingLive do
 
   @impl true
   def handle_event("validate_profile", %{"profile" => params}, socket) do
-    {:noreply, assign(socket, profile_form: to_form(params, as: "profile"))}
+    {:noreply,
+     assign(socket,
+       profile_form: to_form(params, as: "profile"),
+       websites: all_websites_from_params(params)
+     )}
   end
 
   @impl true
   def handle_event("save_profile", %{"profile" => params}, socket) do
     user = socket.assigns.user
+    websites = websites_from_params(params)
+    params = Map.put(params, "websites", websites)
 
     case Accounts.update_user_profile(user, params) do
       {:ok, user} ->
         {:noreply,
          socket
-         |> assign(user: user, profile_data: params, step: :import)}
+         |> assign(user: user, profile_data: params, websites: websites, step: :import)}
 
       {:error, _changeset} ->
         {:noreply,
@@ -528,6 +584,31 @@ defmodule ResumeWeb.OnboardingLive do
          |> assign(profile_form: to_form(params, as: "profile"))
          |> put_flash(:error, "Please fill in your name.")}
     end
+  end
+
+  @impl true
+  def handle_event("select_website_type", %{"type" => type}, socket) do
+    {:noreply, assign(socket, add_website_type: type)}
+  end
+
+  @impl true
+  def handle_event("add_website", %{"type" => type}, socket) do
+    websites = socket.assigns.websites ++ [%{"type" => type, "url" => default_url(type)}]
+    {:noreply, assign(socket, websites: websites, add_website_type: type)}
+  end
+
+  @impl true
+  def handle_event("add_website", _params, socket) do
+    type = socket.assigns.add_website_type
+    websites = socket.assigns.websites ++ [%{"type" => type, "url" => default_url(type)}]
+    {:noreply, assign(socket, websites: websites)}
+  end
+
+  @impl true
+  def handle_event("remove_website", %{"index" => index}, socket) do
+    index = String.to_integer(index)
+    websites = List.delete_at(socket.assigns.websites, index)
+    {:noreply, assign(socket, websites: websites)}
   end
 
   # Import step events
@@ -917,4 +998,30 @@ defmodule ResumeWeb.OnboardingLive do
     )
     |> update(:task_refs, &Map.put(&1, task.ref, {:interview_turn, turn}))
   end
+
+  defp all_websites_from_params(%{"websites" => websites}) when is_map(websites) do
+    websites
+    |> Enum.sort_by(fn {k, _v} -> String.to_integer(k) end)
+    |> Enum.map(fn {_k, v} -> v end)
+  end
+
+  defp all_websites_from_params(_), do: []
+
+  defp websites_from_params(%{"websites" => websites}) when is_map(websites) do
+    websites
+    |> Enum.sort_by(fn {k, _v} -> String.to_integer(k) end)
+    |> Enum.map(fn {_k, v} -> v end)
+    |> Enum.reject(fn w -> (w["url"] || "") |> String.trim() == "" end)
+  end
+
+  defp websites_from_params(_), do: []
+
+  defp default_url("linkedin"), do: "https://www.linkedin.com/in/"
+  defp default_url("github"), do: "https://github.com/"
+  defp default_url(_), do: ""
+
+  defp website_type_label("linkedin"), do: "LinkedIn"
+  defp website_type_label("github"), do: "GitHub"
+  defp website_type_label("custom"), do: "Custom"
+  defp website_type_label(_), do: "Custom"
 end

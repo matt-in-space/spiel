@@ -10,9 +10,11 @@ defmodule ResumeWeb.ResumeTemplates.MonoTest do
       email: "jane@example.com",
       phone: "555-1234",
       location: "San Francisco, CA",
-      website: "https://jane.dev",
-      linkedin: "https://linkedin.com/in/jane",
-      github: "https://github.com/jane"
+      websites: [
+        %Resume.Resumes.Website{type: "custom", url: "https://jane.dev", label: "jane.dev"},
+        %Resume.Resumes.Website{type: "linkedin", url: "https://linkedin.com/in/jane"},
+        %Resume.Resumes.Website{type: "github", url: "https://github.com/jane"}
+      ]
     },
     work_experience: [
       %Resume.Resumes.WorkExperience{

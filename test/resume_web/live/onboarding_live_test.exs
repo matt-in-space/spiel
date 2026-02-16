@@ -43,7 +43,7 @@ defmodule ResumeWeb.OnboardingLiveTest do
 
       html =
         view
-        |> form("form", profile: %{name: "", email: "test@test.com"})
+        |> form("form[phx-submit='save_profile']", profile: %{name: "", email: "test@test.com"})
         |> render_submit()
 
       assert html =~ "Tell us about yourself" || has_element?(view, ".alert-error")
@@ -53,7 +53,9 @@ defmodule ResumeWeb.OnboardingLiveTest do
       {:ok, view, _html} = live(conn, ~p"/onboarding")
 
       view
-      |> form("form", profile: %{name: "Jane Doe", email: "jane@test.com"})
+      |> form("form[phx-submit='save_profile']",
+        profile: %{name: "Jane Doe", email: "jane@test.com"}
+      )
       |> render_submit()
 
       html = render(view)
@@ -68,7 +70,9 @@ defmodule ResumeWeb.OnboardingLiveTest do
       {:ok, view, _html} = live(conn, ~p"/onboarding")
 
       view
-      |> form("form", profile: %{name: "Jane Doe", email: "jane@test.com"})
+      |> form("form[phx-submit='save_profile']",
+        profile: %{name: "Jane Doe", email: "jane@test.com"}
+      )
       |> render_submit()
 
       %{view: view}
@@ -90,7 +94,9 @@ defmodule ResumeWeb.OnboardingLiveTest do
 
     test "text paste triggers extraction and shows count", %{view: view} do
       view
-      |> form("form", paste: %{text: "I worked at Acme Corp for 5 years as a senior engineer."})
+      |> form("form[phx-submit='submit_import']",
+        paste: %{text: "I worked at Acme Corp for 5 years as a senior engineer."}
+      )
       |> render_submit()
 
       Process.sleep(100)
@@ -101,7 +107,9 @@ defmodule ResumeWeb.OnboardingLiveTest do
 
     test "continue after import advances to interview", %{view: view} do
       view
-      |> form("form", paste: %{text: "I worked at Acme Corp for 5 years."})
+      |> form("form[phx-submit='submit_import']",
+        paste: %{text: "I worked at Acme Corp for 5 years."}
+      )
       |> render_submit()
 
       Process.sleep(100)
@@ -122,7 +130,9 @@ defmodule ResumeWeb.OnboardingLiveTest do
 
       # Advance past contact
       view
-      |> form("form", profile: %{name: "Jane Doe", email: "jane@test.com"})
+      |> form("form[phx-submit='save_profile']",
+        profile: %{name: "Jane Doe", email: "jane@test.com"}
+      )
       |> render_submit()
 
       # Skip import
@@ -141,7 +151,9 @@ defmodule ResumeWeb.OnboardingLiveTest do
 
     test "sending a message gets a response", %{view: view} do
       view
-      |> form("form", chat: %{message: "I work at Acme Corp as an engineer"})
+      |> form("form[phx-submit='send_message']",
+        chat: %{message: "I work at Acme Corp as an engineer"}
+      )
       |> render_submit()
 
       Process.sleep(100)
@@ -172,12 +184,16 @@ defmodule ResumeWeb.OnboardingLiveTest do
 
       # Advance through contact
       view
-      |> form("form", profile: %{name: "Jane Doe", email: "jane@test.com"})
+      |> form("form[phx-submit='save_profile']",
+        profile: %{name: "Jane Doe", email: "jane@test.com"}
+      )
       |> render_submit()
 
       # Paste text to get some facts
       view
-      |> form("form", paste: %{text: "I worked at Acme Corp for 5 years as a senior engineer."})
+      |> form("form[phx-submit='submit_import']",
+        paste: %{text: "I worked at Acme Corp for 5 years as a senior engineer."}
+      )
       |> render_submit()
 
       Process.sleep(100)
@@ -216,7 +232,7 @@ defmodule ResumeWeb.OnboardingLiveTest do
 
       # Fill in contact
       view
-      |> form("form", profile: %{name: "Jane Doe"})
+      |> form("form[phx-submit='save_profile']", profile: %{name: "Jane Doe"})
       |> render_submit()
 
       # Skip import

@@ -51,9 +51,7 @@ defmodule Resume.Resumes.Generator do
       "email" => profile["email"],
       "phone" => profile["phone"],
       "location" => profile["location"],
-      "website" => profile["website"],
-      "linkedin" => profile["linkedin"],
-      "github" => profile["github"]
+      "websites" => profile["websites"] || []
     }
   end
 
@@ -83,17 +81,23 @@ defmodule Resume.Resumes.Generator do
   end
 
   defp profile_section(profile) do
+    website_lines =
+      (profile["websites"] || [])
+      |> Enum.map(fn w ->
+        label = website_label(w)
+        "- #{label}: #{w["url"]}"
+      end)
+
     lines =
       [
         maybe_field("Name", profile["name"]),
         maybe_field("Email", profile["email"]),
         maybe_field("Phone", profile["phone"]),
-        maybe_field("Location", profile["location"]),
-        maybe_field("Website", profile["website"]),
-        maybe_field("LinkedIn", profile["linkedin"]),
-        maybe_field("GitHub", profile["github"]),
-        maybe_field("Career Goal", profile["career_goal"])
+        maybe_field("Location", profile["location"])
       ]
+      |> Enum.reject(&is_nil/1)
+      |> Kernel.++(website_lines)
+      |> Kernel.++([maybe_field("Career Goal", profile["career_goal"])])
       |> Enum.reject(&is_nil/1)
       |> Enum.join("\n")
 
@@ -102,6 +106,12 @@ defmodule Resume.Resumes.Generator do
     #{lines}\
     """
   end
+
+  defp website_label(%{"type" => "linkedin"}), do: "LinkedIn"
+  defp website_label(%{"type" => "github"}), do: "GitHub"
+  defp website_label(%{"type" => "custom", "label" => label}) when is_binary(label), do: label
+  defp website_label(%{"type" => "website", "label" => label}) when is_binary(label), do: label
+  defp website_label(_), do: "Website"
 
   defp maybe_field(_label, nil), do: nil
   defp maybe_field(_label, ""), do: nil

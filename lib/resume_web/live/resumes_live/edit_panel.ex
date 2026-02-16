@@ -45,9 +45,21 @@ defmodule ResumeWeb.ResumesLive.EditPanel do
             <.input field={ci[:email]} label="Email" type="email" />
             <.input field={ci[:phone]} label="Phone" type="tel" />
             <.input field={ci[:location]} label="Location" />
-            <.input field={ci[:website]} label="Website" type="url" />
-            <.input field={ci[:linkedin]} label="LinkedIn" />
-            <.input field={ci[:github]} label="GitHub" />
+          </div>
+          <div class="mt-2 space-y-2">
+            <.inputs_for :let={w} field={ci[:websites]}>
+              <div class="flex items-end gap-2">
+                <div class="w-28">
+                  <.input field={w[:type]} label="Type" />
+                </div>
+                <div class="flex-1">
+                  <.input field={w[:url]} label="URL" type="url" />
+                </div>
+                <div class="w-28">
+                  <.input field={w[:label]} label="Label" />
+                </div>
+              </div>
+            </.inputs_for>
           </div>
         </.inputs_for>
       </div>

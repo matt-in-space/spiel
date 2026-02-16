@@ -13,6 +13,12 @@ defmodule ResumeWeb.ResumeTemplates.Helpers do
 
   def format_flex_date(%{year: year}), do: "#{year}"
 
+  @doc "Returns display text for a website entry."
+  def website_display(%{type: "linkedin"}), do: "LinkedIn"
+  def website_display(%{type: "github"}), do: "GitHub"
+  def website_display(%{type: type} = w) when type in ["website", "custom"], do: w.label || w.url
+  def website_display(w), do: Map.get(w, :label) || Map.get(w, :url, "")
+
   @doc "Formats a date range from two FlexDate structs."
   def format_date_range(start_date, end_date, current) do
     start_str = format_flex_date(start_date)
