@@ -11,12 +11,24 @@ defmodule Resume.PDF.WeasyPrint do
 
   @impl true
   def render(html, _css, _opts \\ []) do
-    url = "#{weasyprint_url()}/pdf"
+    base_url = weasyprint_url()
+    %URI{host: host, port: port, scheme: scheme} = URI.parse(base_url)
+
+    {url, connect_opts} =
+      case :inet.getaddr(~c"#{host}", :inet6) do
+        {:ok, ip} ->
+          ip_str = :inet.ntoa(ip) |> to_string()
+          url = "#{scheme}://[#{ip_str}]:#{port}/pdf"
+          {url, [hostname: host]}
+
+        {:error, _} ->
+          {"#{base_url}/pdf", []}
+      end
 
     case Req.post(url,
            body: html,
            headers: [{"content-type", "text/html"}],
-           connect_options: [transport_opts: [inet6: true]]
+           connect_options: connect_opts
          ) do
       {:ok, %Req.Response{status: 200, body: body}} when is_binary(body) ->
         {:ok, body}
