@@ -49,12 +49,15 @@ defmodule ResumeWeb.HomeLive do
         </div>
 
         <.form :if={!@generating} for={@form} phx-change="validate" phx-submit="generate">
-          <.input
-            field={@form[:job_target]}
-            type="textarea"
+          <textarea
+            id={@form[:job_target].id}
+            name={@form[:job_target].name}
             placeholder="e.g. https://..., paste a job description, or describe your desired role"
             rows="4"
-          />
+            phx-hook=".AutoGrow"
+            class="w-full textarea resize-none overflow-y-auto"
+            style="max-height: 40vh"
+          >{Phoenix.HTML.Form.normalize_value("textarea", @form[:job_target].value)}</textarea>
           <div class="mt-4">
             <button type="submit" class="btn btn-primary w-full">
               <.icon name="hero-sparkles-micro" class="size-4" /> Generate Resume
@@ -98,6 +101,22 @@ defmodule ResumeWeb.HomeLive do
         </div>
       </div>
     </Layouts.app>
+
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".AutoGrow">
+      export default {
+        mounted() {
+          this.el.addEventListener("input", () => this.resize());
+          this.resize();
+        },
+        updated() {
+          this.resize();
+        },
+        resize() {
+          this.el.style.height = "auto";
+          this.el.style.height = this.el.scrollHeight + "px";
+        },
+      };
+    </script>
     """
   end
 

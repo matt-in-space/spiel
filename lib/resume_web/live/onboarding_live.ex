@@ -206,7 +206,12 @@ defmodule ResumeWeb.OnboardingLive do
         This information will appear on your resume's contact section.
       </p>
 
-      <.form for={@profile_form} phx-change="validate_profile" phx-submit="save_profile">
+      <.form
+        id="profile-form"
+        for={@profile_form}
+        phx-change="validate_profile"
+        phx-submit="save_profile"
+      >
         <.input field={@profile_form[:name]} label="Full Name" required />
         <.input field={@profile_form[:email]} label="Email" type="email" />
         <.input field={@profile_form[:phone]} label="Phone" type="tel" />
@@ -246,12 +251,6 @@ defmodule ResumeWeb.OnboardingLive do
             </button>
           </div>
         </div>
-
-        <div class="mt-6">
-          <button type="submit" class="btn btn-primary">
-            Next <.icon name="hero-arrow-right-micro" class="size-4" />
-          </button>
-        </div>
       </.form>
 
       <form
@@ -272,6 +271,12 @@ defmodule ResumeWeb.OnboardingLive do
           <.icon name="hero-plus-micro" class="size-4" /> Add Website
         </button>
       </form>
+
+      <div class="mt-6 flex justify-end">
+        <button type="submit" form="profile-form" class="btn btn-primary">
+          Next <.icon name="hero-arrow-right-micro" class="size-4" />
+        </button>
+      </div>
     </div>
     """
   end
@@ -300,9 +305,11 @@ defmodule ResumeWeb.OnboardingLive do
         <p class="text-sm opacity-70 mb-6">
           We'll use these alongside your interview answers to build your resume.
         </p>
-        <button phx-click="advance_from_import" class="btn btn-primary">
-          Continue <.icon name="hero-arrow-right-micro" class="size-4" />
-        </button>
+        <div class="flex justify-end">
+          <button phx-click="advance_from_import" class="btn btn-primary">
+            Continue <.icon name="hero-arrow-right-micro" class="size-4" />
+          </button>
+        </div>
       </div>
 
       <div :if={@import_status == nil}>
@@ -351,16 +358,16 @@ defmodule ResumeWeb.OnboardingLive do
               rows="6"
             />
 
-            <div class="flex items-center gap-3">
-              <button type="submit" class="btn btn-primary">
-                Import <.icon name="hero-arrow-right-micro" class="size-4" />
-              </button>
+            <p class="text-xs opacity-50">
+              No documents? No problem — skip ahead and we'll figure it out together.
+            </p>
+            <div class="flex items-center justify-end gap-3">
               <button type="button" phx-click="skip_import" class="btn btn-ghost">
                 Skip
               </button>
-              <span class="text-xs opacity-50">
-                No documents? No problem — skip ahead and we'll figure it out together.
-              </span>
+              <button type="submit" class="btn btn-primary">
+                Import <.icon name="hero-arrow-right-micro" class="size-4" />
+              </button>
             </div>
           </div>
         </.form>
@@ -456,12 +463,12 @@ defmodule ResumeWeb.OnboardingLive do
         </div>
       </.form>
 
-      <div class="flex items-center gap-3 mt-3">
-        <button phx-click="interview_done" class="btn btn-ghost btn-sm">
-          I'm done
-        </button>
+      <div class="flex items-center justify-end gap-3 mt-3">
         <button phx-click="skip_interview" class="btn btn-ghost btn-sm">
           Skip
+        </button>
+        <button phx-click="interview_done" class="btn btn-ghost btn-sm">
+          I'm done <.icon name="hero-arrow-right-micro" class="size-4" />
         </button>
       </div>
     </div>
@@ -513,13 +520,11 @@ defmodule ResumeWeb.OnboardingLive do
         </button>
       </.form>
 
-      <button
-        :if={!@recap_loading}
-        phx-click="complete_onboarding"
-        class="btn btn-primary"
-      >
-        Complete Setup <.icon name="hero-check-micro" class="size-4" />
-      </button>
+      <div :if={!@recap_loading} class="flex justify-end">
+        <button phx-click="complete_onboarding" class="btn btn-primary">
+          Complete Setup <.icon name="hero-check-micro" class="size-4" />
+        </button>
+      </div>
     </div>
     """
   end
