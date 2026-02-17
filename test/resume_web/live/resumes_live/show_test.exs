@@ -36,15 +36,11 @@ defmodule ResumeWeb.ResumesLive.ShowTest do
       )
       |> render_submit()
 
-      # Should show user message and processing indicator
-      html = render(view)
-      assert html =~ "Emphasize cloud skills"
-
-      # Wait for async task
+      # Wait for async task to complete
       Process.sleep(100)
       html = render(view)
 
-      # Should show assistant response and preview indicator
+      # Should show preview indicator and confirm/revert buttons
       assert html =~ "Preview"
       assert html =~ "Confirm Changes"
       assert html =~ "Revert"

@@ -39,7 +39,6 @@ defmodule ResumeWeb.ResumesLive.Show do
        template_css: template_mod.css(),
        template_options: @template_options,
        template_previews: build_template_previews(current_data),
-       feedback_messages: [],
        feedback_form: to_form(%{"message" => ""}, as: "feedback"),
        preview_data: nil,
        preview_explanation: nil,
@@ -66,23 +65,13 @@ defmodule ResumeWeb.ResumesLive.Show do
     end
   end
 
-  defp latest_version?(versions, current_version) do
-    current_version != nil and current_version.version == max_version(versions)
-  end
-
-  defp max_version([]), do: 0
-  defp max_version([v | _]), do: v.version
-
   defp version_data(current_version) do
     if current_version, do: Resumes.dump_version_data(current_version), else: nil
   end
 
   @impl true
   def render(assigns) do
-    assigns =
-      assigns
-      |> assign(:is_latest, latest_version?(assigns.versions, assigns.current_version))
-      |> assign(:current_data, version_data(assigns.current_version))
+    assigns = assign(assigns, :current_data, version_data(assigns.current_version))
 
     ~H"""
     <Layouts.app flash={@flash}>
@@ -169,50 +158,7 @@ defmodule ResumeWeb.ResumesLive.Show do
             </div>
           </div>
 
-          <div :if={@current_data && @is_latest} class="space-y-4">
-            <div
-              :if={@feedback_messages != []}
-              id="feedback-messages"
-              phx-hook=".ChatScroll"
-              class="max-h-80 overflow-y-auto space-y-3 p-3 bg-base-200 rounded-lg"
-            >
-              <div
-                :for={msg <- @feedback_messages}
-                class={[
-                  "chat",
-                  if(msg.role == :user, do: "chat-end", else: "chat-start")
-                ]}
-              >
-                <div class={[
-                  "chat-bubble",
-                  if(msg.role == :assistant, do: "chat-bubble-primary", else: "")
-                ]}>
-                  {msg.content}
-                </div>
-              </div>
-
-              <div :if={@pending_directive} class="chat chat-start">
-                <div class="chat-bubble chat-bubble-primary">
-                  <p class="mb-2">Should this always apply?</p>
-                  <p class="text-xs opacity-80 mb-3">"{@pending_directive}"</p>
-                  <div class="flex gap-2">
-                    <button phx-click="always_directive" class="btn btn-xs btn-accent">
-                      Always
-                    </button>
-                    <button phx-click="just_this_resume" class="btn btn-xs btn-ghost">
-                      Just this resume
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div :if={@processing_feedback} class="chat chat-start">
-                <div class="chat-bubble chat-bubble-primary">
-                  <span class="loading loading-dots loading-sm"></span>
-                </div>
-              </div>
-            </div>
-
+          <div :if={@current_data} class="space-y-4">
             <div
               id="audio-recorder"
               phx-hook=".AudioRecorder"
@@ -221,52 +167,81 @@ defmodule ResumeWeb.ResumesLive.Show do
             >
             </div>
 
-            <div :if={@transcribing} class="flex items-center gap-2 text-sm">
-              <span class="loading loading-spinner loading-xs"></span> Transcribing...
+            <div
+              :if={@processing_feedback}
+              class="flex items-center gap-2 text-sm text-base-content/70"
+            >
+              <span class="loading loading-spinner loading-sm"></span> Updating resume...
             </div>
 
-            <.form
-              for={@feedback_form}
-              phx-submit="send_feedback"
-              phx-change="validate_feedback"
-              class="flex items-end gap-2"
-            >
-              <div class="flex-1">
-                <.input
-                  field={@feedback_form[:message]}
-                  type="textarea"
-                  placeholder="Suggest changes to your resume..."
-                  autocomplete="off"
-                  rows="1"
-                  phx-hook=".AutoGrow"
-                  class="w-full textarea resize-none overflow-hidden"
-                />
+            <div :if={!@processing_feedback && @preview_data} class="space-y-3">
+              <div :if={@preview_explanation} class="bg-base-200 rounded-lg p-3 text-sm">
+                <p class="font-medium mb-1">What changed</p>
+                <p class="text-base-content/70">{@preview_explanation}</p>
               </div>
-              <%= if @recording do %>
-                <button type="button" phx-click="stop_recording" class="btn btn-error btn-sm">
-                  <.icon name="hero-stop-solid" class="size-4" />
-                </button>
-              <% else %>
-                <button type="button" phx-click="start_recording" class="btn btn-ghost btn-sm">
-                  <.icon name="hero-microphone-solid" class="size-4" />
-                </button>
-              <% end %>
-              <button
-                type="submit"
-                class="btn btn-primary btn-sm"
-                disabled={@processing_feedback || @transcribing}
-              >
-                <.icon name="hero-paper-airplane-solid" class="size-4" />
-              </button>
-            </.form>
 
-            <div :if={@preview_data} class="flex items-center gap-2">
-              <button phx-click="confirm_changes" class="btn btn-primary btn-sm">
-                <.icon name="hero-check-micro" class="size-4" /> Confirm Changes
-              </button>
-              <button phx-click="revert_changes" class="btn btn-ghost btn-sm">
-                <.icon name="hero-arrow-uturn-left-micro" class="size-4" /> Revert
-              </button>
+              <div :if={@pending_directive} class="bg-base-200 rounded-lg p-3 text-sm">
+                <p class="mb-2">Should this always apply?</p>
+                <p class="text-xs opacity-80 mb-2">"{@pending_directive}"</p>
+                <div class="flex gap-2">
+                  <button phx-click="always_directive" class="btn btn-xs btn-accent">
+                    Always
+                  </button>
+                  <button phx-click="just_this_resume" class="btn btn-xs btn-ghost">
+                    Just this resume
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button phx-click="confirm_changes" class="btn btn-primary btn-sm">
+                  <.icon name="hero-check-micro" class="size-4" /> Confirm Changes
+                </button>
+                <button phx-click="revert_changes" class="btn btn-ghost btn-sm">
+                  <.icon name="hero-arrow-uturn-left-micro" class="size-4" /> Revert
+                </button>
+              </div>
+            </div>
+
+            <div :if={!@processing_feedback && !@preview_data}>
+              <div :if={@transcribing} class="flex items-center gap-2 text-sm mb-2">
+                <span class="loading loading-spinner loading-xs"></span> Transcribing...
+              </div>
+
+              <.form
+                for={@feedback_form}
+                phx-submit="send_feedback"
+                phx-change="validate_feedback"
+                class="flex items-end gap-2"
+              >
+                <div class="flex-1">
+                  <.input
+                    field={@feedback_form[:message]}
+                    type="textarea"
+                    placeholder="Suggest changes to your resume..."
+                    autocomplete="off"
+                    rows="1"
+                    phx-hook=".AutoGrow"
+                    class="w-full textarea resize-none overflow-hidden"
+                  />
+                </div>
+                <%= if @recording do %>
+                  <button type="button" phx-click="stop_recording" class="btn btn-error btn-sm">
+                    <.icon name="hero-stop-solid" class="size-4" />
+                  </button>
+                <% else %>
+                  <button type="button" phx-click="start_recording" class="btn btn-ghost btn-sm">
+                    <.icon name="hero-microphone-solid" class="size-4" />
+                  </button>
+                <% end %>
+                <button
+                  type="submit"
+                  class="btn btn-primary btn-sm"
+                  disabled={@transcribing}
+                >
+                  <.icon name="hero-paper-airplane-solid" class="size-4" />
+                </button>
+              </.form>
             </div>
           </div>
 
@@ -445,20 +420,6 @@ defmodule ResumeWeb.ResumesLive.Show do
         },
       };
     </script>
-
-    <script :type={Phoenix.LiveView.ColocatedHook} name=".ChatScroll">
-      export default {
-        mounted() {
-          this.scrollToBottom();
-        },
-        updated() {
-          this.scrollToBottom();
-        },
-        scrollToBottom() {
-          this.el.scrollTop = this.el.scrollHeight;
-        },
-      };
-    </script>
     """
   end
 
@@ -595,13 +556,8 @@ defmodule ResumeWeb.ResumesLive.Show do
       {:ok, user} ->
         {:noreply,
          socket
-         |> assign(
-           user: user,
-           pending_directive: nil,
-           feedback_messages:
-             socket.assigns.feedback_messages ++
-               [%{role: :assistant, content: "Saved as a standing rule: \"#{directive}\""}]
-         )}
+         |> assign(user: user, pending_directive: nil)
+         |> put_flash(:info, "Saved as a standing rule.")}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to save directive.")}
@@ -610,13 +566,7 @@ defmodule ResumeWeb.ResumesLive.Show do
 
   @impl true
   def handle_event("just_this_resume", _params, socket) do
-    {:noreply,
-     assign(socket,
-       pending_directive: nil,
-       feedback_messages:
-         socket.assigns.feedback_messages ++
-           [%{role: :assistant, content: "Applied to this resume only."}]
-     )}
+    {:noreply, assign(socket, pending_directive: nil)}
   end
 
   # Voice recording events
@@ -750,19 +700,17 @@ defmodule ResumeWeb.ResumesLive.Show do
   end
 
   defp process_feedback_message(socket, message) do
-    messages = socket.assigns.feedback_messages ++ [%{role: :user, content: message}]
     user = Accounts.get_user!(socket.assigns.user.id)
     current_version = socket.assigns.current_version
     current_data = socket.assigns.preview_data || version_data_to_map(current_version)
 
     task =
       Task.async(fn ->
-        Feedback.process_feedback(current_data, user, message, history: messages)
+        Feedback.process_feedback(current_data, user, message, history: [])
       end)
 
     socket
     |> assign(
-      feedback_messages: messages,
       processing_feedback: true,
       feedback_form: to_form(%{"message" => ""}, as: "feedback"),
       user: user
@@ -771,14 +719,12 @@ defmodule ResumeWeb.ResumesLive.Show do
   end
 
   defp handle_feedback_result(socket, result) do
-    messages =
-      socket.assigns.feedback_messages ++
-        [%{role: :assistant, content: result.explanation}]
-
-    socket = assign(socket, processing_feedback: false, feedback_messages: messages)
-
-    # Set preview data
-    socket = assign(socket, preview_data: result.data, preview_explanation: result.explanation)
+    socket =
+      assign(socket,
+        processing_feedback: false,
+        preview_data: result.data,
+        preview_explanation: result.explanation
+      )
 
     # Handle classification
     socket =
@@ -788,21 +734,8 @@ defmodule ResumeWeb.ResumesLive.Show do
           directives = (user.directives || []) ++ [result.directive]
 
           case Accounts.update_user_directives(user, directives) do
-            {:ok, user} ->
-              assign(socket,
-                user: user,
-                feedback_messages:
-                  socket.assigns.feedback_messages ++
-                    [
-                      %{
-                        role: :assistant,
-                        content: "Saved as a standing rule: \"#{result.directive}\""
-                      }
-                    ]
-              )
-
-            {:error, _} ->
-              socket
+            {:ok, user} -> assign(socket, user: user)
+            {:error, _} -> socket
           end
 
         :ambiguous when is_binary(result.directive) ->
@@ -822,25 +755,11 @@ defmodule ResumeWeb.ResumesLive.Show do
     user = Accounts.get_user!(socket.assigns.user.id)
     facts = user.facts || []
 
-    {facts, descriptions} = Resume.Facts.apply_changes(facts, changes)
+    {facts, _descriptions} = Resume.Facts.apply_changes(facts, changes)
 
     case Accounts.update_user_facts(user, facts) do
-      {:ok, user} ->
-        if descriptions != [] do
-          msg = Enum.join(descriptions, ". ") <> "."
-
-          assign(socket,
-            user: user,
-            feedback_messages:
-              socket.assigns.feedback_messages ++
-                [%{role: :assistant, content: msg}]
-          )
-        else
-          assign(socket, user: user)
-        end
-
-      {:error, _} ->
-        socket
+      {:ok, user} -> assign(socket, user: user)
+      {:error, _} -> socket
     end
   end
 
