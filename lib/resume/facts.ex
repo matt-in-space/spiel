@@ -184,7 +184,8 @@ defmodule Resume.Facts do
   defp valid_operation?(%{"type" => "add", "text" => t}) when is_binary(t), do: true
 
   defp valid_operation?(%{"type" => "update", "index" => i, "text" => t})
-       when is_integer(i) and is_binary(t), do: true
+       when is_integer(i) and is_binary(t),
+       do: true
 
   defp valid_operation?(%{"type" => "remove", "index" => i}) when is_integer(i), do: true
   defp valid_operation?(_), do: false
