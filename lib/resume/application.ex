@@ -15,6 +15,8 @@ defmodule Resume.Application do
       {Phoenix.PubSub, name: Resume.PubSub},
       # Start a worker by calling: Resume.Worker.start_link(arg)
       # {Resume.Worker, arg},
+      # Standalone metrics server for Fly.io scraping (avoids Plug.SSL redirects)
+      {Bandit, plug: ResumeWeb.MetricsEndpoint, port: 9091, scheme: :http},
       # Start to serve requests, typically the last entry
       ResumeWeb.Endpoint
     ]
