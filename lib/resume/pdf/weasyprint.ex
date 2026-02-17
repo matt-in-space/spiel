@@ -13,7 +13,11 @@ defmodule Resume.PDF.WeasyPrint do
   def render(html, _css, _opts \\ []) do
     url = "#{weasyprint_url()}/pdf"
 
-    case Req.post(url, body: html, headers: [{"content-type", "text/html"}]) do
+    case Req.post(url,
+           body: html,
+           headers: [{"content-type", "text/html"}],
+           connect_options: [transport_opts: [inet6: true]]
+         ) do
       {:ok, %Req.Response{status: 200, body: body}} when is_binary(body) ->
         {:ok, body}
 
