@@ -425,35 +425,35 @@ defmodule ResumeWeb.OnboardingLive do
         for={@input_form}
         phx-change="validate_chat"
         phx-submit="send_message"
-        class="flex items-end gap-2"
+        class="rounded-lg border border-base-300 focus-within:border-primary transition-colors"
       >
-        <div class="flex-1">
-          <.input
-            field={@input_form[:message]}
-            type="textarea"
-            placeholder="Type your response..."
-            autocomplete="off"
-            rows="1"
-            phx-hook=".AutoGrow"
-            class="w-full textarea resize-none overflow-hidden"
-          />
+        <textarea
+          id={@input_form[:message].id}
+          name={@input_form[:message].name}
+          placeholder="Type your response..."
+          autocomplete="off"
+          rows="1"
+          phx-hook=".AutoGrow"
+          class="w-full resize-none overflow-hidden border-none bg-transparent px-3 pt-3 pb-1 text-sm focus:outline-none focus:ring-0"
+        >{Phoenix.HTML.Form.normalize_value("textarea", @input_form[:message].value)}</textarea>
+        <div class="flex items-center justify-end gap-1 px-2 pb-2">
+          <%= if @recording do %>
+            <button type="button" phx-click="stop_recording" class="btn btn-error btn-xs btn-circle">
+              <.icon name="hero-stop-solid" class="size-3.5" />
+            </button>
+          <% else %>
+            <button type="button" phx-click="start_recording" class="btn btn-ghost btn-xs btn-circle">
+              <.icon name="hero-microphone-solid" class="size-3.5" />
+            </button>
+          <% end %>
+          <button
+            type="submit"
+            class="btn btn-primary btn-xs btn-circle"
+            disabled={@interview_processing || @transcribing}
+          >
+            <.icon name="hero-paper-airplane-solid" class="size-3.5" />
+          </button>
         </div>
-        <%= if @recording do %>
-          <button type="button" phx-click="stop_recording" class="btn btn-error btn-sm">
-            <.icon name="hero-stop-solid" class="size-4" />
-          </button>
-        <% else %>
-          <button type="button" phx-click="start_recording" class="btn btn-ghost btn-sm">
-            <.icon name="hero-microphone-solid" class="size-4" />
-          </button>
-        <% end %>
-        <button
-          type="submit"
-          class="btn btn-primary btn-sm"
-          disabled={@interview_processing || @transcribing}
-        >
-          <.icon name="hero-paper-airplane-solid" class="size-4" />
-        </button>
       </.form>
 
       <div class="flex items-center gap-3 mt-3">

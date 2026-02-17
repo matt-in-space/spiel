@@ -1,7 +1,7 @@
 defmodule ResumeWeb.RecordingLive do
   use ResumeWeb, :live_view
 
-  alias Resume.Accounts
+  alias Resume.{Accounts, Retry}
 
   @impl true
   def mount(_params, session, socket) do
@@ -272,7 +272,9 @@ defmodule ResumeWeb.RecordingLive do
 
     task =
       Task.async(fn ->
-        Resume.Transcription.transcribe(audio_binary, content_type: type)
+        Retry.with_retry(fn ->
+          Resume.Transcription.transcribe(audio_binary, content_type: type)
+        end)
       end)
 
     socket =
@@ -302,10 +304,12 @@ defmodule ResumeWeb.RecordingLive do
 
     task =
       Task.async(fn ->
-        Resume.Facts.extract(transcripts, "voice recordings about their career",
-          existing_facts: socket.assigns.user.facts,
-          user_id: socket.assigns.user.id
-        )
+        Retry.with_retry(fn ->
+          Resume.Facts.extract(transcripts, "voice recordings about their career",
+            existing_facts: socket.assigns.user.facts,
+            user_id: socket.assigns.user.id
+          )
+        end)
       end)
 
     socket =

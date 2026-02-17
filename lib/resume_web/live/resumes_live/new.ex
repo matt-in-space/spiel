@@ -1,7 +1,7 @@
 defmodule ResumeWeb.ResumesLive.New do
   use ResumeWeb, :live_view
 
-  alias Resume.{Accounts, JobPostings, Resumes}
+  alias Resume.{Accounts, JobPostings, Resumes, Retry}
 
   @impl true
   def mount(_params, session, socket) do
@@ -100,14 +100,17 @@ defmodule ResumeWeb.ResumesLive.New do
 
       task =
         Task.async(fn ->
-          job_posting_text = resolve_job_posting_text(url, text)
+          {job_posting_text, url_failed?} = resolve_job_posting_text(url, text)
 
           opts =
             []
             |> maybe_add_opt(:job_posting_text, job_posting_text)
             |> maybe_add_opt(:job_posting_url, url)
 
-          Resumes.generate_resume(user, title, opts)
+          case Retry.with_retry(fn -> Resumes.generate_resume(user, title, opts) end) do
+            {:ok, resume} -> {:ok, resume, url_failed?}
+            error -> error
+          end
         end)
 
       {:noreply,
@@ -117,13 +120,13 @@ defmodule ResumeWeb.ResumesLive.New do
     end
   end
 
-  defp resolve_job_posting_text(nil, nil), do: nil
-  defp resolve_job_posting_text(_url, text) when is_binary(text), do: text
+  defp resolve_job_posting_text(nil, nil), do: {nil, false}
+  defp resolve_job_posting_text(_url, text) when is_binary(text), do: {text, false}
 
   defp resolve_job_posting_text(url, nil) do
     case JobPostings.fetch_text(url) do
-      {:ok, text} -> text
-      {:error, _reason} -> nil
+      {:ok, text} -> {text, false}
+      {:error, _reason} -> {nil, true}
     end
   end
 
@@ -146,7 +149,16 @@ defmodule ResumeWeb.ResumesLive.New do
     socket = assign(socket, task_refs: task_refs)
 
     case {tag, result} do
-      {:generate, {:ok, resume}} ->
+      {:generate, {:ok, resume, true}} ->
+        {:noreply,
+         socket
+         |> put_flash(
+           :error,
+           "Couldn't fetch the job posting URL. You can paste the text on the resume page."
+         )
+         |> push_navigate(to: ~p"/resumes/#{resume}")}
+
+      {:generate, {:ok, resume, _}} ->
         {:noreply, push_navigate(socket, to: ~p"/resumes/#{resume}")}
 
       {:generate, {:error, _reason}} ->

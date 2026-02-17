@@ -19,7 +19,14 @@ defmodule Resume.JobPostings do
 
     case Req.get(url, req_opts) do
       {:ok, %Req.Response{status: 200, body: body}} when is_binary(body) ->
-        {:ok, extract_text(body)}
+        text = extract_text(body)
+
+        if usable_text?(text) do
+          {:ok, text}
+        else
+          Logger.warning("Job posting URL returned unusable content: #{url}")
+          {:error, :unusable_content}
+        end
 
       {:ok, %Req.Response{status: status}} ->
         {:error, {:http_status, status}}
@@ -49,6 +56,22 @@ defmodule Resume.JobPostings do
     |> String.replace(~r/\n{3,}/, "\n\n")
     |> String.trim()
     |> truncate(20_000)
+  end
+
+  @gate_patterns [
+    ~r/javascript (?:is )?(?:required|must be enabled|needs to be enabled|not enabled)/i,
+    ~r/enable javascript/i,
+    ~r/please (?:sign|log) ?in/i,
+    ~r/you (?:must|need to) (?:sign|log) ?in/i,
+    ~r/not authenticated/i,
+    ~r/access denied/i,
+    ~r/verify you(?:'re| are) (?:a )?human/i,
+    ~r/checking your browser/i,
+    ~r/captcha/i
+  ]
+
+  defp usable_text?(text) do
+    String.length(text) >= 50 and not Enum.any?(@gate_patterns, &Regex.match?(&1, text))
   end
 
   defp remove_elements(html, pattern), do: String.replace(html, pattern, " ")

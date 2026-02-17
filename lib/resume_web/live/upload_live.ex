@@ -1,7 +1,7 @@
 defmodule ResumeWeb.UploadLive do
   use ResumeWeb, :live_view
 
-  alias Resume.Accounts
+  alias Resume.{Accounts, Retry}
 
   @impl true
   def mount(_params, session, socket) do
@@ -165,10 +165,14 @@ defmodule ResumeWeb.UploadLive do
     """
   end
 
-  defp upload_error_message(:too_large), do: "File is too large (max 2 MB)"
-  defp upload_error_message(:not_accepted), do: "Only .txt and .pdf files are accepted"
-  defp upload_error_message(:too_many_files), do: "Only one file at a time"
-  defp upload_error_message(_), do: "Upload error"
+  defp upload_error_message(:too_large),
+    do: "File is too large (max 2 MB). Try pasting the text instead."
+
+  defp upload_error_message(:not_accepted),
+    do: "Unsupported format — please upload a .txt or .pdf file."
+
+  defp upload_error_message(:too_many_files), do: "Only one file at a time."
+  defp upload_error_message(_), do: "Upload failed. Try pasting the text directly."
 
   @impl true
   def handle_event("validate_paste", %{"paste" => params}, socket) do
@@ -206,7 +210,12 @@ defmodule ResumeWeb.UploadLive do
 
     cond do
       extraction_error != nil ->
-        {:noreply, put_flash(socket, :error, "Failed to read file: #{extraction_error}")}
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Couldn't read that file. Make sure it's a valid .txt or .pdf and try again, or paste the text directly."
+         )}
 
       combined == "" ->
         {:noreply, put_flash(socket, :error, "Please upload a file or paste some text.")}
@@ -235,10 +244,12 @@ defmodule ResumeWeb.UploadLive do
 
     task =
       Task.async(fn ->
-        Resume.Facts.extract([text], "an uploaded document about their career",
-          existing_facts: socket.assigns.user.facts,
-          user_id: socket.assigns.user.id
-        )
+        Retry.with_retry(fn ->
+          Resume.Facts.extract([text], "an uploaded document about their career",
+            existing_facts: socket.assigns.user.facts,
+            user_id: socket.assigns.user.id
+          )
+        end)
       end)
 
     socket =

@@ -52,7 +52,8 @@ defmodule Resume.JobPostingsTest do
     end
 
     test "decodes HTML entities" do
-      html = "<p>Ruby &amp; Rails &lt;3</p>"
+      html =
+        "<div><h1>Ruby &amp; Rails Developer</h1><p>We need someone who loves Ruby &amp; Rails &lt;3 and has 5+ years of experience building web applications.</p></div>"
 
       Req.Test.stub(JobPostings, fn conn ->
         Plug.Conn.send_resp(conn, 200, html)
@@ -61,7 +62,32 @@ defmodule Resume.JobPostingsTest do
       assert {:ok, text} =
                JobPostings.fetch_text("http://example.com/job", plug: {Req.Test, JobPostings})
 
-      assert text =~ "Ruby & Rails <3"
+      assert text =~ "Ruby & Rails"
+      assert text =~ "<3"
+    end
+
+    test "rejects gate pages that require JavaScript or login" do
+      for html <- [
+            "<html><body><p>JavaScript must be enabled to use this application.</p></body></html>",
+            "<html><body><p>Please sign in to view this page.</p></body></html>",
+            "<html><body><p>Checking your browser before accessing the site.</p></body></html>"
+          ] do
+        Req.Test.stub(JobPostings, fn conn ->
+          Plug.Conn.send_resp(conn, 200, html)
+        end)
+
+        assert {:error, :unusable_content} =
+                 JobPostings.fetch_text("http://example.com/job", plug: {Req.Test, JobPostings})
+      end
+    end
+
+    test "rejects pages with too little content" do
+      Req.Test.stub(JobPostings, fn conn ->
+        Plug.Conn.send_resp(conn, 200, "<p>Error</p>")
+      end)
+
+      assert {:error, :unusable_content} =
+               JobPostings.fetch_text("http://example.com/job", plug: {Req.Test, JobPostings})
     end
   end
 end

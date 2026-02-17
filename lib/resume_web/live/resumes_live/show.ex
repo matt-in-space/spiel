@@ -3,7 +3,7 @@ defmodule ResumeWeb.ResumesLive.Show do
 
   require Logger
 
-  alias Resume.{Accounts, Feedback, Resumes}
+  alias Resume.{Accounts, Feedback, Resumes, Retry}
   alias ResumeWeb.ResumeTemplates.Default
 
   @templates %{
@@ -212,35 +212,43 @@ defmodule ResumeWeb.ResumesLive.Show do
                 for={@feedback_form}
                 phx-submit="send_feedback"
                 phx-change="validate_feedback"
-                class="flex items-end gap-2"
+                class="rounded-lg border border-base-300 focus-within:border-primary transition-colors"
               >
-                <div class="flex-1">
-                  <.input
-                    field={@feedback_form[:message]}
-                    type="textarea"
-                    placeholder="Suggest changes to your resume..."
-                    autocomplete="off"
-                    rows="1"
-                    phx-hook=".AutoGrow"
-                    class="w-full textarea resize-none overflow-hidden"
-                  />
+                <textarea
+                  id={@feedback_form[:message].id}
+                  name={@feedback_form[:message].name}
+                  placeholder="Suggest changes to your resume..."
+                  autocomplete="off"
+                  rows="1"
+                  phx-hook=".AutoGrow"
+                  class="w-full resize-none overflow-hidden border-none bg-transparent px-3 pt-3 pb-1 text-sm focus:outline-none focus:ring-0"
+                >{Phoenix.HTML.Form.normalize_value("textarea", @feedback_form[:message].value)}</textarea>
+                <div class="flex items-center justify-end gap-1 px-2 pb-2">
+                  <%= if @recording do %>
+                    <button
+                      type="button"
+                      phx-click="stop_recording"
+                      class="btn btn-error btn-xs btn-circle"
+                    >
+                      <.icon name="hero-stop-solid" class="size-3.5" />
+                    </button>
+                  <% else %>
+                    <button
+                      type="button"
+                      phx-click="start_recording"
+                      class="btn btn-ghost btn-xs btn-circle"
+                    >
+                      <.icon name="hero-microphone-solid" class="size-3.5" />
+                    </button>
+                  <% end %>
+                  <button
+                    type="submit"
+                    class="btn btn-primary btn-xs btn-circle"
+                    disabled={@transcribing}
+                  >
+                    <.icon name="hero-paper-airplane-solid" class="size-3.5" />
+                  </button>
                 </div>
-                <%= if @recording do %>
-                  <button type="button" phx-click="stop_recording" class="btn btn-error btn-sm">
-                    <.icon name="hero-stop-solid" class="size-4" />
-                  </button>
-                <% else %>
-                  <button type="button" phx-click="start_recording" class="btn btn-ghost btn-sm">
-                    <.icon name="hero-microphone-solid" class="size-4" />
-                  </button>
-                <% end %>
-                <button
-                  type="submit"
-                  class="btn btn-primary btn-sm"
-                  disabled={@transcribing}
-                >
-                  <.icon name="hero-paper-airplane-solid" class="size-4" />
-                </button>
               </.form>
             </div>
           </div>
@@ -593,7 +601,9 @@ defmodule ResumeWeb.ResumesLive.Show do
 
     task =
       Task.async(fn ->
-        Resume.Transcription.transcribe(audio_binary, content_type: type)
+        Retry.with_retry(fn ->
+          Resume.Transcription.transcribe(audio_binary, content_type: type)
+        end)
       end)
 
     {:noreply,
@@ -706,7 +716,9 @@ defmodule ResumeWeb.ResumesLive.Show do
 
     task =
       Task.async(fn ->
-        Feedback.process_feedback(current_data, user, message, history: [])
+        Retry.with_retry(fn ->
+          Feedback.process_feedback(current_data, user, message, history: [])
+        end)
       end)
 
     socket

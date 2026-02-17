@@ -1,7 +1,7 @@
 defmodule ResumeWeb.HomeLive do
   use ResumeWeb, :live_view
 
-  alias Resume.{Accounts, JobPostings, Resumes}
+  alias Resume.{Accounts, JobPostings, Resumes, Retry}
 
   @impl true
   def mount(_params, session, socket) do
@@ -117,7 +117,7 @@ defmodule ResumeWeb.HomeLive do
 
       task =
         Task.async(fn ->
-          {job_posting_text, job_posting_url} = resolve_input(input)
+          {job_posting_text, job_posting_url, url_failed?} = resolve_input(input)
           title = generate_title(input)
 
           opts =
@@ -125,7 +125,10 @@ defmodule ResumeWeb.HomeLive do
             |> maybe_add_opt(:job_posting_text, job_posting_text)
             |> maybe_add_opt(:job_posting_url, job_posting_url)
 
-          Resumes.generate_resume(user, title, opts)
+          case Retry.with_retry(fn -> Resumes.generate_resume(user, title, opts) end) do
+            {:ok, resume} -> {:ok, resume, url_failed?}
+            error -> error
+          end
         end)
 
       {:noreply,
@@ -149,7 +152,16 @@ defmodule ResumeWeb.HomeLive do
     socket = assign(socket, task_refs: task_refs)
 
     case {tag, result} do
-      {:generate, {:ok, resume}} ->
+      {:generate, {:ok, resume, true}} ->
+        {:noreply,
+         socket
+         |> put_flash(
+           :error,
+           "Couldn't fetch that URL. Try pasting the job description text instead."
+         )
+         |> push_navigate(to: ~p"/resumes/#{resume}")}
+
+      {:generate, {:ok, resume, _}} ->
         {:noreply, push_navigate(socket, to: ~p"/resumes/#{resume}")}
 
       {:generate, {:error, _reason}} ->
@@ -173,11 +185,11 @@ defmodule ResumeWeb.HomeLive do
       url = input |> String.split("\n") |> List.first() |> String.trim()
 
       case JobPostings.fetch_text(url) do
-        {:ok, text} -> {text, url}
-        {:error, _} -> {input, url}
+        {:ok, text} -> {text, url, false}
+        {:error, _} -> {nil, url, true}
       end
     else
-      {input, nil}
+      {input, nil, false}
     end
   end
 
