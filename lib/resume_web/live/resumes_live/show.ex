@@ -43,6 +43,7 @@ defmodule ResumeWeb.ResumesLive.Show do
        preview_data: nil,
        preview_explanation: nil,
        pending_directive: nil,
+       pending_fact_changes: [],
        processing_feedback: false,
        recording: false,
        transcribing: false,
@@ -528,16 +529,20 @@ defmodule ResumeWeb.ResumesLive.Show do
       {:ok, version} ->
         versions = Resumes.list_versions(resume.id)
 
-        {:noreply,
-         socket
-         |> assign(
-           versions: versions,
-           current_version: version,
-           template_previews: build_template_previews(version_data(version)),
-           preview_data: nil,
-           preview_explanation: nil
-         )
-         |> put_flash(:info, "Changes saved.")}
+        socket =
+          socket
+          |> apply_fact_changes(socket.assigns.pending_fact_changes)
+          |> assign(
+            versions: versions,
+            current_version: version,
+            template_previews: build_template_previews(version_data(version)),
+            preview_data: nil,
+            preview_explanation: nil,
+            pending_fact_changes: []
+          )
+          |> put_flash(:info, "Changes saved.")
+
+        {:noreply, socket}
 
       {:error, _changeset} ->
         {:noreply, put_flash(socket, :error, "Failed to save changes.")}
@@ -550,7 +555,8 @@ defmodule ResumeWeb.ResumesLive.Show do
      assign(socket,
        preview_data: nil,
        preview_explanation: nil,
-       pending_directive: nil
+       pending_directive: nil,
+       pending_fact_changes: []
      )}
   end
 
@@ -597,19 +603,23 @@ defmodule ResumeWeb.ResumesLive.Show do
 
   @impl true
   def handle_event("audio_data", %{"data" => data, "type" => type}, socket) do
-    audio_binary = Base.decode64!(data)
+    if socket.assigns.processing_feedback do
+      {:noreply, assign(socket, recording: false)}
+    else
+      audio_binary = Base.decode64!(data)
 
-    task =
-      Task.async(fn ->
-        Retry.with_retry(fn ->
-          Resume.Transcription.transcribe(audio_binary, content_type: type)
+      task =
+        Task.async(fn ->
+          Retry.with_retry(fn ->
+            Resume.Transcription.transcribe(audio_binary, content_type: type)
+          end)
         end)
-      end)
 
-    {:noreply,
-     socket
-     |> assign(recording: false, transcribing: true)
-     |> update(:task_refs, &Map.put(&1, task.ref, :transcribe_feedback))}
+      {:noreply,
+       socket
+       |> assign(recording: false, transcribing: true)
+       |> update(:task_refs, &Map.put(&1, task.ref, :transcribe_feedback))}
+    end
   end
 
   @impl true
@@ -646,11 +656,14 @@ defmodule ResumeWeb.ResumesLive.Show do
          |> assign(processing_feedback: false)
          |> put_flash(:error, "Failed to process feedback. Please try again.")}
 
-      {:transcribe_feedback, {:ok, transcript}} ->
+      {:transcribe_feedback, {:ok, transcript}} when not socket.assigns.processing_feedback ->
         {:noreply,
          socket
          |> assign(transcribing: false)
          |> process_feedback_message(transcript)}
+
+      {:transcribe_feedback, {:ok, _transcript}} ->
+        {:noreply, assign(socket, transcribing: false)}
 
       {:transcribe_feedback, {:error, _reason}} ->
         {:noreply,
@@ -757,8 +770,8 @@ defmodule ResumeWeb.ResumesLive.Show do
           socket
       end
 
-    # Handle fact changes
-    apply_fact_changes(socket, result.fact_changes)
+    # Stash fact changes for apply on confirm
+    assign(socket, pending_fact_changes: result.fact_changes)
   end
 
   defp apply_fact_changes(socket, []), do: socket
