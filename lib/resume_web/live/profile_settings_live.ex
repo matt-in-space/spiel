@@ -54,6 +54,12 @@ defmodule ResumeWeb.ProfileSettingsLive do
     ~H"""
     <Layouts.app flash={@flash}>
       <div class="space-y-6">
+        <div class="text-sm breadcrumbs p-0">
+          <ul>
+            <li><.link navigate={~p"/home"}>Home</.link></li>
+            <li>Profile</li>
+          </ul>
+        </div>
         <h1 class="text-2xl font-semibold tracking-tight">Profile Settings</h1>
 
         <div role="tablist" class="tabs tabs-bordered">

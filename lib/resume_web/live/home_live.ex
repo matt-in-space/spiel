@@ -12,6 +12,9 @@ defmodule ResumeWeb.HomeLive do
      socket
      |> assign(
        user: user,
+       profile_name: get_in(user.default_resume_data, ["name"]),
+       fact_count: length(user.facts || []),
+       directive_count: length(user.directives || []),
        form: to_form(%{"job_target" => ""}, as: "generate"),
        generating: false,
        task_refs: %{}
@@ -36,6 +39,25 @@ defmodule ResumeWeb.HomeLive do
     ~H"""
     <Layouts.app flash={@flash}>
       <div class="space-y-8 max-w-2xl mx-auto">
+        <div class="flex items-center justify-between">
+          <div :if={@profile_name}>
+            <p class="font-medium text-sm">{@profile_name}</p>
+            <p class="text-xs opacity-50">
+              {ngettext("%{count} detail", "%{count} details", @fact_count)} · {ngettext(
+                "%{count} rule",
+                "%{count} rules",
+                @directive_count
+              )}
+            </p>
+          </div>
+          <p :if={!@profile_name} class="text-sm opacity-70">
+            Set up your profile to generate better resumes
+          </p>
+          <.link navigate={~p"/profile"} class="btn btn-ghost btn-xs">
+            {if @profile_name, do: "Edit Profile", else: "Set up"}
+          </.link>
+        </div>
+
         <div class="text-center space-y-2">
           <h1 class="text-3xl font-semibold tracking-tight">What role are you targeting?</h1>
           <p class="text-sm opacity-70">
@@ -67,36 +89,36 @@ defmodule ResumeWeb.HomeLive do
 
         <div class="divider">Your Resumes</div>
 
-        <div id="resumes" phx-update="stream" class="space-y-3">
+        <div id="resumes" phx-update="stream" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div
             :for={{dom_id, resume} <- @streams.resumes}
             id={dom_id}
-            class="card bg-base-200 border border-base-300 hover:border-base-content/20 transition-colors relative"
+            class="card bg-base-200 border border-base-300 hover:border-base-content/20 transition-colors relative p-3 flex flex-col gap-2"
           >
-            <div class="card-body py-3 px-4 flex-row items-center justify-between">
-              <.link navigate={~p"/resumes/#{resume}"} class="after:absolute after:inset-0">
-                <h2 class="font-medium text-sm">
-                  {resume.title}
-                  <span
-                    :if={resume.job_posting_text || resume.job_posting_url}
-                    class="badge badge-accent badge-xs ml-1"
-                  >
-                    Targeted
-                  </span>
-                </h2>
-                <p class="text-xs opacity-50">
+            <.link navigate={~p"/resumes/#{resume}"} class="after:absolute after:inset-0">
+              <h2 class="font-medium text-sm">
+                {resume.title}
+              </h2>
+              <div class="flex items-center gap-1.5 mt-1">
+                <span class="text-xs opacity-50">
                   {Calendar.strftime(resume.inserted_at, "%b %d, %Y")}
-                </p>
-              </.link>
-              <button
-                phx-click="delete"
-                phx-value-id={resume.id}
-                data-confirm="Delete this resume?"
-                class="btn btn-ghost btn-xs text-error relative z-10"
-              >
-                <.icon name="hero-trash-micro" class="size-3.5" />
-              </button>
-            </div>
+                </span>
+                <span
+                  :if={resume.job_posting_text || resume.job_posting_url}
+                  class="badge badge-accent badge-xs"
+                >
+                  Targeted
+                </span>
+              </div>
+            </.link>
+            <button
+              phx-click="delete"
+              phx-value-id={resume.id}
+              data-confirm="Delete this resume?"
+              class="btn btn-ghost btn-xs text-error absolute top-2 right-2 z-10"
+            >
+              <.icon name="hero-trash-micro" class="size-3.5" />
+            </button>
           </div>
         </div>
       </div>
