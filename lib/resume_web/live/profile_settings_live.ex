@@ -175,7 +175,7 @@ defmodule ResumeWeb.ProfileSettingsLive do
                     placeholder="Add details or rules — just type naturally, e.g. 'I worked at Google for 3 years as a senior engineer' or 'always emphasize leadership skills'"
                     autocomplete="off"
                     rows="2"
-                    phx-hook=".AutoGrow"
+                    phx-hook="AutoGrow"
                     class="w-full textarea resize-none overflow-hidden"
                   />
                 </div>
@@ -291,22 +291,6 @@ defmodule ResumeWeb.ProfileSettingsLive do
         </div>
       </div>
     </Layouts.app>
-
-    <script :type={Phoenix.LiveView.ColocatedHook} name=".AutoGrow">
-      export default {
-        mounted() {
-          this.el.addEventListener("input", () => this.resize());
-          this.resize();
-        },
-        updated() {
-          this.resize();
-        },
-        resize() {
-          this.el.style.height = "auto";
-          this.el.style.height = this.el.scrollHeight + "px";
-        },
-      };
-    </script>
 
     <script :type={Phoenix.LiveView.ColocatedHook} name=".AudioRecorder">
       export default {

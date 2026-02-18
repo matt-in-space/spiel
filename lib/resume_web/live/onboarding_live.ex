@@ -177,22 +177,6 @@ defmodule ResumeWeb.OnboardingLive do
         },
       };
     </script>
-
-    <script :type={Phoenix.LiveView.ColocatedHook} name=".AutoGrow">
-      export default {
-        mounted() {
-          this.el.addEventListener("input", () => this.resize());
-          this.resize();
-        },
-        updated() {
-          this.resize();
-        },
-        resize() {
-          this.el.style.height = "auto";
-          this.el.style.height = this.el.scrollHeight + "px";
-        },
-      };
-    </script>
     """
   end
 
@@ -440,7 +424,7 @@ defmodule ResumeWeb.OnboardingLive do
           placeholder="Type your response..."
           autocomplete="off"
           rows="1"
-          phx-hook=".AutoGrow"
+          phx-hook="AutoGrow"
           class="w-full resize-none overflow-hidden border-none bg-transparent px-3 pt-3 pb-1 text-sm focus:outline-none focus:ring-0"
         >{Phoenix.HTML.Form.normalize_value("textarea", @input_form[:message].value)}</textarea>
         <div class="flex items-center justify-end gap-1 px-2 pb-2">

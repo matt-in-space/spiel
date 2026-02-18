@@ -221,7 +221,7 @@ defmodule ResumeWeb.ResumesLive.Show do
                   placeholder="Suggest changes to your resume..."
                   autocomplete="off"
                   rows="1"
-                  phx-hook=".AutoGrow"
+                  phx-hook="AutoGrow"
                   class="w-full resize-none overflow-hidden border-none bg-transparent px-3 pt-3 pb-1 text-sm focus:outline-none focus:ring-0"
                 >{Phoenix.HTML.Form.normalize_value("textarea", @feedback_form[:message].value)}</textarea>
                 <div class="flex items-center justify-end gap-1 px-2 pb-2">
@@ -410,22 +410,6 @@ defmodule ResumeWeb.ResumesLive.Show do
           if (this.mediaRecorder && this.mediaRecorder.state === "recording") {
             this.mediaRecorder.stop();
           }
-        },
-      };
-    </script>
-
-    <script :type={Phoenix.LiveView.ColocatedHook} name=".AutoGrow">
-      export default {
-        mounted() {
-          this.el.addEventListener("input", () => this.resize());
-          this.resize();
-        },
-        updated() {
-          this.resize();
-        },
-        resize() {
-          this.el.style.height = "auto";
-          this.el.style.height = this.el.scrollHeight + "px";
         },
       };
     </script>
