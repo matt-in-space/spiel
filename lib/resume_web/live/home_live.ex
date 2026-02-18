@@ -12,6 +12,7 @@ defmodule ResumeWeb.HomeLive do
      socket
      |> assign(
        user: user,
+       onboarding_completed: Accounts.onboarding_completed?(user),
        profile_name: get_in(user.default_resume_data, ["name"]),
        fact_count: length(user.facts || []),
        directive_count: length(user.directives || []),
@@ -58,19 +59,40 @@ defmodule ResumeWeb.HomeLive do
           </.link>
         </div>
 
-        <div class="text-center space-y-2">
+        <div :if={!@onboarding_completed} class="card bg-base-200 border border-base-300">
+          <div class="card-body text-center space-y-2">
+            <.icon name="hero-microphone" class="size-10 text-primary mx-auto" />
+            <h2 class="card-title justify-center">Finish your resume interview</h2>
+            <p class="text-sm opacity-70">
+              Tell us about your career so Spiel can generate better resumes for you.
+            </p>
+            <div class="card-actions justify-center mt-2">
+              <.link navigate={~p"/onboarding"} class="btn btn-primary">
+                Continue Setup
+              </.link>
+              <button phx-click="skip_onboarding" class="btn btn-ghost">Skip</button>
+            </div>
+          </div>
+        </div>
+
+        <div :if={@onboarding_completed} class="text-center space-y-2">
           <h1 class="text-3xl font-semibold tracking-tight">What role are you targeting?</h1>
           <p class="text-sm opacity-70">
             Paste a job URL or description, or just describe the kind of role you're looking for.
           </p>
         </div>
 
-        <div :if={@generating} class="flex flex-col items-center gap-3 py-12">
+        <div :if={@onboarding_completed && @generating} class="flex flex-col items-center gap-3 py-12">
           <span class="loading loading-spinner loading-lg"></span>
           <p class="text-sm opacity-70">Generating your resume...</p>
         </div>
 
-        <.form :if={!@generating} for={@form} phx-change="validate" phx-submit="generate">
+        <.form
+          :if={@onboarding_completed && !@generating}
+          for={@form}
+          phx-change="validate"
+          phx-submit="generate"
+        >
           <textarea
             id={@form[:job_target].id}
             name={@form[:job_target].name}
@@ -124,6 +146,12 @@ defmodule ResumeWeb.HomeLive do
       </div>
     </Layouts.app>
     """
+  end
+
+  @impl true
+  def handle_event("skip_onboarding", _params, socket) do
+    {:ok, _user} = Accounts.skip_onboarding(socket.assigns.user)
+    {:noreply, assign(socket, onboarding_completed: true)}
   end
 
   @impl true
