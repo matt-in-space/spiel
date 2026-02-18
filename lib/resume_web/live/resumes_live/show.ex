@@ -732,34 +732,43 @@ defmodule ResumeWeb.ResumesLive.Show do
   end
 
   defp handle_feedback_result(socket, result) do
-    socket =
-      assign(socket,
-        processing_feedback: false,
-        preview_data: result.data,
-        preview_explanation: result.explanation
-      )
+    current_data =
+      socket.assigns.preview_data || version_data_to_map(socket.assigns.current_version)
 
-    # Handle classification
-    socket =
-      case result.classification do
-        :directive when is_binary(result.directive) ->
-          user = Accounts.get_user!(socket.assigns.user.id)
-          directives = (user.directives || []) ++ [result.directive]
+    if result.data == current_data do
+      socket
+      |> assign(processing_feedback: false)
+      |> put_flash(:info, "No changes to apply. Try being more specific about what to change.")
+    else
+      socket =
+        assign(socket,
+          processing_feedback: false,
+          preview_data: result.data,
+          preview_explanation: result.explanation
+        )
 
-          case Accounts.update_user_directives(user, directives) do
-            {:ok, user} -> assign(socket, user: user)
-            {:error, _} -> socket
-          end
+      # Handle classification
+      socket =
+        case result.classification do
+          :directive when is_binary(result.directive) ->
+            user = Accounts.get_user!(socket.assigns.user.id)
+            directives = (user.directives || []) ++ [result.directive]
 
-        :ambiguous when is_binary(result.directive) ->
-          assign(socket, pending_directive: result.directive)
+            case Accounts.update_user_directives(user, directives) do
+              {:ok, user} -> assign(socket, user: user)
+              {:error, _} -> socket
+            end
 
-        _ ->
-          socket
-      end
+          :ambiguous when is_binary(result.directive) ->
+            assign(socket, pending_directive: result.directive)
 
-    # Stash fact changes for apply on confirm
-    assign(socket, pending_fact_changes: result.fact_changes)
+          _ ->
+            socket
+        end
+
+      # Stash fact changes for apply on confirm
+      assign(socket, pending_fact_changes: result.fact_changes)
+    end
   end
 
   defp apply_fact_changes(socket, []), do: socket
