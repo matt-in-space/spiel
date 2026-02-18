@@ -141,7 +141,7 @@ defmodule ResumeWeb.ProfileSettingsLive do
           >
             <select name="type" class="select select-bordered select-sm">
               <option
-                :for={{label, value} <- @website_types}
+                :for={{label, value} <- available_website_types(@website_types, @websites)}
                 value={value}
                 selected={value == @add_website_type}
               >
@@ -537,14 +537,18 @@ defmodule ResumeWeb.ProfileSettingsLive do
   @impl true
   def handle_event("add_website", %{"type" => type}, socket) do
     websites = socket.assigns.websites ++ [%{"type" => type, "url" => default_url(type)}]
-    {:noreply, assign(socket, websites: websites, add_website_type: type)}
+    available = available_website_types(@website_types, websites)
+    default_type = if available == [], do: "custom", else: elem(hd(available), 1)
+    {:noreply, assign(socket, websites: websites, add_website_type: default_type)}
   end
 
   @impl true
   def handle_event("add_website", _params, socket) do
     type = socket.assigns.add_website_type
     websites = socket.assigns.websites ++ [%{"type" => type, "url" => default_url(type)}]
-    {:noreply, assign(socket, websites: websites)}
+    available = available_website_types(@website_types, websites)
+    default_type = if available == [], do: "custom", else: elem(hd(available), 1)
+    {:noreply, assign(socket, websites: websites, add_website_type: default_type)}
   end
 
   @impl true
@@ -640,6 +644,11 @@ defmodule ResumeWeb.ProfileSettingsLive do
   end
 
   defp websites_from_params(_), do: []
+
+  defp available_website_types(types, websites) do
+    used = MapSet.new(websites, fn w -> w["type"] end)
+    Enum.reject(types, fn {_label, value} -> value != "custom" && MapSet.member?(used, value) end)
+  end
 
   defp default_url("linkedin"), do: "https://www.linkedin.com/in/"
   defp default_url("github"), do: "https://github.com/"
