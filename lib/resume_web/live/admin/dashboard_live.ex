@@ -1,11 +1,13 @@
 defmodule ResumeWeb.Admin.DashboardLive do
   use ResumeWeb, :live_view
 
+  alias Resume.Admin
   alias ResumeWeb.Layouts
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    stats = Admin.dashboard_stats()
+    {:ok, assign(socket, stats: stats)}
   end
 
   @impl true
@@ -17,6 +19,34 @@ defmodule ResumeWeb.Admin.DashboardLive do
         <:subtitle>System dashboards and tools</:subtitle>
       </.header>
 
+      <div class="stats stats-vertical sm:stats-horizontal border border-base-300 w-full mb-6">
+        <div class="stat">
+          <div class="stat-title">Users</div>
+          <div class="stat-value text-lg">{@stats.total_users}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">Resumes</div>
+          <div class="stat-value text-lg">{@stats.total_resumes}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">Versions</div>
+          <div class="stat-value text-lg">{@stats.total_versions}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">Popular Template</div>
+          <div class="stat-value text-lg">
+            {if @stats.most_popular_template, do: @stats.most_popular_template.template, else: "—"}
+          </div>
+          <div :if={@stats.most_popular_template} class="stat-desc">
+            {@stats.most_popular_template.count} resumes
+          </div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">Downloads</div>
+          <div class="stat-value text-lg">{@stats.total_downloads}</div>
+        </div>
+      </div>
+
       <div class="grid gap-4">
         <.link
           navigate={~p"/admin/costs"}
@@ -24,10 +54,10 @@ defmodule ResumeWeb.Admin.DashboardLive do
         >
           <div class="card-body">
             <h2 class="card-title">
-              <.icon name="hero-currency-dollar" class="size-5" /> LLM Costs
+              <.icon name="hero-currency-dollar" class="size-5" /> API Costs
             </h2>
             <p class="text-base-content/70">
-              Track LLM API usage, costs per user, and call breakdowns.
+              Track API usage, costs per user, and call breakdowns.
             </p>
           </div>
         </.link>

@@ -9,6 +9,7 @@ defmodule Resume.Resumes.Resume do
     field :template, :string, default: "default"
     field :job_posting_url, :string
     field :job_posting_text, :string
+    field :download_count, :integer, default: 0
 
     belongs_to :user, Resume.Accounts.User
     has_many :versions, Version

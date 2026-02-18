@@ -64,6 +64,14 @@ defmodule Resume.Resumes do
     Resume.changeset(resume, attrs)
   end
 
+  @doc """
+  Atomically increments the download count for a resume.
+  """
+  def increment_download_count(%Resume{id: id}) do
+    from(r in Resume, where: r.id == ^id)
+    |> Repo.update_all(inc: [download_count: 1])
+  end
+
   # --- Versions ---
 
   @doc """

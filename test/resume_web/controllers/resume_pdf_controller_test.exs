@@ -3,7 +3,8 @@ defmodule ResumeWeb.ResumePDFControllerTest do
 
   import Resume.AccountsFixtures
 
-  alias Resume.Resumes
+  alias Resume.{Repo, Resumes}
+  alias Resume.Resumes.Resume
 
   setup :register_and_log_in_user
 
@@ -58,6 +59,18 @@ defmodule ResumeWeb.ResumePDFControllerTest do
       conn = build_conn()
       conn = get(conn, ~p"/resumes/#{resume}/pdf")
       assert redirected_to(conn) == ~p"/users/log-in"
+    end
+
+    test "increments download_count on successful PDF generation", %{conn: conn, resume: resume} do
+      assert Repo.get!(Resume, resume.id).download_count == 0
+
+      get(conn, ~p"/resumes/#{resume}/pdf")
+
+      assert Repo.get!(Resume, resume.id).download_count == 1
+
+      get(conn, ~p"/resumes/#{resume}/pdf")
+
+      assert Repo.get!(Resume, resume.id).download_count == 2
     end
 
     test "404s for another user's resume", %{conn: conn} do

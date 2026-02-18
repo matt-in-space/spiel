@@ -591,11 +591,15 @@ defmodule ResumeWeb.ResumesLive.Show do
       {:noreply, assign(socket, recording: false)}
     else
       audio_binary = Base.decode64!(data)
+      user_id = socket.assigns.user.id
 
       task =
         Task.async(fn ->
           Retry.with_retry(fn ->
-            Resume.Transcription.transcribe(audio_binary, content_type: type)
+            Resume.Transcription.tracked_transcribe(audio_binary, [content_type: type], %{
+              user_id: user_id,
+              caller: "transcription"
+            })
           end)
         end)
 

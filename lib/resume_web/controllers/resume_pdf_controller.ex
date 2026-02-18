@@ -55,6 +55,8 @@ defmodule ResumeWeb.ResumePDFController do
 
     case PDF.render(full_html, css, filename: filename) do
       {:ok, pdf_binary} ->
+        Resumes.increment_download_count(resume)
+
         conn
         |> put_resp_content_type("application/pdf")
         |> put_resp_header("content-disposition", ~s(attachment; filename="#{filename}"))

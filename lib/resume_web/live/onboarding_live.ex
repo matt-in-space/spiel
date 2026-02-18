@@ -714,10 +714,14 @@ defmodule ResumeWeb.OnboardingLive do
   @impl true
   def handle_event("audio_data", %{"data" => data, "type" => type}, socket) do
     audio_binary = Base.decode64!(data)
+    user_id = socket.assigns.user.id
 
     task =
       Task.async(fn ->
-        Resume.Transcription.transcribe(audio_binary, content_type: type)
+        Resume.Transcription.tracked_transcribe(audio_binary, [content_type: type], %{
+          user_id: user_id,
+          caller: "transcription"
+        })
       end)
 
     {:noreply,

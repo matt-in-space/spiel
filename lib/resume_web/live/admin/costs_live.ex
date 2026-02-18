@@ -86,8 +86,8 @@ defmodule ResumeWeb.Admin.CostsLive do
     ~H"""
     <Layouts.app flash={@flash}>
       <.header>
-        Admin: LLM Costs
-        <:subtitle>Usage and cost tracking across all users</:subtitle>
+        Admin: API Costs
+        <:subtitle>LLM and transcription usage and cost tracking across all users</:subtitle>
       </.header>
 
       <div class="flex gap-2 mb-6">
