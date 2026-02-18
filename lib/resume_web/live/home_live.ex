@@ -8,13 +8,15 @@ defmodule ResumeWeb.HomeLive do
     user = get_user(socket, session)
     resumes = Resumes.list_resumes_for_user(user.id)
 
+    fact_count = length(user.facts || [])
+
     {:ok,
      socket
      |> assign(
        user: user,
-       onboarding_completed: Accounts.onboarding_completed?(user),
+       show_onboarding_cta: fact_count == 0,
        profile_name: get_in(user.default_resume_data, ["name"]),
-       fact_count: length(user.facts || []),
+       fact_count: fact_count,
        directive_count: length(user.directives || []),
        form: to_form(%{"job_target" => ""}, as: "generate"),
        generating: false,
@@ -59,7 +61,7 @@ defmodule ResumeWeb.HomeLive do
           </.link>
         </div>
 
-        <div :if={!@onboarding_completed} class="card bg-base-200 border border-base-300">
+        <div :if={@show_onboarding_cta} class="card bg-base-200 border border-base-300">
           <div class="card-body text-center space-y-2">
             <.icon name="hero-microphone" class="size-10 text-primary mx-auto" />
             <h2 class="card-title justify-center">Finish your resume interview</h2>
@@ -70,25 +72,25 @@ defmodule ResumeWeb.HomeLive do
               <.link navigate={~p"/onboarding"} class="btn btn-primary">
                 Continue Setup
               </.link>
-              <button phx-click="skip_onboarding" class="btn btn-ghost">Skip</button>
+              <button phx-click="dismiss_onboarding" class="btn btn-ghost">Dismiss</button>
             </div>
           </div>
         </div>
 
-        <div :if={@onboarding_completed} class="text-center space-y-2">
+        <div :if={!@show_onboarding_cta} class="text-center space-y-2">
           <h1 class="text-3xl font-semibold tracking-tight">What role are you targeting?</h1>
           <p class="text-sm opacity-70">
             Paste a job URL or description, or just describe the kind of role you're looking for.
           </p>
         </div>
 
-        <div :if={@onboarding_completed && @generating} class="flex flex-col items-center gap-3 py-12">
+        <div :if={!@show_onboarding_cta && @generating} class="flex flex-col items-center gap-3 py-12">
           <span class="loading loading-spinner loading-lg"></span>
           <p class="text-sm opacity-70">Generating your resume...</p>
         </div>
 
         <.form
-          :if={@onboarding_completed && !@generating}
+          :if={!@show_onboarding_cta && !@generating}
           for={@form}
           phx-change="validate"
           phx-submit="generate"
@@ -149,9 +151,8 @@ defmodule ResumeWeb.HomeLive do
   end
 
   @impl true
-  def handle_event("skip_onboarding", _params, socket) do
-    {:ok, _user} = Accounts.skip_onboarding(socket.assigns.user)
-    {:noreply, assign(socket, onboarding_completed: true)}
+  def handle_event("dismiss_onboarding", _params, socket) do
+    {:noreply, assign(socket, show_onboarding_cta: false)}
   end
 
   @impl true

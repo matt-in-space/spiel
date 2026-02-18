@@ -132,16 +132,6 @@ defmodule Resume.Accounts do
   end
 
   @doc """
-  Marks onboarding as completed without updating profile data.
-  Used when a user chooses to skip the onboarding flow.
-  """
-  def skip_onboarding(user) do
-    user
-    |> User.onboarding_changeset()
-    |> Repo.update()
-  end
-
-  @doc """
   Returns true if the user has completed onboarding.
   """
   def onboarding_completed?(%User{onboarding_completed_at: nil}), do: false
