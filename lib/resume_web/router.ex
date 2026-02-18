@@ -21,6 +21,8 @@ defmodule ResumeWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/terms", PageController, :terms
+    get "/privacy", PageController, :privacy
   end
 
   get "/health", ResumeWeb.HealthController, :index
