@@ -51,38 +51,14 @@ defmodule Resume.LLM.Mock do
 
   defp feedback_json do
     Jason.encode!(%{
-      "summary" =>
-        "Experienced software engineer with deep expertise in web development and cloud architecture.",
-      "work_experience" => [
+      "operations" => [
         %{
-          "role" => "Senior Software Engineer",
-          "company" => "Acme Corp",
-          "current" => false,
-          "start_date" => %{"year" => 2020, "month" => 1},
-          "end_date" => %{"year" => 2023, "month" => 6},
-          "accomplishments" => [
-            "Led migration to microservices architecture",
-            "Mentored team of 3 junior engineers"
-          ]
+          "op" => "replace",
+          "section" => "summary",
+          "value" =>
+            "Experienced software engineer with deep expertise in web development and cloud architecture."
         }
       ],
-      "education" => [
-        %{
-          "institution" => "State University",
-          "degree" => "B.S.",
-          "field" => "Computer Science",
-          "start_date" => %{"year" => 2014, "month" => 9},
-          "end_date" => %{"year" => 2018, "month" => 5}
-        }
-      ],
-      "skills" => [
-        %{"category" => "Languages", "skills" => ["Elixir", "JavaScript"]},
-        %{"category" => "Frameworks", "skills" => ["Phoenix", "React"]}
-      ],
-      "certifications" => [],
-      "projects" => [],
-      "publications" => [],
-      "volunteer_work" => [],
       "explanation" => "Added cloud architecture emphasis to the summary as requested.",
       "classification" => "resume",
       "directive" => nil,

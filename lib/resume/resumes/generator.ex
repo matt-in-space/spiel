@@ -255,6 +255,21 @@ defmodule Resume.Resumes.Generator do
     """
   end
 
+  def section_field_reference do
+    """
+    ### Section field reference
+    - work_experience: role, company, current (bool), start_date {year, month}, end_date {year, month}, accomplishments (list of strings)
+    - education: institution, degree, field, start_date, end_date
+    - skills: category, skills (list of strings)
+    - certifications: name, issuer, date {year, month}
+    - projects: name, description, url, highlights (list of strings)
+    - publications: title, publisher, url, date {year, month}
+    - volunteer_work: role, organization, description, start_date, end_date
+    - languages: name, fluency
+    - awards: title, issuer, summary, date {year, month}\
+    """
+  end
+
   defp parse_response(response) do
     cleaned =
       response

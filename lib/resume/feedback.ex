@@ -9,6 +9,7 @@ defmodule Resume.Feedback do
 
   require Logger
 
+  alias Resume.Feedback.Patch
   alias Resume.Resumes.Generator
 
   @doc """
@@ -40,7 +41,7 @@ defmodule Resume.Feedback do
 
     case Resume.LLM.tracked_complete(prompt, [system: system_prompt()], tracking) do
       {:ok, response, _usage} ->
-        case parse_response(response, user) do
+        case parse_response(response, resume_data, user) do
           {:ok, result} ->
             {:ok, result}
 
@@ -58,7 +59,7 @@ defmodule Resume.Feedback do
   defp system_prompt do
     """
     You are a resume adjustment assistant. Given a resume, user career facts, \
-    standing directives, and user feedback, produce an updated resume. \
+    standing directives, and user feedback, produce change operations that update the resume. \
     Classify the feedback as resume-specific, a lasting directive, or ambiguous. \
     Return ONLY valid JSON, no other text.\
     """
@@ -183,45 +184,90 @@ defmodule Resume.Feedback do
   defp output_instructions do
     """
     ## Output Format
-    Return a JSON object containing the updated resume data with these additional fields:
+    Return a JSON object with change operations instead of the full resume. Only include operations for parts that actually change.
 
-    #{Generator.schema_instructions()}
+    ```json
+    {
+      "operations": [ ... ],
+      "explanation": "Brief description of what changed (2-5 sentences)",
+      "classification": "resume" | "directive" | "ambiguous",
+      "directive": "Standing instruction text, or null",
+      "fact_changes": []
+    }
+    ```
 
-    Additionally, include these fields alongside the resume data:
+    ### Operation types (indices are 0-based)
 
-    - "explanation": A brief description of what you changed and why (2-5 sentences)
-    - "classification": One of "resume", "directive", or "ambiguous"
-      - "resume" — the feedback applies only to this specific resume
-      - "directive" — the feedback is a standing instruction for all future resumes (e.g. "always emphasize leadership", "never include my GPA")
-      - "ambiguous" — unclear whether it's a one-time tweak or a lasting preference
-    - "directive": If classification is "directive" or "ambiguous", provide the directive text as a concise standing instruction. Null otherwise.
-    - "fact_changes": An array of fact corrections detected in the feedback. Each entry:
-      - {"type": "add", "text": "New fact text"} — a new career fact to add
-      - {"type": "update", "index": N, "text": "Updated text"} — update fact at 1-based index N
-      - {"type": "remove", "index": N} — remove fact at 1-based index N
-      Use an empty array if no fact changes are detected.
+    Replace a top-level scalar (e.g. summary):
+      {"op": "replace", "section": "summary", "value": "New text"}
+
+    Replace a single field within an array item:
+      {"op": "replace_item", "section": "work_experience", "index": 0, "field": "role", "value": "New Title"}
+
+    Replace an entire array item:
+      {"op": "replace_item", "section": "work_experience", "index": 0, "value": { ...full item... }}
+
+    Replace an entire array section:
+      {"op": "replace_section", "section": "skills", "value": [ ...full array... ]}
+
+    Append an item to an array:
+      {"op": "add_item", "section": "certifications", "value": { ...item... }}
+
+    Remove an item from an array:
+      {"op": "remove_item", "section": "work_experience", "index": 1}
+
+    ### Sections
+    Top-level scalars: summary
+    Array sections: work_experience, education, skills, certifications, projects, publications, volunteer_work, languages, awards
+
+    #{Generator.section_field_reference()}
+
+    ### classification values
+    - "resume" — applies only to this specific resume
+    - "directive" — standing instruction for all future resumes
+    - "ambiguous" — unclear whether one-time or lasting
+
+    ### fact_changes
+    - {"type": "add", "text": "New fact"} — add a career fact
+    - {"type": "update", "index": N, "text": "Updated text"} — update fact at 1-based index N
+    - {"type": "remove", "index": N} — remove fact at 1-based index N
+    Use an empty array if no fact changes.
 
     Rules:
-    - Apply the feedback to produce an updated version of the resume data
-    - Preserve the same JSON structure as the input resume data
-    - Only change what the feedback asks for — don't reorganize sections or rewrite content unnecessarily
-    - The contact_info section should remain unchanged\
+    - Only include operations for what actually changes — do NOT return unchanged data
+    - Do not touch the contact_info section
+    - Prefer replace_item with field over replacing whole items when only one field changes\
     """
   end
 
-  defp parse_response(response, user) do
+  defp parse_response(response, resume_data, user) do
     cleaned =
       response
       |> String.replace(~r/```\w*\n?/, "")
       |> String.trim()
 
     case Jason.decode(cleaned) do
+      {:ok, %{"operations" => ops} = parsed} when is_list(ops) ->
+        data = Patch.apply(resume_data, ops)
+        data = Map.put(data, "contact_info", build_contact_info(user))
+
+        {:ok,
+         %{
+           data: data,
+           explanation: parsed["explanation"],
+           classification: parse_classification(parsed["classification"]),
+           directive: parsed["directive"],
+           fact_changes: parse_fact_changes(parsed["fact_changes"] || [])
+         }}
+
       {:ok, data} when is_map(data) ->
+        # Legacy fallback: LLM returned full resume JSON
         {explanation, data} = Map.pop(data, "explanation")
         {classification_str, data} = Map.pop(data, "classification")
         {directive, data} = Map.pop(data, "directive")
         {fact_changes, data} = Map.pop(data, "fact_changes", [])
         {_tailoring_notes, data} = Map.pop(data, "tailoring_notes")
+        {_operations, data} = Map.pop(data, "operations")
 
         classification = parse_classification(classification_str)
         data = Map.put(data, "contact_info", build_contact_info(user))
