@@ -24,10 +24,6 @@ processes = [ "app" ]
   soft_limit = 1_000
   type = "connections"
 
-[metrics]
-  port = 9091
-  path = "/metrics"
-
 [[vm]]
 cpu_kind = "shared"
 cpus = 1

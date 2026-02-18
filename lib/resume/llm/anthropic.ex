@@ -48,17 +48,6 @@ defmodule Resume.LLM.Anthropic do
             "LLM call model=#{model} input=#{usage.input_tokens} output=#{usage.output_tokens} cost=#{:erlang.float_to_binary(usage.cost_cents, decimals: 4)}¢ duration=#{duration_ms}ms"
           )
 
-          :telemetry.execute(
-            [:resume, :llm, :complete],
-            %{
-              duration_ms: duration_ms,
-              input_tokens: usage.input_tokens,
-              output_tokens: usage.output_tokens,
-              cost_cents: usage.cost_cents
-            },
-            %{model: model}
-          )
-
           {:ok, text, usage}
         else
           {:error, :no_text_content}

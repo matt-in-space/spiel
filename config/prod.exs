@@ -13,7 +13,7 @@ config :resume, ResumeWeb.Endpoint, cache_static_manifest: "priv/static/cache_ma
 config :resume, ResumeWeb.Endpoint,
   force_ssl: [
     rewrite_on: [:x_forwarded_proto],
-    exclude: ["/health", "/metrics"]
+    exclude: ["/health"]
   ]
 
 # Configure Swoosh API Client

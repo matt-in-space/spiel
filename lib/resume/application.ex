@@ -8,15 +8,12 @@ defmodule Resume.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      Resume.PromEx,
       ResumeWeb.Telemetry,
       Resume.Repo,
       {DNSCluster, query: Application.get_env(:resume, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Resume.PubSub},
       # Start a worker by calling: Resume.Worker.start_link(arg)
       # {Resume.Worker, arg},
-      # Standalone metrics server for Fly.io scraping (avoids Plug.SSL redirects)
-      {Bandit, plug: ResumeWeb.MetricsEndpoint, port: 9091, scheme: :http},
       # Start to serve requests, typically the last entry
       ResumeWeb.Endpoint
     ]
