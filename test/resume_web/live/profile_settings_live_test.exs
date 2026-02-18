@@ -74,7 +74,7 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       |> render_click()
 
       html = render(view)
-      assert html =~ "Process"
+      assert html =~ "Add details or rules"
       refute html =~ "Full Name"
     end
 

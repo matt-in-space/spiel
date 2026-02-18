@@ -96,7 +96,7 @@ defmodule ResumeWeb.HomeLive do
             class="card bg-base-200 border border-base-300 hover:border-base-content/20 transition-colors relative p-3 flex flex-col gap-2"
           >
             <.link navigate={~p"/resumes/#{resume}"} class="after:absolute after:inset-0">
-              <h2 class="font-medium text-sm">
+              <h2 class="font-medium text-sm pr-6">
                 {resume.title}
               </h2>
               <div class="flex items-center gap-1.5 mt-1">

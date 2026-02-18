@@ -166,34 +166,45 @@ defmodule ResumeWeb.ProfileSettingsLive do
         <div :if={@active_tab == :details_rules} class="space-y-6">
           <%!-- Agentic Input --%>
           <div class="space-y-3">
-            <.form for={@input_form} phx-change="validate_input" phx-submit="process_input">
-              <div class="flex items-end gap-2">
-                <div class="flex-1">
-                  <.input
-                    field={@input_form[:text]}
-                    type="textarea"
-                    placeholder="Add details or rules — just type naturally, e.g. 'I worked at Google for 3 years as a senior engineer' or 'always emphasize leadership skills'"
-                    autocomplete="off"
-                    rows="2"
-                    phx-hook="AutoGrow"
-                    class="w-full textarea resize-none overflow-hidden"
-                  />
-                </div>
+            <.form
+              for={@input_form}
+              phx-change="validate_input"
+              phx-submit="process_input"
+              class="rounded-lg border border-base-300 focus-within:border-primary transition-colors"
+            >
+              <textarea
+                id={@input_form[:text].id}
+                name={@input_form[:text].name}
+                placeholder="Add details or rules — just type naturally, e.g. 'I worked at Google for 3 years as a senior engineer' or 'always emphasize leadership skills'"
+                autocomplete="off"
+                rows="2"
+                phx-hook="AutoGrow"
+                class="w-full resize-none overflow-hidden border-none bg-transparent px-3 pt-3 pb-1 text-sm focus:outline-none focus:ring-0"
+              >{Phoenix.HTML.Form.normalize_value("textarea", @input_form[:text].value)}</textarea>
+              <div class="flex items-center justify-end gap-1 px-2 pb-2">
                 <%= if @recording do %>
-                  <button type="button" phx-click="stop_recording" class="btn btn-error btn-sm">
-                    <.icon name="hero-stop-solid" class="size-4" />
+                  <button
+                    type="button"
+                    phx-click="stop_recording"
+                    class="btn btn-error btn-xs btn-circle"
+                  >
+                    <.icon name="hero-stop-solid" class="size-3.5" />
                   </button>
                 <% else %>
-                  <button type="button" phx-click="start_recording" class="btn btn-ghost btn-sm">
-                    <.icon name="hero-microphone-solid" class="size-4" />
+                  <button
+                    type="button"
+                    phx-click="start_recording"
+                    class="btn btn-ghost btn-xs btn-circle"
+                  >
+                    <.icon name="hero-microphone-solid" class="size-3.5" />
                   </button>
                 <% end %>
                 <button
                   type="submit"
-                  class="btn btn-primary btn-sm"
+                  class="btn btn-primary btn-xs btn-circle"
                   disabled={@processing || @transcribing}
                 >
-                  <.icon name="hero-sparkles-micro" class="size-4" /> Process
+                  <.icon name="hero-sparkles-micro" class="size-3.5" />
                 </button>
               </div>
             </.form>
