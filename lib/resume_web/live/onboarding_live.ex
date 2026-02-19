@@ -114,6 +114,8 @@ defmodule ResumeWeb.OnboardingLive do
           recap_loading={@recap_loading}
           recap_input_form={@recap_input_form}
           completing={@completing}
+          recording={@recording}
+          transcribing={@transcribing}
         />
       </div>
     </Layouts.app>
@@ -498,22 +500,64 @@ defmodule ResumeWeb.OnboardingLive do
         <p class="text-sm opacity-50">No details collected yet. You can always add more later.</p>
       </div>
 
+      <div
+        :if={!@recap_loading && !@completing}
+        id="recap-audio-recorder"
+        phx-hook=".AudioRecorder"
+        phx-update="ignore"
+        data-recording={to_string(@recording)}
+      >
+      </div>
+
+      <div
+        :if={!@recap_loading && !@completing && @transcribing}
+        class="flex items-center gap-2 text-sm mb-2"
+      >
+        <span class="loading loading-spinner loading-xs"></span> Transcribing...
+      </div>
+
       <.form
         :if={!@recap_loading && !@completing}
         for={@recap_input_form}
+        phx-change="validate_correction"
         phx-submit="submit_correction"
-        class="flex items-end gap-2 mb-6"
+        class="rounded-lg border border-base-300 focus-within:border-primary transition-colors mb-6"
       >
-        <div class="flex-1">
-          <.input
-            field={@recap_input_form[:correction]}
-            placeholder="Add a correction or missing detail..."
-            autocomplete="off"
-          />
+        <textarea
+          id={@recap_input_form[:correction].id}
+          name={@recap_input_form[:correction].name}
+          placeholder="Add a correction or missing detail..."
+          autocomplete="off"
+          rows="1"
+          phx-hook="AutoGrow"
+          class="w-full resize-none overflow-hidden border-none bg-transparent px-3 pt-3 pb-1 text-sm focus:outline-none focus:ring-0"
+        >{Phoenix.HTML.Form.normalize_value("textarea", @recap_input_form[:correction].value)}</textarea>
+        <div class="flex items-center justify-end gap-1 px-2 pb-2">
+          <%= if @recording do %>
+            <button
+              type="button"
+              phx-click="stop_recording"
+              class="btn btn-error btn-xs btn-circle"
+            >
+              <.icon name="hero-stop-solid" class="size-3.5" />
+            </button>
+          <% else %>
+            <button
+              type="button"
+              phx-click="start_recording"
+              class="btn btn-ghost btn-xs btn-circle"
+            >
+              <.icon name="hero-microphone-solid" class="size-3.5" />
+            </button>
+          <% end %>
+          <button
+            type="submit"
+            class="btn btn-primary btn-xs btn-circle"
+            disabled={@transcribing}
+          >
+            <.icon name="hero-paper-airplane-solid" class="size-3.5" />
+          </button>
         </div>
-        <button type="submit" class="btn btn-ghost btn-sm">
-          Add
-        </button>
       </.form>
 
       <div :if={!@recap_loading && !@completing} class="flex justify-end">
@@ -736,10 +780,15 @@ defmodule ResumeWeb.OnboardingLive do
         })
       end)
 
+    transcribe_tag =
+      if socket.assigns.step == :recap,
+        do: {:transcribe, :recap},
+        else: {:transcribe, :interview}
+
     {:noreply,
      socket
      |> assign(recording: false, transcribing: true)
-     |> update(:task_refs, &Map.put(&1, task.ref, {:transcribe, :interview}))}
+     |> update(:task_refs, &Map.put(&1, task.ref, transcribe_tag))}
   end
 
   @impl true
@@ -763,6 +812,11 @@ defmodule ResumeWeb.OnboardingLive do
   # Recap step events
 
   @impl true
+  def handle_event("validate_correction", %{"recap" => params}, socket) do
+    {:noreply, assign(socket, recap_input_form: to_form(params, as: "recap"))}
+  end
+
+  @impl true
   def handle_event("submit_correction", %{"recap" => %{"correction" => correction}}, socket) do
     correction = String.trim(correction)
 
@@ -779,7 +833,10 @@ defmodule ResumeWeb.OnboardingLive do
 
       {:noreply,
        socket
-       |> assign(recap_input_form: to_form(%{"correction" => ""}, as: "recap"))
+       |> assign(
+         recap_input_form: to_form(%{"correction" => ""}, as: "recap"),
+         recap_loading: true
+       )
        |> update(:task_refs, &Map.put(&1, task.ref, {:correction, nil}))}
     end
   end
@@ -913,6 +970,20 @@ defmodule ResumeWeb.OnboardingLive do
          |> assign(transcribing: false)
          |> put_flash(:error, "Transcription failed. Please try typing instead.")}
 
+      {{:transcribe, :recap}, {:ok, transcript}} ->
+        {:noreply,
+         socket
+         |> assign(
+           transcribing: false,
+           recap_input_form: to_form(%{"correction" => transcript}, as: "recap")
+         )}
+
+      {{:transcribe, :recap}, {:error, _reason}} ->
+        {:noreply,
+         socket
+         |> assign(transcribing: false)
+         |> put_flash(:error, "Transcription failed. Please try typing instead.")}
+
       {{:recap, nil}, {:ok, recap_text}} ->
         {:noreply, assign(socket, recap_text: recap_text, recap_loading: false)}
 
@@ -931,13 +1002,32 @@ defmodule ResumeWeb.OnboardingLive do
             do: "No new facts found.",
             else: Enum.join(descriptions, ". ") <> "."
 
-        {:noreply,
-         socket
-         |> assign(all_facts: updated_facts)
-         |> put_flash(:info, flash_msg)}
+        socket =
+          socket
+          |> assign(all_facts: updated_facts)
+          |> put_flash(:info, flash_msg)
+
+        if descriptions != [] and updated_facts != [] do
+          profile = socket.assigns.user.default_resume_data || %{}
+
+          task =
+            Task.async(fn ->
+              Interview.generate_recap(updated_facts, profile, user_id: socket.assigns.user.id)
+            end)
+
+          {:noreply,
+           socket
+           |> assign(recap_loading: true)
+           |> update(:task_refs, &Map.put(&1, task.ref, {:recap, nil}))}
+        else
+          {:noreply, assign(socket, recap_loading: false)}
+        end
 
       {{:correction, nil}, {:error, _reason}} ->
-        {:noreply, put_flash(socket, :error, "Failed to process correction.")}
+        {:noreply,
+         socket
+         |> assign(recap_loading: false)
+         |> put_flash(:error, "Failed to process correction.")}
 
       {{:auto_generate, nil}, {:ok, resume}} ->
         {:noreply,
