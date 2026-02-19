@@ -577,7 +577,10 @@ defmodule ResumeWeb.ProfileSettingsLive do
 
       {:noreply,
        socket
-       |> assign(processing_career_goal: true)
+       |> assign(
+         processing_career_goal: true,
+         career_goal_form: to_form(%{"instruction" => ""}, as: "career_goal")
+       )
        |> update(:task_refs, &Map.put(&1, task.ref, :career_goal))}
     end
   end
