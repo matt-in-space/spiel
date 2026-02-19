@@ -21,6 +21,7 @@ defmodule ResumeWeb.HomeLive do
        directive_count: length(user.directives || []),
        form: to_form(%{"job_target" => ""}, as: "generate"),
        generating: false,
+       upgrade_prompt: nil,
        task_refs: %{}
      )
      |> stream(:resumes, resumes)}
@@ -83,6 +84,12 @@ defmodule ResumeWeb.HomeLive do
           <p class="text-sm opacity-70">
             Paste a job URL or description, or just describe the kind of role you're looking for.
           </p>
+        </div>
+
+        <div :if={@upgrade_prompt} class="alert alert-warning mb-4">
+          <.icon name="hero-lock-closed-micro" class="size-5" />
+          <span>{@upgrade_prompt}</span>
+          <.link navigate={~p"/billing"} class="btn btn-sm btn-primary">Get Unlimited Access</.link>
         </div>
 
         <div :if={!@show_onboarding_cta && @generating} class="flex flex-col items-center gap-3 py-12">
@@ -246,6 +253,11 @@ defmodule ResumeWeb.HomeLive do
 
       {:generate, {:ok, resume, _}} ->
         {:noreply, push_navigate(socket, to: ~p"/resumes/#{resume}")}
+
+      {:generate, {:error, :limit_reached, message}} ->
+        {:noreply,
+         socket
+         |> assign(generating: false, upgrade_prompt: message)}
 
       {:generate, {:error, _reason}} ->
         {:noreply,

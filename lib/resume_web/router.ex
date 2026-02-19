@@ -27,10 +27,11 @@ defmodule ResumeWeb.Router do
 
   get "/health", ResumeWeb.HealthController, :index
 
-  # Other scopes may use custom stacks.
-  # scope "/api", ResumeWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", ResumeWeb do
+    pipe_through :api
+
+    post "/stripe/webhook", StripeWebhookController, :handle
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:resume, :dev_routes) do
@@ -68,6 +69,7 @@ defmodule ResumeWeb.Router do
     live "/profile", ProfileSettingsLive
     live "/resumes/new", ResumesLive.New
     live "/resumes/:id", ResumesLive.Show
+    live "/billing", BillingLive
 
     get "/resumes/:id/pdf", ResumePDFController, :show
 
@@ -81,6 +83,7 @@ defmodule ResumeWeb.Router do
 
     live "/", Admin.DashboardLive
     live "/costs", Admin.CostsLive
+    live "/billing", Admin.BillingLive
   end
 
   scope "/", ResumeWeb do

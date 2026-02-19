@@ -15,6 +15,7 @@ defmodule ResumeWeb.UploadLive do
        text_form: to_form(%{"text" => ""}, as: "paste"),
        extracted_text: "",
        pending_operations: [],
+       upgrade_prompt: nil,
        task_refs: %{}
      )
      |> allow_upload(:document, accept: ~w(.txt .pdf), max_entries: 1, max_file_size: 2_000_000)}
@@ -37,6 +38,14 @@ defmodule ResumeWeb.UploadLive do
     ~H"""
     <Layouts.app flash={@flash}>
       <div class="space-y-6">
+        <div :if={@upgrade_prompt} class="alert alert-warning mb-4">
+          <.icon name="hero-lock-closed-micro" class="size-5" />
+          <span>{@upgrade_prompt}</span>
+          <.link navigate={~p"/billing"} class="btn btn-sm btn-primary">
+            Get Unlimited Access
+          </.link>
+        </div>
+
         <h1 class="text-2xl font-semibold tracking-tight">Upload or Paste Text</h1>
         <p class="text-sm opacity-70">
           Upload a .txt or .pdf file, or paste text from your resume, LinkedIn, or other source.
@@ -240,24 +249,30 @@ defmodule ResumeWeb.UploadLive do
 
   @impl true
   def handle_event("extract_facts", _params, socket) do
-    text = socket.assigns.extracted_text
+    case Resume.Billing.check_allowance(socket.assigns.user, :fact_update) do
+      :ok ->
+        text = socket.assigns.extracted_text
 
-    task =
-      Task.async(fn ->
-        Retry.with_retry(fn ->
-          Resume.Facts.extract([text], "an uploaded document about their career",
-            existing_facts: socket.assigns.user.facts,
-            user_id: socket.assigns.user.id
-          )
-        end)
-      end)
+        task =
+          Task.async(fn ->
+            Retry.with_retry(fn ->
+              Resume.Facts.extract([text], "an uploaded document about their career",
+                existing_facts: socket.assigns.user.facts,
+                user_id: socket.assigns.user.id
+              )
+            end)
+          end)
 
-    socket =
-      socket
-      |> assign(phase: :extracting)
-      |> update(:task_refs, &Map.put(&1, task.ref, :extract))
+        socket =
+          socket
+          |> assign(phase: :extracting)
+          |> update(:task_refs, &Map.put(&1, task.ref, :extract))
 
-    {:noreply, socket}
+        {:noreply, socket}
+
+      {:error, :limit_reached, message} ->
+        {:noreply, assign(socket, upgrade_prompt: message)}
+    end
   end
 
   @impl true

@@ -34,6 +34,13 @@ defmodule Resume.Feedback do
     * `{:error, reason}`
   """
   def process_feedback(resume_data, user, feedback, opts \\ []) do
+    case Resume.Billing.check_allowance(user, :adjustment) do
+      :ok -> process_feedback_unchecked(resume_data, user, feedback, opts)
+      error -> error
+    end
+  end
+
+  defp process_feedback_unchecked(resume_data, user, feedback, opts) do
     history = Keyword.get(opts, :history, [])
     prompt = build_prompt(resume_data, user, feedback, history)
 

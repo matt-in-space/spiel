@@ -51,3 +51,9 @@ config :resume, llm_adapter: Resume.LLM.Mock
 
 # Use mock PDF adapter in tests
 config :resume, pdf_adapter: Resume.PDF.Mock
+
+# Stripe test config
+config :resume,
+  stripe_secret_key: "sk_test_fake",
+  stripe_price_id: "price_test_fake",
+  stripe_webhook_secret: "whsec_test_secret"

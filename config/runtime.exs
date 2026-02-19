@@ -21,6 +21,18 @@ if api_key = System.get_env("ANTHROPIC_API_KEY") do
   config :resume, anthropic_api_key: api_key
 end
 
+if stripe_key = System.get_env("STRIPE_SECRET_KEY") do
+  config :resume, stripe_secret_key: stripe_key
+end
+
+if stripe_price = System.get_env("STRIPE_PRICE_ID") do
+  config :resume, stripe_price_id: stripe_price
+end
+
+if stripe_webhook = System.get_env("STRIPE_WEBHOOK_SECRET") do
+  config :resume, stripe_webhook_secret: stripe_webhook
+end
+
 if System.get_env("PHX_SERVER") do
   config :resume, ResumeWeb.Endpoint, server: true
 end

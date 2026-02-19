@@ -49,3 +49,4 @@ Dev routes available at `/dev/dashboard` and `/dev/mailbox`.
 - **JS**: Only `app.js` and `app.css` bundles. No inline `<script>` tags — use colocated hooks (`:type={Phoenix.LiveView.ColocatedHook}`, names prefixed with `.`).
 - **Router scopes** auto-alias modules — don't add redundant aliases.
 - **Ecto**: Schema fields use `:string` type even for text columns. Always preload associations accessed in templates. Use `Ecto.Changeset.get_field/2` to read changeset fields.
+- **Billing gates**: Any feature that makes an LLM call must check `Resume.Billing.check_allowance(user, action)` first. Gate at the context level for `:generation` and `:adjustment`; gate at the LiveView level for `:fact_update` (because onboarding must stay free). Returns `{:error, :limit_reached, message}` when over the free limit.

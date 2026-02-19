@@ -5,6 +5,7 @@ defmodule Resume.Resumes do
 
   import Ecto.Query
   require Logger
+  alias Resume.Billing
   alias Resume.Repo
   alias Resume.Resumes.{Generator, Resume, ResumeData, Version}
 
@@ -159,6 +160,13 @@ defmodule Resume.Resumes do
 
   """
   def generate_resume(user, opts \\ []) do
+    case Billing.check_allowance(user, :generation) do
+      :ok -> generate_resume_unchecked(user, opts)
+      error -> error
+    end
+  end
+
+  defp generate_resume_unchecked(user, opts) do
     case Generator.generate(user, opts) do
       {:ok, data, %{explanation: explanation, title: generated_title}} ->
         title = Keyword.get(opts, :title) || generated_title || fallback_title()
@@ -194,6 +202,13 @@ defmodule Resume.Resumes do
   Regenerates a resume's data using the LLM, creating a new version.
   """
   def regenerate_resume(%Resume{} = resume, user) do
+    case Billing.check_allowance(user, :generation) do
+      :ok -> regenerate_resume_unchecked(resume, user)
+      error -> error
+    end
+  end
+
+  defp regenerate_resume_unchecked(%Resume{} = resume, user) do
     opts =
       if resume.job_posting_text,
         do: [job_posting_text: resume.job_posting_text],

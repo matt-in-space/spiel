@@ -51,6 +51,7 @@ defmodule ResumeWeb.ResumesLive.Show do
        title_form: to_form(%{"title" => resume.title}, as: "title"),
        sidebar_open: false,
        show_tutorial: Accounts.show_tutorial?(user, "show-tutorial"),
+       upgrade_prompt: nil,
        task_refs: %{}
      )}
   end
@@ -86,6 +87,13 @@ defmodule ResumeWeb.ResumesLive.Show do
           phx-click="toggle_sidebar"
         />
         <div class="drawer-content space-y-6">
+          <div :if={@upgrade_prompt} class="alert alert-warning mb-4">
+            <.icon name="hero-lock-closed-micro" class="size-5" />
+            <span>{@upgrade_prompt}</span>
+            <.link navigate={~p"/billing"} class="btn btn-sm btn-primary">
+              Get Unlimited Access
+            </.link>
+          </div>
           <label
             for="sidebar-toggle"
             class="fixed right-0 top-1/2 -translate-y-1/2 z-10 bg-base-200 hover:bg-base-300 transition-colors rounded-l-lg px-2.5 py-5 cursor-pointer shadow-md"
@@ -668,6 +676,11 @@ defmodule ResumeWeb.ResumesLive.Show do
     case {tag, result} do
       {:feedback, {:ok, result}} ->
         {:noreply, handle_feedback_result(socket, result)}
+
+      {:feedback, {:error, :limit_reached, message}} ->
+        {:noreply,
+         socket
+         |> assign(processing_feedback: false, upgrade_prompt: message)}
 
       {:feedback, {:error, _reason}} ->
         {:noreply,

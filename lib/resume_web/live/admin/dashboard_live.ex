@@ -61,6 +61,19 @@ defmodule ResumeWeb.Admin.DashboardLive do
             </p>
           </div>
         </.link>
+        <.link
+          navigate={~p"/admin/billing"}
+          class="card bg-base-200 border border-base-300 hover:border-base-content/20 transition-colors"
+        >
+          <div class="card-body">
+            <h2 class="card-title">
+              <.icon name="hero-credit-card" class="size-5" /> Billing
+            </h2>
+            <p class="text-base-content/70">
+              Revenue, payments, and user access management.
+            </p>
+          </div>
+        </.link>
       </div>
     </Layouts.app>
     """

@@ -14,7 +14,8 @@ defmodule ResumeWeb.RecordingLive do
        recordings: [],
        task_refs: %{},
        phase: :recording,
-       pending_operations: []
+       pending_operations: [],
+       upgrade_prompt: nil
      )}
   end
 
@@ -35,6 +36,14 @@ defmodule ResumeWeb.RecordingLive do
     ~H"""
     <Layouts.app flash={@flash}>
       <div class="space-y-6">
+        <div :if={@upgrade_prompt} class="alert alert-warning mb-4">
+          <.icon name="hero-lock-closed-micro" class="size-5" />
+          <span>{@upgrade_prompt}</span>
+          <.link navigate={~p"/billing"} class="btn btn-sm btn-primary">
+            Get Unlimited Access
+          </.link>
+        </div>
+
         <div :if={@phase == :recording}>
           <div class="space-y-6">
             <h1 class="text-2xl font-semibold tracking-tight">Record Audio</h1>
@@ -301,27 +310,33 @@ defmodule ResumeWeb.RecordingLive do
 
   @impl true
   def handle_event("extract_facts", _params, socket) do
-    transcripts =
-      socket.assigns.recordings
-      |> Enum.filter(&(&1.status == :done))
-      |> Enum.map(& &1.transcript)
+    case Resume.Billing.check_allowance(socket.assigns.user, :fact_update) do
+      :ok ->
+        transcripts =
+          socket.assigns.recordings
+          |> Enum.filter(&(&1.status == :done))
+          |> Enum.map(& &1.transcript)
 
-    task =
-      Task.async(fn ->
-        Retry.with_retry(fn ->
-          Resume.Facts.extract(transcripts, "voice recordings about their career",
-            existing_facts: socket.assigns.user.facts,
-            user_id: socket.assigns.user.id
-          )
-        end)
-      end)
+        task =
+          Task.async(fn ->
+            Retry.with_retry(fn ->
+              Resume.Facts.extract(transcripts, "voice recordings about their career",
+                existing_facts: socket.assigns.user.facts,
+                user_id: socket.assigns.user.id
+              )
+            end)
+          end)
 
-    socket =
-      socket
-      |> assign(phase: :extracting)
-      |> update(:task_refs, &Map.put(&1, task.ref, :extract))
+        socket =
+          socket
+          |> assign(phase: :extracting)
+          |> update(:task_refs, &Map.put(&1, task.ref, :extract))
 
-    {:noreply, socket}
+        {:noreply, socket}
+
+      {:error, :limit_reached, message} ->
+        {:noreply, assign(socket, upgrade_prompt: message)}
+    end
   end
 
   @impl true

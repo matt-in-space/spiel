@@ -47,6 +47,9 @@
         <Layouts.theme_toggle />
         <%= if @current_scope do %>
           <.link href={~p"/home"} class="btn btn-ghost btn-sm hidden sm:inline-flex">Home</.link>
+          <.link href={~p"/billing"} class="btn btn-ghost btn-sm hidden sm:inline-flex">
+            Billing
+          </.link>
           <%= if Resume.Accounts.User.admin?(@current_scope.user) do %>
             <.link href={~p"/admin"} class="btn btn-ghost btn-sm hidden sm:inline-flex">
               Admin

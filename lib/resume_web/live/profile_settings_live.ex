@@ -35,6 +35,7 @@ defmodule ResumeWeb.ProfileSettingsLive do
        input_form: to_form(%{"text" => ""}, as: "input"),
        filter: "",
        processing: false,
+       upgrade_prompt: nil,
        recording: false,
        transcribing: false,
        task_refs: %{},
@@ -191,6 +192,13 @@ defmodule ResumeWeb.ProfileSettingsLive do
 
         <%!-- Details & Rules Tab --%>
         <div :if={@active_tab == :details_rules} class="space-y-6">
+          <div :if={@upgrade_prompt} class="alert alert-warning mb-4">
+            <.icon name="hero-lock-closed-micro" class="size-5" />
+            <span>{@upgrade_prompt}</span>
+            <.link navigate={~p"/billing"} class="btn btn-sm btn-primary">
+              Get Unlimited Access
+            </.link>
+          </div>
           <%!-- Agentic Input --%>
           <div class="space-y-3">
             <.form
@@ -482,20 +490,26 @@ defmodule ResumeWeb.ProfileSettingsLive do
     if text == "" do
       {:noreply, socket}
     else
-      task =
-        Task.async(fn ->
-          Resume.Facts.process_input(
-            text,
-            socket.assigns.facts,
-            socket.assigns.directives,
-            user_id: socket.assigns.user.id
-          )
-        end)
+      case Resume.Billing.check_allowance(socket.assigns.user, :fact_update) do
+        :ok ->
+          task =
+            Task.async(fn ->
+              Resume.Facts.process_input(
+                text,
+                socket.assigns.facts,
+                socket.assigns.directives,
+                user_id: socket.assigns.user.id
+              )
+            end)
 
-      {:noreply,
-       socket
-       |> assign(processing: true)
-       |> update(:task_refs, &Map.put(&1, task.ref, :process_input))}
+          {:noreply,
+           socket
+           |> assign(processing: true)
+           |> update(:task_refs, &Map.put(&1, task.ref, :process_input))}
+
+        {:error, :limit_reached, message} ->
+          {:noreply, assign(socket, upgrade_prompt: message)}
+      end
     end
   end
 

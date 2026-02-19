@@ -14,6 +14,8 @@ defmodule Resume.Accounts.User do
     field :onboarding_completed_at, :utc_datetime
     field :dismissed_tutorials, {:array, :string}, default: []
     field :role, Ecto.Enum, values: [:admin, :member], default: :member
+    field :pass_expires_at, :utc_datetime
+    field :access_level, :string, default: "free"
 
     timestamps(type: :utc_datetime)
   end
@@ -85,6 +87,15 @@ defmodule Resume.Accounts.User do
   def dismiss_tutorial_changeset(user, tutorial_id) when is_binary(tutorial_id) do
     dismissed = Enum.uniq([tutorial_id | user.dismissed_tutorials])
     change(user, dismissed_tutorials: dismissed)
+  end
+
+  @doc """
+  A changeset for updating billing fields (access_level, pass_expires_at).
+  """
+  def billing_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:access_level, :pass_expires_at])
+    |> validate_inclusion(:access_level, ~w(free pass unlimited))
   end
 
   @doc """
