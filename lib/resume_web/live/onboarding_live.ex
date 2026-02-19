@@ -1,7 +1,7 @@
 defmodule ResumeWeb.OnboardingLive do
   use ResumeWeb, :live_view
 
-  alias Resume.{Accounts, Documents, Facts, Interview}
+  alias Resume.{Accounts, Documents, Facts, Interview, Resumes}
 
   @steps [:contact, :import, :interview, :recap]
 
@@ -45,6 +45,8 @@ defmodule ResumeWeb.OnboardingLive do
          recap_text: nil,
          recap_loading: false,
          recap_input_form: to_form(%{"correction" => ""}, as: "recap"),
+         # completing
+         completing: false,
          # shared
          all_facts: user.facts || [],
          task_refs: %{}
@@ -107,6 +109,7 @@ defmodule ResumeWeb.OnboardingLive do
           recap_text={@recap_text}
           recap_loading={@recap_loading}
           recap_input_form={@recap_input_form}
+          completing={@completing}
         />
       </div>
     </Layouts.app>
@@ -467,27 +470,32 @@ defmodule ResumeWeb.OnboardingLive do
         Here's what we've gathered so far. Add anything that's missing or needs correcting.
       </p>
 
-      <div :if={@recap_loading} class="flex flex-col items-center gap-3 py-12">
+      <div :if={@completing} class="flex flex-col items-center gap-3 py-16">
+        <span class="loading loading-spinner loading-lg"></span>
+        <p class="text-sm opacity-70">Building your first personalized resume...</p>
+      </div>
+
+      <div :if={@recap_loading && !@completing} class="flex flex-col items-center gap-3 py-12">
         <span class="loading loading-spinner loading-lg"></span>
         <p class="text-sm opacity-70">Generating your summary...</p>
       </div>
 
       <div
-        :if={!@recap_loading && @recap_text}
+        :if={!@recap_loading && !@completing && @recap_text}
         class="card bg-base-200 border border-base-300 p-6 mb-6"
       >
         <p class="whitespace-pre-wrap text-sm">{@recap_text}</p>
       </div>
 
       <div
-        :if={!@recap_loading && !@recap_text}
+        :if={!@recap_loading && !@completing && !@recap_text}
         class="card bg-base-200 border border-base-300 p-6 mb-6"
       >
         <p class="text-sm opacity-50">No details collected yet. You can always add more later.</p>
       </div>
 
       <.form
-        :if={!@recap_loading}
+        :if={!@recap_loading && !@completing}
         for={@recap_input_form}
         phx-submit="submit_correction"
         class="flex items-end gap-2 mb-6"
@@ -504,7 +512,7 @@ defmodule ResumeWeb.OnboardingLive do
         </button>
       </.form>
 
-      <div :if={!@recap_loading} class="flex justify-end">
+      <div :if={!@recap_loading && !@completing} class="flex justify-end">
         <button phx-click="complete_onboarding" class="btn btn-primary">
           Complete Setup <.icon name="hero-check-micro" class="size-4" />
         </button>
@@ -786,11 +794,20 @@ defmodule ResumeWeb.OnboardingLive do
     facts = socket.assigns.all_facts
 
     case Accounts.complete_onboarding(user, profile_data, facts) do
-      {:ok, _user} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Welcome! Your profile is set up.")
-         |> redirect(to: ~p"/home")}
+      {:ok, updated_user} ->
+        if length(facts) >= 5 do
+          task = Task.async(fn -> Resumes.generate_resume(updated_user) end)
+
+          {:noreply,
+           socket
+           |> assign(completing: true)
+           |> update(:task_refs, &Map.put(&1, task.ref, {:auto_generate, nil}))}
+        else
+          {:noreply,
+           socket
+           |> put_flash(:info, "Welcome! Your profile is set up.")
+           |> redirect(to: ~p"/home")}
+        end
 
       {:error, _reason} ->
         {:noreply, put_flash(socket, :error, "Something went wrong. Please try again.")}
@@ -917,6 +934,21 @@ defmodule ResumeWeb.OnboardingLive do
 
       {{:correction, nil}, {:error, _reason}} ->
         {:noreply, put_flash(socket, :error, "Failed to process correction.")}
+
+      {{:auto_generate, nil}, {:ok, resume}} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Welcome! Here's your first resume.")
+         |> redirect(to: ~p"/resumes/#{resume}")}
+
+      {{:auto_generate, nil}, {:error, _reason}} ->
+        {:noreply,
+         socket
+         |> put_flash(
+           :info,
+           "Welcome! We couldn't auto-generate a resume, but you can create one from the home page."
+         )
+         |> redirect(to: ~p"/home")}
 
       _ ->
         {:noreply, socket}

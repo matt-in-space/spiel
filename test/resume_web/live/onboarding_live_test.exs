@@ -217,7 +217,7 @@ defmodule ResumeWeb.OnboardingLiveTest do
       assert html =~ "experienced professional" || html =~ "Complete Setup"
     end
 
-    test "complete saves and redirects to /home", %{view: view} do
+    test "complete saves and redirects to /home with few facts", %{view: view} do
       view |> element("button", "Complete Setup") |> render_click()
       flash = assert_redirect(view, ~p"/home")
       assert flash["info"] =~ "Welcome"
@@ -247,6 +247,70 @@ defmodule ResumeWeb.OnboardingLiveTest do
       view |> element("button", "Complete Setup") |> render_click()
       flash = assert_redirect(view, ~p"/home")
       assert flash["info"] =~ "Welcome"
+    end
+  end
+
+  describe "auto-generate resume on complete" do
+    setup :register_and_log_in_user
+
+    setup %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/onboarding")
+
+      # Advance through contact
+      view
+      |> form("form[phx-submit='save_profile']",
+        profile: %{name: "Jane Doe", email: "jane@test.com"}
+      )
+      |> render_submit()
+
+      # Import text to get 2 facts
+      view
+      |> form("form[phx-submit='submit_import']",
+        paste: %{text: "I worked at Acme Corp for 5 years as a senior engineer."}
+      )
+      |> render_submit()
+
+      Process.sleep(100)
+
+      # Continue from import
+      view |> element("button", "Continue") |> render_click()
+      Process.sleep(100)
+
+      # Skip interview
+      view |> element("button", "Skip") |> render_click()
+      Process.sleep(100)
+
+      # Submit corrections to accumulate >= 5 facts
+      view
+      |> form("form[phx-submit='submit_correction']", recap: %{correction: "I also know Python"})
+      |> render_submit()
+
+      Process.sleep(100)
+
+      view
+      |> form("form[phx-submit='submit_correction']",
+        recap: %{correction: "I have a CS degree from MIT"}
+      )
+      |> render_submit()
+
+      Process.sleep(100)
+
+      %{view: view}
+    end
+
+    test "auto-generates resume and redirects", %{view: view} do
+      view |> element("button", "Complete Setup") |> render_click()
+
+      # Should show the loading state
+      html = render(view)
+      assert html =~ "Building your first personalized resume"
+
+      # Wait for async generation
+      Process.sleep(200)
+
+      {path, flash} = assert_redirect(view)
+      assert path =~ "/resumes/"
+      assert flash["info"] =~ "first resume"
     end
   end
 end
