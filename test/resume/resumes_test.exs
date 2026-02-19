@@ -5,7 +5,7 @@ defmodule Resume.ResumesTest do
 
   import Resume.AccountsFixtures
 
-  describe "generate_resume/3" do
+  describe "generate_resume/2" do
     test "creates a resume record with version 1" do
       user = user_fixture()
       {:ok, user} = Resume.Accounts.update_user_profile(user, %{"name" => "Test User"})
@@ -15,9 +15,9 @@ defmodule Resume.ResumesTest do
           "Worked at Acme Corp as a Senior Software Engineer"
         ])
 
-      {:ok, resume} = Resumes.generate_resume(user, "My Resume")
+      {:ok, resume} = Resumes.generate_resume(user)
 
-      assert resume.title == "My Resume"
+      assert resume.title != nil
       assert resume.user_id == user.id
 
       version = Resumes.get_latest_version!(resume.id)
@@ -31,12 +31,21 @@ defmodule Resume.ResumesTest do
       assert length(data.work_experience) > 0
     end
 
+    test "uses explicit title when provided" do
+      user = user_fixture()
+      {:ok, user} = Resume.Accounts.update_user_profile(user, %{"name" => "Test User"})
+
+      {:ok, resume} = Resumes.generate_resume(user, title: "My Custom Title")
+
+      assert resume.title == "My Custom Title"
+    end
+
     test "stores job posting metadata" do
       user = user_fixture()
       {:ok, user} = Resume.Accounts.update_user_profile(user, %{"name" => "Test User"})
 
       {:ok, resume} =
-        Resumes.generate_resume(user, "Targeted Resume",
+        Resumes.generate_resume(user,
           job_posting_text: "Senior Elixir Developer needed",
           job_posting_url: "https://example.com/jobs/123"
         )
@@ -49,10 +58,10 @@ defmodule Resume.ResumesTest do
       user = user_fixture()
       {:ok, user} = Resume.Accounts.update_user_profile(user, %{"name" => "Test User"})
 
-      {:ok, resume} = Resumes.generate_resume(user, "Persisted Resume")
+      {:ok, resume} = Resumes.generate_resume(user)
 
       fetched = Resumes.get_user_resume!(user.id, resume.id)
-      assert fetched.title == "Persisted Resume"
+      assert fetched.title != nil
 
       version = Resumes.get_latest_version!(fetched.id)
       data = Resumes.dump_version_data(version)
@@ -64,7 +73,7 @@ defmodule Resume.ResumesTest do
     test "updates the template field" do
       user = user_fixture()
       {:ok, user} = Resume.Accounts.update_user_profile(user, %{"name" => "Test User"})
-      {:ok, resume} = Resumes.generate_resume(user, "My Resume")
+      {:ok, resume} = Resumes.generate_resume(user)
 
       assert resume.template == "default"
       {:ok, updated} = Resumes.update_resume(resume, %{template: "modern"})
@@ -77,7 +86,7 @@ defmodule Resume.ResumesTest do
     test "creates a new version with trigger regeneration" do
       user = user_fixture()
       {:ok, user} = Resume.Accounts.update_user_profile(user, %{"name" => "Test User"})
-      {:ok, resume} = Resumes.generate_resume(user, "My Resume")
+      {:ok, resume} = Resumes.generate_resume(user)
 
       {:ok, version} = Resumes.regenerate_resume(resume, user)
 
@@ -91,7 +100,7 @@ defmodule Resume.ResumesTest do
       {:ok, user} = Resume.Accounts.update_user_profile(user, %{"name" => "Test User"})
 
       {:ok, resume} =
-        Resumes.generate_resume(user, "Targeted", job_posting_text: "Elixir developer needed")
+        Resumes.generate_resume(user, job_posting_text: "Elixir developer needed")
 
       {:ok, version} = Resumes.regenerate_resume(resume, user)
       assert version.version == 2
@@ -103,7 +112,7 @@ defmodule Resume.ResumesTest do
     setup do
       user = user_fixture()
       {:ok, user} = Resume.Accounts.update_user_profile(user, %{"name" => "Test User"})
-      {:ok, resume} = Resumes.generate_resume(user, "My Resume")
+      {:ok, resume} = Resumes.generate_resume(user)
       %{user: user, resume: resume}
     end
 

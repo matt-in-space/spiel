@@ -50,9 +50,8 @@ defmodule ResumeWeb.ResumesLive.New do
           <div class="space-y-4">
             <.input
               field={@form[:title]}
-              label="Title"
-              placeholder="e.g. Software Engineer Resume"
-              required
+              label="Title (optional)"
+              placeholder="Auto-generated if left blank"
             />
             <.input
               field={@form[:job_posting_url]}
@@ -88,36 +87,32 @@ defmodule ResumeWeb.ResumesLive.New do
 
   @impl true
   def handle_event("generate", %{"resume" => params}, socket) do
-    title = String.trim(params["title"] || "")
+    user = Accounts.get_user!(socket.assigns.user.id)
 
-    if title == "" do
-      {:noreply, put_flash(socket, :error, "Title is required.")}
-    else
-      user = Accounts.get_user!(socket.assigns.user.id)
+    title = non_blank(params["title"])
+    url = non_blank(params["job_posting_url"])
+    text = non_blank(params["job_posting_text"])
 
-      url = non_blank(params["job_posting_url"])
-      text = non_blank(params["job_posting_text"])
+    task =
+      Task.async(fn ->
+        {job_posting_text, url_failed?} = resolve_job_posting_text(url, text)
 
-      task =
-        Task.async(fn ->
-          {job_posting_text, url_failed?} = resolve_job_posting_text(url, text)
+        opts =
+          []
+          |> maybe_add_opt(:title, title)
+          |> maybe_add_opt(:job_posting_text, job_posting_text)
+          |> maybe_add_opt(:job_posting_url, url)
 
-          opts =
-            []
-            |> maybe_add_opt(:job_posting_text, job_posting_text)
-            |> maybe_add_opt(:job_posting_url, url)
+        case Retry.with_retry(fn -> Resumes.generate_resume(user, opts) end) do
+          {:ok, resume} -> {:ok, resume, url_failed?}
+          error -> error
+        end
+      end)
 
-          case Retry.with_retry(fn -> Resumes.generate_resume(user, title, opts) end) do
-            {:ok, resume} -> {:ok, resume, url_failed?}
-            error -> error
-          end
-        end)
-
-      {:noreply,
-       socket
-       |> assign(generating: true)
-       |> update(:task_refs, &Map.put(&1, task.ref, :generate))}
-    end
+    {:noreply,
+     socket
+     |> assign(generating: true)
+     |> update(:task_refs, &Map.put(&1, task.ref, :generate))}
   end
 
   defp resolve_job_posting_text(nil, nil), do: {nil, false}

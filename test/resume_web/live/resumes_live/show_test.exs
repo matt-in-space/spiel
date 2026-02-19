@@ -15,7 +15,7 @@ defmodule ResumeWeb.ResumesLive.ShowTest do
 
     # Complete onboarding so user can access pages
     {:ok, user} = Accounts.complete_onboarding(user, %{"name" => "Test User"}, user.facts)
-    {:ok, resume} = Resumes.generate_resume(user, "Test Resume")
+    {:ok, resume} = Resumes.generate_resume(user)
     %{user: user, resume: resume}
   end
 

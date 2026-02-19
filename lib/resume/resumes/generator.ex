@@ -26,10 +26,11 @@ defmodule Resume.Resumes.Generator do
         case parse_response(response) do
           {:ok, data} ->
             {explanation, data} = Map.pop(data, "explanation")
+            {title, data} = Map.pop(data, "title")
             {_, data} = Map.pop(data, "tailoring_notes")
 
             {:ok, Map.put(data, "contact_info", build_contact_info(user)),
-             %{explanation: explanation}}
+             %{explanation: explanation, title: title}}
 
           {:error, reason} ->
             Logger.error("Resume generation failed to parse LLM response: #{inspect(reason)}")
@@ -251,6 +252,7 @@ defmodule Resume.Resumes.Generator do
     - Include languages if mentioned (fluency: "Native", "Fluent", "Conversational", or "Basic")
     - Include awards or honors if mentioned
     - If the person has no work experience, lean on education, projects, skills, volunteer work, and goals to build a compelling resume
+    - Include a "title" field — a short label (max 60 chars) for this resume, such as the target job title or a brief description of the role (e.g. "Senior Backend Engineer", "Marketing Manager at Acme Corp"). Do NOT use generic labels like "About the job" or "Professional Resume".
     - Include an "explanation" field — 2-5 sentences about what makes this resume unique: what was emphasized or tailored, and why, considering the target role or job posting (if provided) and any directives that were followed.\
     """
   end

@@ -172,14 +172,13 @@ defmodule ResumeWeb.HomeLive do
       task =
         Task.async(fn ->
           {job_posting_text, job_posting_url, url_failed?} = resolve_input(input)
-          title = generate_title(input)
 
           opts =
             []
             |> maybe_add_opt(:job_posting_text, job_posting_text)
             |> maybe_add_opt(:job_posting_url, job_posting_url)
 
-          case Retry.with_retry(fn -> Resumes.generate_resume(user, title, opts) end) do
+          case Retry.with_retry(fn -> Resumes.generate_resume(user, opts) end) do
             {:ok, resume} -> {:ok, resume, url_failed?}
             error -> error
           end
@@ -244,18 +243,6 @@ defmodule ResumeWeb.HomeLive do
       end
     else
       {input, nil, false}
-    end
-  end
-
-  defp generate_title(input) do
-    first_line = input |> String.split("\n") |> List.first() |> String.trim()
-
-    if String.starts_with?(first_line, "http") do
-      "Resume - #{Calendar.strftime(DateTime.utc_now(), "%b %d, %Y")}"
-    else
-      first_line
-      |> String.replace(~r/^(a job (?:as|for|at|in)|looking for|applying (?:for|to))\s+/i, "")
-      |> String.slice(0, 60)
     end
   end
 

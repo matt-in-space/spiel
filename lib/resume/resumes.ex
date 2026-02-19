@@ -153,13 +153,16 @@ defmodule Resume.Resumes do
 
   ## Options
 
+    * `:title` - Optional explicit title (otherwise LLM-generated)
     * `:job_posting_text` - Optional job posting text to tailor the resume to
     * `:job_posting_url` - Optional URL of the job posting
 
   """
-  def generate_resume(user, title, opts \\ []) do
+  def generate_resume(user, opts \\ []) do
     case Generator.generate(user, opts) do
-      {:ok, data, %{explanation: explanation}} ->
+      {:ok, data, %{explanation: explanation, title: generated_title}} ->
+        title = Keyword.get(opts, :title) || generated_title || fallback_title()
+
         Repo.transaction(fn ->
           case create_resume(%{
                  title: title,
@@ -181,6 +184,10 @@ defmodule Resume.Resumes do
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  defp fallback_title do
+    "Resume - #{Calendar.strftime(DateTime.utc_now(), "%b %d, %Y")}"
   end
 
   @doc """
