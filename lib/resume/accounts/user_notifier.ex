@@ -12,7 +12,7 @@ defmodule Resume.Accounts.UserNotifier do
       new()
       |> to(recipient)
       |> from(
-        {"Resume Thinker",
+        {"Spiel Resume Coach",
          Application.get_env(:resume, Resume.Mailer)[:from_email] || "contact@example.com"}
       )
       |> subject(subject)
