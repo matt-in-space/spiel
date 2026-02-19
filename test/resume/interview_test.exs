@@ -35,6 +35,34 @@ defmodule Resume.InterviewTest do
     end
   end
 
+  describe "regenerate_career_goal/5" do
+    test "returns a new career goal from instruction without existing goal" do
+      {:ok, goal} =
+        Interview.regenerate_career_goal(
+          "I want to target DevOps roles",
+          nil,
+          ["5 years of backend development"],
+          %{"name" => "Jane"}
+        )
+
+      assert is_binary(goal)
+      assert String.length(goal) > 0
+    end
+
+    test "returns a revised career goal when existing goal is provided" do
+      {:ok, goal} =
+        Interview.regenerate_career_goal(
+          "Focus more on cloud infrastructure",
+          "Targeting senior engineering roles",
+          ["5 years of backend development"],
+          %{"name" => "Jane"}
+        )
+
+      assert is_binary(goal)
+      assert String.length(goal) > 0
+    end
+  end
+
   describe "generate_recap/2" do
     test "returns a recap string" do
       facts = ["Worked at Acme Corp", "5 years of Elixir experience"]

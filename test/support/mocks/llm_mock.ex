@@ -33,6 +33,11 @@ defmodule Resume.LLM.Mock do
          ~s({"recap": "You are an experienced professional with a strong background in software engineering."}),
          mock_usage()}
 
+      String.contains?(system, "career advisor") ->
+        {:ok,
+         ~s({"career_goal": "Targeting a senior DevOps engineering role focused on cloud infrastructure and automation."}),
+         mock_usage()}
+
       String.contains?(system, "classify") ->
         {:ok,
          ~s({"fact_operations": [{"type": "add", "text": "Mock fact from profile input"}], "directive_operations": [{"type": "add", "text": "Mock directive from profile input"}]}),

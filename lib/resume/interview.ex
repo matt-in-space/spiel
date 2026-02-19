@@ -104,7 +104,44 @@ defmodule Resume.Interview do
     end
   end
 
+  @doc """
+  Regenerates a career goal from a natural language instruction.
+
+  Takes the user's instruction, the existing goal (or nil), their facts,
+  profile data, and opts. Returns `{:ok, new_goal_string}` or `{:error, reason}`.
+  """
+  def regenerate_career_goal(instruction, existing_goal, facts, profile, opts \\ []) do
+    prompt = """
+    #{profile_context(profile)}
+
+    ## Career Facts
+    #{format_facts(facts)}
+
+    #{existing_goal_section(existing_goal)}
+
+    ## User Instruction
+    #{instruction}
+
+    Based on the user's instruction and their career facts, write a concise career goal statement
+    (1-3 sentences). If an existing goal is provided, revise it according to the instruction.
+    If no existing goal, create one from scratch.
+
+    Return ONLY a JSON object: {"career_goal": "the career goal statement"}
+    """
+
+    tracking = %{user_id: Keyword.get(opts, :user_id), caller: "interview"}
+
+    case Resume.LLM.tracked_complete(prompt, [system: career_goal_system_prompt()], tracking) do
+      {:ok, response, _usage} -> parse_career_goal(response)
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
   # System prompts
+
+  defp career_goal_system_prompt do
+    "You are a career advisor helping refine a candidate's career goal statement. Return only valid JSON."
+  end
 
   defp opening_system_prompt do
     "You are a friendly interviewer gathering facts for a resume. The candidate may be experienced or just starting out — they could be a student, career changer, or entering the workforce for the first time. Facts include work history, education, projects, skills, volunteer work, and goals. Be conversational and encouraging. Return only valid JSON."
@@ -157,6 +194,13 @@ defmodule Resume.Interview do
       {role, content} -> "#{String.capitalize(to_string(role))}: #{content}"
     end)
     |> Enum.join("\n")
+  end
+
+  defp existing_goal_section(nil), do: ""
+  defp existing_goal_section(""), do: ""
+
+  defp existing_goal_section(goal) do
+    "## Current Career Goal\n#{goal}"
   end
 
   # Parsers
@@ -212,6 +256,15 @@ defmodule Resume.Interview do
     with {:ok, data} <- decode_json(response),
          recap when is_binary(recap) <- data["recap"] do
       {:ok, recap}
+    else
+      _ -> {:error, :invalid_response}
+    end
+  end
+
+  defp parse_career_goal(response) do
+    with {:ok, data} <- decode_json(response),
+         goal when is_binary(goal) <- data["career_goal"] do
+      {:ok, goal}
     else
       _ -> {:error, :invalid_response}
     end

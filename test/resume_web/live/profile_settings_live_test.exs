@@ -267,6 +267,53 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
     end
   end
 
+  describe "career goal" do
+    setup :register_and_log_in_user
+
+    test "shows career goal when set", %{conn: conn, user: user} do
+      {:ok, _} =
+        Resume.Accounts.update_user_career_goal(user, "Targeting senior engineering roles")
+
+      {:ok, _view, html} = live(conn, ~p"/profile")
+      assert html =~ "Targeting senior engineering roles"
+      assert html =~ "Career Goal"
+    end
+
+    test "shows empty state when no career goal", %{conn: conn} do
+      {:ok, _view, html} = live(conn, ~p"/profile")
+      assert html =~ "No career goal set yet"
+    end
+
+    test "submitting instruction updates career goal", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/profile")
+
+      view
+      |> form(~s(form[phx-submit="update_career_goal"]),
+        career_goal: %{instruction: "I want to target DevOps roles"}
+      )
+      |> render_submit()
+
+      Process.sleep(100)
+      html = render(view)
+
+      assert html =~ "Career goal updated"
+      assert html =~ "DevOps"
+    end
+
+    test "ignores empty instruction", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/profile")
+
+      view
+      |> form(~s(form[phx-submit="update_career_goal"]),
+        career_goal: %{instruction: "  "}
+      )
+      |> render_submit()
+
+      html = render(view)
+      refute html =~ "Career goal updated"
+    end
+  end
+
   describe "process input" do
     setup :register_and_log_in_user
 

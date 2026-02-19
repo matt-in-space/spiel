@@ -101,6 +101,17 @@ defmodule Resume.Accounts do
   end
 
   @doc """
+  Updates the user's career goal in `default_resume_data`.
+  """
+  def update_user_career_goal(user, career_goal) when is_binary(career_goal) do
+    merged = Map.put(user.default_resume_data, "career_goal", career_goal)
+
+    user
+    |> Ecto.Changeset.change(default_resume_data: merged)
+    |> Repo.update()
+  end
+
+  @doc """
   Replaces the user's directives list.
   """
   def update_user_directives(user, directives) when is_list(directives) do

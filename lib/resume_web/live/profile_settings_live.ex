@@ -24,6 +24,8 @@ defmodule ResumeWeb.ProfileSettingsLive do
        website_types: @website_types,
        add_website_type: "linkedin",
        profile_form: to_form(profile_data, as: "profile"),
+       career_goal_form: to_form(%{"instruction" => ""}, as: "career_goal"),
+       processing_career_goal: false,
        facts: user.facts || [],
        directives: user.directives || [],
        active_tab: :profile,
@@ -153,12 +155,33 @@ defmodule ResumeWeb.ProfileSettingsLive do
             </button>
           </form>
 
-          <div :if={@career_goal} class="card bg-base-200 border border-base-300 p-4">
-            <h2 class="text-sm font-semibold opacity-70 mb-1">Career Goal</h2>
-            <p class="text-sm">{@career_goal}</p>
-            <p class="text-xs opacity-50 mt-2">
-              Extracted from your interview. Re-do the interview to update.
-            </p>
+          <div class="card bg-base-200 border border-base-300 p-4 space-y-3">
+            <h2 class="text-sm font-semibold opacity-70">Career Goal</h2>
+            <p :if={@career_goal} class="text-sm">{@career_goal}</p>
+            <p :if={!@career_goal} class="text-sm opacity-50">No career goal set yet.</p>
+
+            <.form
+              for={@career_goal_form}
+              phx-submit="update_career_goal"
+              class="flex items-end gap-2"
+            >
+              <div class="flex-1">
+                <.input
+                  field={@career_goal_form[:instruction]}
+                  placeholder="e.g. I'm now targeting DevOps roles"
+                  label=""
+                />
+              </div>
+              <button
+                type="submit"
+                class="btn btn-primary btn-sm"
+                disabled={@processing_career_goal}
+              >
+                <span :if={@processing_career_goal} class="loading loading-spinner loading-xs"></span>
+                <.icon :if={!@processing_career_goal} name="hero-sparkles-micro" class="size-4" />
+                Update
+              </button>
+            </.form>
           </div>
         </div>
 
@@ -493,6 +516,40 @@ defmodule ResumeWeb.ProfileSettingsLive do
      |> put_flash(:error, "Recording failed: #{reason}")}
   end
 
+  # Career goal
+
+  @impl true
+  def handle_event(
+        "update_career_goal",
+        %{"career_goal" => %{"instruction" => instruction}},
+        socket
+      ) do
+    instruction = String.trim(instruction)
+
+    if instruction == "" do
+      {:noreply, socket}
+    else
+      user = socket.assigns.user
+      profile = user.default_resume_data
+
+      task =
+        Task.async(fn ->
+          Resume.Interview.regenerate_career_goal(
+            instruction,
+            socket.assigns.career_goal,
+            socket.assigns.facts,
+            profile,
+            user_id: user.id
+          )
+        end)
+
+      {:noreply,
+       socket
+       |> assign(processing_career_goal: true)
+       |> update(:task_refs, &Map.put(&1, task.ref, :career_goal))}
+    end
+  end
+
   # Profile form
 
   @impl true
@@ -616,6 +673,34 @@ defmodule ResumeWeb.ProfileSettingsLive do
          socket
          |> assign(transcribing: false)
          |> put_flash(:error, "Transcription failed. Please try again.")}
+
+      {:career_goal, {:ok, new_goal}} ->
+        user = socket.assigns.user
+
+        case Accounts.update_user_career_goal(user, new_goal) do
+          {:ok, user} ->
+            {:noreply,
+             socket
+             |> assign(
+               processing_career_goal: false,
+               career_goal: new_goal,
+               career_goal_form: to_form(%{"instruction" => ""}, as: "career_goal"),
+               user: user
+             )
+             |> put_flash(:info, "Career goal updated.")}
+
+          {:error, _} ->
+            {:noreply,
+             socket
+             |> assign(processing_career_goal: false)
+             |> put_flash(:error, "Failed to save career goal. Please try again.")}
+        end
+
+      {:career_goal, {:error, _reason}} ->
+        {:noreply,
+         socket
+         |> assign(processing_career_goal: false)
+         |> put_flash(:error, "Failed to update career goal. Please try again.")}
 
       _ ->
         {:noreply, socket}
