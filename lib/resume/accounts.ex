@@ -148,6 +148,23 @@ defmodule Resume.Accounts do
   def onboarding_completed?(%User{onboarding_completed_at: nil}), do: false
   def onboarding_completed?(%User{onboarding_completed_at: _}), do: true
 
+  @doc """
+  Dismisses a specific tutorial for the given user.
+  """
+  def dismiss_tutorial(user, tutorial_id) do
+    user |> User.dismiss_tutorial_changeset(tutorial_id) |> Repo.update()
+  end
+
+  @doc """
+  Returns true if the user should see the given tutorial.
+  Requires onboarding complete and tutorial not yet dismissed.
+  """
+  def show_tutorial?(%User{onboarding_completed_at: nil}, _tutorial_id), do: false
+
+  def show_tutorial?(%User{dismissed_tutorials: dismissed}, tutorial_id) do
+    tutorial_id not in dismissed
+  end
+
   ## Settings
 
   @doc """

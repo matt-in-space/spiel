@@ -50,6 +50,7 @@ defmodule ResumeWeb.ResumesLive.Show do
        editing_title: false,
        title_form: to_form(%{"title" => resume.title}, as: "title"),
        sidebar_open: false,
+       show_tutorial: Accounts.show_tutorial?(user, "show-tutorial"),
        task_refs: %{}
      )}
   end
@@ -210,6 +211,7 @@ defmodule ResumeWeb.ResumesLive.Show do
               </div>
 
               <.form
+                id="feedback-form"
                 for={@feedback_form}
                 phx-submit="send_feedback"
                 phx-change="validate_feedback"
@@ -359,6 +361,29 @@ defmodule ResumeWeb.ResumesLive.Show do
           </div>
         </div>
       </div>
+
+      <.tutorial
+        id="show-tutorial"
+        show={@show_tutorial}
+        steps={[
+          %{
+            target: "#feedback-form",
+            message:
+              "Suggest changes using natural language — like 'make the summary shorter' or 'emphasize my Python experience'.",
+            position: "bottom"
+          },
+          %{
+            target: "label[for='sidebar-toggle']",
+            message: "Open this panel to change the resume template or browse version history.",
+            position: "bottom"
+          },
+          %{
+            target: "a[href$='/pdf']",
+            message: "Download your resume as a PDF when you're ready.",
+            position: "bottom"
+          }
+        ]}
+      />
     </Layouts.app>
 
     <script :type={Phoenix.LiveView.ColocatedHook} name=".AudioRecorder">
@@ -414,6 +439,12 @@ defmodule ResumeWeb.ResumesLive.Show do
       };
     </script>
     """
+  end
+
+  @impl true
+  def handle_event("dismiss_tutorial", %{"id" => id}, socket) do
+    Accounts.dismiss_tutorial(socket.assigns.user, id)
+    {:noreply, assign(socket, show_tutorial: false)}
   end
 
   @impl true

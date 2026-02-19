@@ -16,6 +16,8 @@ defmodule ResumeWeb.ProfileSettingsLive do
     career_goal = profile_data["career_goal"]
     websites = profile_data["websites"] || []
 
+    show_tutorial = Accounts.show_tutorial?(user, "profile-tutorial")
+
     {:ok,
      assign(socket,
        user: user,
@@ -28,7 +30,8 @@ defmodule ResumeWeb.ProfileSettingsLive do
        processing_career_goal: false,
        facts: user.facts || [],
        directives: user.directives || [],
-       active_tab: :profile,
+       active_tab: if(show_tutorial, do: :details_rules, else: :profile),
+       show_tutorial: show_tutorial,
        input_form: to_form(%{"text" => ""}, as: "input"),
        filter: "",
        processing: false,
@@ -277,6 +280,7 @@ defmodule ResumeWeb.ProfileSettingsLive do
           <%!-- Card Grid --%>
           <div
             :if={combined_items(@facts, @directives, @filter) != []}
+            id="facts-grid"
             class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
           >
             <div
@@ -324,6 +328,25 @@ defmodule ResumeWeb.ProfileSettingsLive do
           </div>
         </div>
       </div>
+
+      <.tutorial
+        id="profile-tutorial"
+        show={@show_tutorial}
+        steps={[
+          %{
+            target: "#input_text",
+            message:
+              "Tell the Resume Coach about your experience, skills, or rules — just type naturally.",
+            position: "bottom"
+          },
+          %{
+            target: "#facts-grid",
+            message:
+              "These are the details and rules we know about you. You can delete anything that's wrong.",
+            position: "top"
+          }
+        ]}
+      />
     </Layouts.app>
 
     <script :type={Phoenix.LiveView.ColocatedHook} name=".AudioRecorder">
@@ -396,6 +419,14 @@ defmodule ResumeWeb.ProfileSettingsLive do
     |> Enum.filter(fn item ->
       filter == "" || String.contains?(String.downcase(item.text), String.downcase(filter))
     end)
+  end
+
+  # Tutorial
+
+  @impl true
+  def handle_event("dismiss_tutorial", %{"id" => id}, socket) do
+    Accounts.dismiss_tutorial(socket.assigns.user, id)
+    {:noreply, assign(socket, show_tutorial: false)}
   end
 
   # Tab switching

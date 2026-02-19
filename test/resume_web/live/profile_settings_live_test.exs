@@ -353,4 +353,50 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       refute html =~ "Processing input"
     end
   end
+
+  describe "tutorial" do
+    setup :register_and_log_in_user
+
+    defp complete_onboarding(user) do
+      {:ok, user} =
+        Resume.Accounts.complete_onboarding(user, %{"name" => "Test User"}, ["A fact"])
+
+      user
+    end
+
+    test "shows tutorial for onboarded user who hasn't dismissed", %{conn: conn, user: user} do
+      user = complete_onboarding(user)
+      {:ok, _} = Resume.Accounts.update_user_facts(user, ["Fact 1"])
+      {:ok, _view, html} = live(conn, ~p"/profile")
+      assert html =~ "profile-tutorial"
+    end
+
+    test "starts on details_rules tab when tutorial is showing", %{conn: conn, user: user} do
+      user = complete_onboarding(user)
+      {:ok, _} = Resume.Accounts.update_user_facts(user, ["Fact 1"])
+      {:ok, _view, html} = live(conn, ~p"/profile")
+      # Should see details & rules content, not profile form
+      assert html =~ "Add details or rules"
+    end
+
+    test "does not show tutorial for dismissed user", %{conn: conn, user: user} do
+      user = complete_onboarding(user)
+      Resume.Accounts.dismiss_tutorial(user, "profile-tutorial")
+      {:ok, _view, html} = live(conn, ~p"/profile")
+      refute html =~ "profile-tutorial"
+    end
+
+    test "dismiss_tutorial event hides tutorial and persists", %{conn: conn, user: user} do
+      user = complete_onboarding(user)
+      {:ok, _} = Resume.Accounts.update_user_facts(user, ["Fact 1"])
+      {:ok, view, html} = live(conn, ~p"/profile")
+      assert html =~ "profile-tutorial"
+
+      render_hook(view, "dismiss_tutorial", %{"id" => "profile-tutorial"})
+
+      refute render(view) =~ "profile-tutorial"
+      updated_user = Resume.Accounts.get_user!(user.id)
+      assert "profile-tutorial" in updated_user.dismissed_tutorials
+    end
+  end
 end

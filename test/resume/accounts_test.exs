@@ -389,6 +389,50 @@ defmodule Resume.AccountsTest do
     end
   end
 
+  describe "dismiss_tutorial/2" do
+    test "adds tutorial id to dismissed_tutorials" do
+      user = user_fixture()
+      assert user.dismissed_tutorials == []
+      {:ok, user} = Accounts.dismiss_tutorial(user, "home-tutorial")
+      assert "home-tutorial" in user.dismissed_tutorials
+    end
+
+    test "does not duplicate ids" do
+      user = user_fixture()
+      {:ok, user} = Accounts.dismiss_tutorial(user, "home-tutorial")
+      {:ok, user} = Accounts.dismiss_tutorial(user, "home-tutorial")
+      assert user.dismissed_tutorials == ["home-tutorial"]
+    end
+  end
+
+  describe "show_tutorial?/2" do
+    test "returns false before onboarding" do
+      user = user_fixture()
+      refute Accounts.show_tutorial?(user, "home-tutorial")
+    end
+
+    test "returns true after onboarding" do
+      user = user_fixture()
+      {:ok, user} = Accounts.complete_onboarding(user, %{"name" => "Test"}, ["A fact"])
+      assert Accounts.show_tutorial?(user, "home-tutorial")
+    end
+
+    test "returns false for dismissed tutorial" do
+      user = user_fixture()
+      {:ok, user} = Accounts.complete_onboarding(user, %{"name" => "Test"}, ["A fact"])
+      {:ok, user} = Accounts.dismiss_tutorial(user, "home-tutorial")
+      refute Accounts.show_tutorial?(user, "home-tutorial")
+    end
+
+    test "returns true for other tutorials after one is dismissed" do
+      user = user_fixture()
+      {:ok, user} = Accounts.complete_onboarding(user, %{"name" => "Test"}, ["A fact"])
+      {:ok, user} = Accounts.dismiss_tutorial(user, "home-tutorial")
+      assert Accounts.show_tutorial?(user, "show-tutorial")
+      assert Accounts.show_tutorial?(user, "profile-tutorial")
+    end
+  end
+
   describe "inspect/2 for the User module" do
     test "does not include password" do
       refute inspect(%User{password: "123456"}) =~ "password: \"123456\""

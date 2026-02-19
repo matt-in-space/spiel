@@ -12,6 +12,7 @@ defmodule Resume.Accounts.User do
     field :default_resume_data, :map, default: %{}
     field :directives, {:array, :string}, default: []
     field :onboarding_completed_at, :utc_datetime
+    field :dismissed_tutorials, {:array, :string}, default: []
     field :role, Ecto.Enum, values: [:admin, :member], default: :member
 
     timestamps(type: :utc_datetime)
@@ -76,6 +77,14 @@ defmodule Resume.Accounts.User do
   def onboarding_changeset(user) do
     now = DateTime.utc_now(:second)
     change(user, onboarding_completed_at: now)
+  end
+
+  @doc """
+  A changeset that adds a tutorial key to `dismissed_tutorials`.
+  """
+  def dismiss_tutorial_changeset(user, tutorial_id) when is_binary(tutorial_id) do
+    dismissed = Enum.uniq([tutorial_id | user.dismissed_tutorials])
+    change(user, dismissed_tutorials: dismissed)
   end
 
   @doc """

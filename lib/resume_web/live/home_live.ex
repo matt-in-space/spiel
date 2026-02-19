@@ -15,6 +15,7 @@ defmodule ResumeWeb.HomeLive do
      |> assign(
        user: user,
        show_onboarding_cta: fact_count == 0,
+       show_tutorial: fact_count > 0 and Accounts.show_tutorial?(user, "home-tutorial"),
        profile_name: get_in(user.default_resume_data, ["name"]),
        fact_count: fact_count,
        directive_count: length(user.directives || []),
@@ -146,8 +147,37 @@ defmodule ResumeWeb.HomeLive do
           </div>
         </div>
       </div>
+
+      <.tutorial
+        id="home-tutorial"
+        show={@show_tutorial}
+        steps={[
+          %{
+            target: "#generate_job_target",
+            message:
+              "Describe a job you're targeting or paste a job posting URL to generate a tailored resume.",
+            position: "bottom"
+          },
+          %{
+            target: "#resumes",
+            message: "Your generated resumes appear here. Click one to view and edit it.",
+            position: "top"
+          },
+          %{
+            target: "a[href='/profile']",
+            message: "Visit your profile to update your career details and rules.",
+            position: "bottom"
+          }
+        ]}
+      />
     </Layouts.app>
     """
+  end
+
+  @impl true
+  def handle_event("dismiss_tutorial", %{"id" => id}, socket) do
+    Accounts.dismiss_tutorial(socket.assigns.user, id)
+    {:noreply, assign(socket, show_tutorial: false)}
   end
 
   @impl true

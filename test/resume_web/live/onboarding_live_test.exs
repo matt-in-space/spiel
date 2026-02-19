@@ -12,7 +12,7 @@ defmodule ResumeWeb.OnboardingLiveTest do
       assert path == ~p"/users/log-in"
     end
 
-    test "redirects already-onboarded users to /home", %{conn: conn} do
+    test "redirects already-onboarded users with facts to /home", %{conn: conn} do
       user = user_fixture()
 
       {:ok, _user} =
@@ -21,6 +21,16 @@ defmodule ResumeWeb.OnboardingLiveTest do
       conn = log_in_user(conn, user)
       assert {:error, redirect} = live(conn, ~p"/onboarding")
       assert {:redirect, %{to: "/home"}} = redirect
+    end
+
+    test "allows re-entry for onboarded users with 0 facts", %{conn: conn} do
+      user = user_fixture()
+      {:ok, _user} = Resume.Accounts.complete_onboarding(user, %{"name" => "Test"}, [])
+
+      conn = log_in_user(conn, user)
+      {:ok, _view, html} = live(conn, ~p"/onboarding")
+      # Should land on interview step directly
+      assert html =~ "Career Interview"
     end
   end
 

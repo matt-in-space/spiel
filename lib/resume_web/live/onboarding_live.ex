@@ -9,11 +9,12 @@ defmodule ResumeWeb.OnboardingLive do
   def mount(_params, session, socket) do
     user = get_user(socket, session)
 
-    if Accounts.onboarding_completed?(user) do
+    if Accounts.onboarding_completed?(user) and (user.facts || []) != [] do
       {:ok, redirect(socket, to: ~p"/home")}
     else
       profile_data = Map.merge(%{"email" => user.email}, user.default_resume_data)
       websites = profile_data["websites"] || []
+      returning = Accounts.onboarding_completed?(user)
 
       {:ok,
        socket
@@ -55,7 +56,10 @@ defmodule ResumeWeb.OnboardingLive do
          accept: ~w(.txt .pdf),
          max_entries: 5,
          max_file_size: 5_000_000
-       )}
+       )
+       |> then(fn socket ->
+         if returning, do: advance_to_interview(socket), else: socket
+       end)}
     end
   end
 

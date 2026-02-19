@@ -91,4 +91,31 @@ defmodule ResumeWeb.HomeLiveTest do
       refute render(view) =~ "To Delete"
     end
   end
+
+  describe "tutorial" do
+    test "shows tutorial for onboarded user who hasn't dismissed", %{conn: conn, user: user} do
+      complete_user_onboarding(user)
+      {:ok, _view, html} = live(conn, ~p"/home")
+      assert html =~ "home-tutorial"
+    end
+
+    test "does not show tutorial for dismissed user", %{conn: conn, user: user} do
+      user = complete_user_onboarding(user)
+      Resume.Accounts.dismiss_tutorial(user, "home-tutorial")
+      {:ok, _view, html} = live(conn, ~p"/home")
+      refute html =~ "home-tutorial"
+    end
+
+    test "dismiss_tutorial event hides tutorial and persists", %{conn: conn, user: user} do
+      complete_user_onboarding(user)
+      {:ok, view, html} = live(conn, ~p"/home")
+      assert html =~ "home-tutorial"
+
+      render_hook(view, "dismiss_tutorial", %{"id" => "home-tutorial"})
+
+      refute render(view) =~ "home-tutorial"
+      updated_user = Resume.Accounts.get_user!(user.id)
+      assert "home-tutorial" in updated_user.dismissed_tutorials
+    end
+  end
 end

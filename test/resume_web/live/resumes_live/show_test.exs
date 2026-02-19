@@ -108,4 +108,34 @@ defmodule ResumeWeb.ResumesLive.ShowTest do
       end
     end
   end
+
+  describe "tutorial" do
+    setup [:create_resume]
+
+    test "shows tutorial for onboarded user who hasn't dismissed", %{conn: conn, resume: resume} do
+      {:ok, _view, html} = live(conn, ~p"/resumes/#{resume}")
+      assert html =~ "show-tutorial"
+    end
+
+    test "does not show tutorial for dismissed user", %{conn: conn, user: user, resume: resume} do
+      Accounts.dismiss_tutorial(user, "show-tutorial")
+      {:ok, _view, html} = live(conn, ~p"/resumes/#{resume}")
+      refute html =~ "show-tutorial"
+    end
+
+    test "dismiss_tutorial event hides tutorial and persists", %{
+      conn: conn,
+      user: user,
+      resume: resume
+    } do
+      {:ok, view, html} = live(conn, ~p"/resumes/#{resume}")
+      assert html =~ "show-tutorial"
+
+      render_hook(view, "dismiss_tutorial", %{"id" => "show-tutorial"})
+
+      refute render(view) =~ "show-tutorial"
+      updated_user = Accounts.get_user!(user.id)
+      assert "show-tutorial" in updated_user.dismissed_tutorials
+    end
+  end
 end

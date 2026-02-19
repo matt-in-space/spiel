@@ -454,6 +454,34 @@ defmodule ResumeWeb.CoreComponents do
     """
   end
 
+  @doc """
+  Renders a tutorial overlay with step-by-step tooltips.
+
+  Each step targets a CSS selector and shows a message positioned
+  relative to the target element.
+
+  ## Examples
+
+      <.tutorial id="home-tutorial" show={@show_tutorial} steps={[
+        %{target: "#my-element", message: "This is the first step.", position: "bottom"}
+      ]} />
+  """
+  attr :id, :string, required: true
+  attr :show, :boolean, required: true
+  attr :steps, :list, required: true
+
+  def tutorial(assigns) do
+    ~H"""
+    <div
+      :if={@show}
+      id={@id}
+      phx-hook="Tutorial"
+      phx-update="ignore"
+      data-steps={Jason.encode!(@steps)}
+    />
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do
