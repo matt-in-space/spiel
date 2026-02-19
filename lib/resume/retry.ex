@@ -25,6 +25,9 @@ defmodule Resume.Retry do
       {:ok, _} = result ->
         result
 
+      {:error, :limit_reached, _} = result ->
+        result
+
       {:error, reason} ->
         Logger.warning("Retry attempt #{attempt}/#{max} failed: #{inspect(reason)}")
         Process.sleep(delay)
