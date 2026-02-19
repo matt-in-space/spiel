@@ -166,24 +166,25 @@ defmodule ResumeWeb.ProfileSettingsLive do
             <.form
               for={@career_goal_form}
               phx-submit="update_career_goal"
-              class="flex items-end gap-2"
+              class="space-y-2"
             >
-              <div class="flex-1">
-                <.input
-                  field={@career_goal_form[:instruction]}
-                  placeholder="e.g. I'm now targeting DevOps roles"
-                  label=""
-                />
+              <.input
+                field={@career_goal_form[:instruction]}
+                placeholder="e.g. I'm now targeting DevOps roles"
+                label=""
+              />
+              <div class="flex justify-end">
+                <button
+                  type="submit"
+                  class="btn btn-primary btn-sm"
+                  disabled={@processing_career_goal}
+                >
+                  <span :if={@processing_career_goal} class="loading loading-spinner loading-xs">
+                  </span>
+                  <.icon :if={!@processing_career_goal} name="hero-sparkles-micro" class="size-4" />
+                  Update
+                </button>
               </div>
-              <button
-                type="submit"
-                class="btn btn-primary btn-sm"
-                disabled={@processing_career_goal}
-              >
-                <span :if={@processing_career_goal} class="loading loading-spinner loading-xs"></span>
-                <.icon :if={!@processing_career_goal} name="hero-sparkles-micro" class="size-4" />
-                Update
-              </button>
             </.form>
           </div>
         </div>
