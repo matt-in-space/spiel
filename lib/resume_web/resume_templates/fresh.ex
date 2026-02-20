@@ -323,13 +323,14 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 4pt 14pt;
       font-size: 9pt;
       color: #64748b !important;
+      margin: 0 -7pt;
     }
 
     .resume .fresh-contact-row span {
       white-space: nowrap;
+      margin: 2pt 7pt;
     }
 
     .resume .fresh-contact-row a {
@@ -432,7 +433,11 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     .resume .fresh-skill-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 4pt;
+      margin: -2pt;
+    }
+
+    .resume .fresh-skill-tags .fresh-skill-tag {
+      margin: 2pt;
     }
 
     .resume .fresh-skill-tag {

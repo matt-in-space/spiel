@@ -319,9 +319,9 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     .resume .mini-contact-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 4pt 16pt;
       font-size: 8.5pt;
       color: #999 !important;
+      margin: 0 -8pt;
     }
 
     .resume .mini-contact-row,
@@ -331,6 +331,7 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
 
     .resume .mini-contact-row span {
       white-space: nowrap;
+      margin: 2pt 8pt;
     }
 
     .resume .mini-contact-row a {

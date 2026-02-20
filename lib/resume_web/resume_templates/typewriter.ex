@@ -322,12 +322,13 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 4pt 14pt;
       font-size: 9pt;
+      margin: 0 -7pt;
     }
 
     .resume .tw-contact-row span {
       white-space: nowrap;
+      margin: 2pt 7pt;
     }
 
     /* Sections */

@@ -325,9 +325,9 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 4pt 14pt;
       font-size: 9pt;
       color: #795548 !important;
+      margin: 0 -7pt;
     }
 
     .resume .macc-contact-row,
@@ -337,6 +337,7 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
 
     .resume .macc-contact-row span {
       white-space: nowrap;
+      margin: 2pt 7pt;
     }
 
     .resume .macc-contact-row a {
@@ -441,7 +442,11 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
     .resume .macc-skill-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 4pt;
+      margin: -2pt;
+    }
+
+    .resume .macc-skill-tags .macc-skill-tag {
+      margin: 2pt;
     }
 
     .resume .macc-skill-tag {

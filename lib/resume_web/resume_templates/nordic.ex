@@ -320,14 +320,15 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
     .resume .nord-contact-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 4pt 16pt;
       font-size: 9pt;
       font-weight: 300;
       color: #78909C !important;
+      margin: 0 -8pt;
     }
 
     .resume .nord-contact-row span {
       white-space: nowrap;
+      margin: 2pt 8pt;
     }
 
     .resume .nord-contact-row,

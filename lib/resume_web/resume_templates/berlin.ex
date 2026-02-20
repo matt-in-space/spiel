@@ -322,7 +322,6 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
     .resume .bln-contact-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 0;
       font-size: 9pt;
       color: #333 !important;
     }

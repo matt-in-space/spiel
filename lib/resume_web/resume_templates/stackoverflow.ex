@@ -320,9 +320,9 @@ defmodule ResumeWeb.ResumeTemplates.Stackoverflow do
     .resume .stack-contact-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 4pt 14pt;
       font-size: 9pt;
       color: #6a737c !important;
+      margin: 0 -7pt;
     }
 
     .resume .stack-contact-row,
@@ -332,6 +332,7 @@ defmodule ResumeWeb.ResumeTemplates.Stackoverflow do
 
     .resume .stack-contact-row span {
       white-space: nowrap;
+      margin: 2pt 7pt;
     }
 
     .resume .stack-contact-row a {
@@ -434,7 +435,11 @@ defmodule ResumeWeb.ResumeTemplates.Stackoverflow do
     .resume .stack-skill-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 4pt;
+      margin: -2pt;
+    }
+
+    .resume .stack-skill-tags .stack-skill-tag {
+      margin: 2pt;
     }
 
     .resume .stack-skill-tag {

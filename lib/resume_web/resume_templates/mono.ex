@@ -320,13 +320,14 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
     .resume .mono-contact-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 4pt 12pt;
       font-size: 9pt;
       color: #555 !important;
+      margin: 0 -6pt;
     }
 
     .resume .mono-contact-row span {
       white-space: nowrap;
+      margin: 2pt 6pt;
     }
 
     .resume .mono-contact-row a {

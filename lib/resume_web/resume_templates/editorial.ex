@@ -323,13 +323,14 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 4pt 14pt;
       font-size: 9pt;
       color: #555 !important;
+      margin: 0 -7pt;
     }
 
     .resume .edit-contact-row span {
       white-space: nowrap;
+      margin: 2pt 7pt;
     }
 
     .resume .edit-contact-row a {

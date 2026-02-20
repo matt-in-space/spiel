@@ -322,9 +322,9 @@ defmodule ResumeWeb.ResumeTemplates.Even do
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 4pt 12pt;
       font-size: 9pt;
       color: #555 !important;
+      margin: 0 -6pt;
     }
 
     .resume .even-contact-row,
@@ -334,6 +334,7 @@ defmodule ResumeWeb.ResumeTemplates.Even do
 
     .resume .even-contact-row span {
       white-space: nowrap;
+      margin: 2pt 6pt;
     }
 
     /* Sections — equal spacing */
@@ -418,7 +419,8 @@ defmodule ResumeWeb.ResumeTemplates.Even do
     .resume .even-skills-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 4pt 16pt;
+      column-gap: 16pt;
+      row-gap: 4pt;
       font-size: 9.5pt;
     }
 

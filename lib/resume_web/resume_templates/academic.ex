@@ -321,9 +321,9 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 3pt 10pt;
       font-size: 9pt;
       color: #333 !important;
+      margin: 0 -5pt;
     }
 
     .resume .acad-contact-row,
@@ -333,6 +333,7 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
 
     .resume .acad-contact-row span {
       white-space: nowrap;
+      margin: 1.5pt 5pt;
     }
 
     .resume .acad-contact-row a {
