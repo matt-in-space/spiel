@@ -57,7 +57,6 @@ Create a `.env` or export these:
 | `SECRET_KEY_BASE` | Production | Phoenix secret (generate with `mix phx.gen.secret`) |
 | `PHX_HOST` | Production | Hostname for URL generation |
 | `RESEND_API_KEY` | Production | Resend API key for transactional email delivery |
-| `FROM_EMAIL` | Production | Sender email address for outbound emails |
 | `OPENAI_API_KEY` | Production | OpenAI API key for Whisper transcription |
 | `WEASYPRINT_URL` | Production | WeasyPrint service URL for PDF generation |
 

@@ -119,8 +119,7 @@ if config_env() == :prod do
 
   config :resume, Resume.Mailer,
     adapter: Swoosh.Adapters.Resend,
-    api_key: System.get_env("RESEND_API_KEY"),
-    from_email: System.get_env("FROM_EMAIL")
+    api_key: System.get_env("RESEND_API_KEY")
 
   if weasyprint_url = System.get_env("WEASYPRINT_URL") do
     config :resume, weasyprint_url: weasyprint_url
