@@ -34,7 +34,7 @@ defmodule ResumeWeb.ResumesLive.New do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} breadcrumbs={[%{label: "New Resume"}]}>
       <div class="space-y-6">
         <.header>
           New Resume

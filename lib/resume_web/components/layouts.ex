@@ -38,12 +38,27 @@ defmodule ResumeWeb.Layouts do
     default: nil,
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
 
+  attr :breadcrumbs, :list, default: [], doc: "list of %{label, to} maps for breadcrumb trail"
+
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
     <main class="px-4 py-10 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl space-y-4">
+        <div :if={@breadcrumbs != []} class="breadcrumbs text-sm">
+          <ul>
+            <li>
+              <.link href={~p"/home"} aria-label="Home">
+                <.icon name="hero-home-micro" class="size-4" />
+              </.link>
+            </li>
+            <li :for={{crumb, idx} <- Enum.with_index(@breadcrumbs)}>
+              <.link :if={idx < length(@breadcrumbs) - 1} href={crumb.to}>{crumb.label}</.link>
+              <span :if={idx == length(@breadcrumbs) - 1}>{crumb.label}</span>
+            </li>
+          </ul>
+        </div>
         <.flash_group flash={@flash} />
         {render_slot(@inner_block)}
       </div>

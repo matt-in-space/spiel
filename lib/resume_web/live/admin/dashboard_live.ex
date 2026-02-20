@@ -13,7 +13,7 @@ defmodule ResumeWeb.Admin.DashboardLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} breadcrumbs={[%{label: "Admin"}]}>
       <.header>
         Admin
         <:subtitle>System dashboards and tools</:subtitle>

@@ -78,7 +78,7 @@ defmodule ResumeWeb.OnboardingLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} breadcrumbs={[%{label: "Setup"}]}>
       <div class="space-y-6 max-w-2xl mx-auto">
         <.steps_indicator current={@step} />
 

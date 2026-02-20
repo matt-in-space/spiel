@@ -84,7 +84,7 @@ defmodule ResumeWeb.Admin.CostsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} breadcrumbs={[%{label: "Admin", to: ~p"/admin"}, %{label: "Costs"}]}>
       <.header>
         Admin: API Costs
         <:subtitle>LLM and transcription usage and cost tracking across all users</:subtitle>

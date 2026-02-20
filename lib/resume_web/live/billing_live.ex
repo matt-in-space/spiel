@@ -36,7 +36,7 @@ defmodule ResumeWeb.BillingLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} breadcrumbs={[%{label: "Billing"}]}>
       <div class="max-w-lg mx-auto space-y-6">
         <h1 class="text-2xl font-semibold tracking-tight">Billing</h1>
 

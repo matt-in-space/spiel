@@ -22,7 +22,7 @@ defmodule ResumeWeb.Admin.BillingLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} breadcrumbs={[%{label: "Admin", to: ~p"/admin"}, %{label: "Billing"}]}>
       <.header>
         Admin: Billing
         <:subtitle>Revenue, payments, and access management</:subtitle>

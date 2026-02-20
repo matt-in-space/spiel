@@ -77,7 +77,7 @@ defmodule ResumeWeb.ResumesLive.Show do
     assigns = assign(assigns, :current_data, version_data(assigns.current_version))
 
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} breadcrumbs={[%{label: @resume.title}]}>
       <div class="drawer drawer-end">
         <input
           id="sidebar-toggle"

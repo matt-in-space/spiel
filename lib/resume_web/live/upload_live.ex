@@ -36,7 +36,7 @@ defmodule ResumeWeb.UploadLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} breadcrumbs={[%{label: "Upload"}]}>
       <div class="space-y-6">
         <div :if={@upgrade_prompt} class="alert alert-warning mb-4">
           <.icon name="hero-lock-closed-micro" class="size-5" />
