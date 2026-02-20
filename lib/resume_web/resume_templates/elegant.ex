@@ -1,0 +1,415 @@
+defmodule ResumeWeb.ResumeTemplates.Elegant do
+  @moduledoc """
+  Elegant resume template.
+
+  Refined serif typography with warm gold accents, thin decorative borders,
+  generous spacing, and centered header with small caps section titles.
+  """
+
+  use ResumeWeb, :html
+
+  import ResumeWeb.ResumeTemplates.Helpers
+
+  attr :data, :any, required: true
+
+  def render(assigns) do
+    ~H"""
+    <div class="resume">
+      <.contact_info contact={@data.contact_info} />
+      <.summary_section summary={@data.summary} />
+      <.work_experience_section experiences={@data.work_experience} />
+      <.education_section entries={@data.education} />
+      <.skills_section groups={@data.skills} />
+      <.certifications_section certs={@data.certifications} />
+      <.projects_section projects={@data.projects} />
+      <.publications_section pubs={@data.publications} />
+      <.volunteer_section entries={@data.volunteer_work} />
+      <.languages_section languages={Map.get(@data, :languages, [])} />
+      <.awards_section awards={Map.get(@data, :awards, [])} />
+    </div>
+    """
+  end
+
+  defp contact_info(%{contact: nil} = assigns), do: ~H""
+
+  defp contact_info(assigns) do
+    ~H"""
+    <header class="elegant-header">
+      <h1 class="elegant-name">{@contact.name}</h1>
+      <div class="elegant-contact-details">
+        <span :if={@contact.email}>{@contact.email}</span>
+        <span :if={@contact.phone}>{@contact.phone}</span>
+        <span :if={@contact.location}>{@contact.location}</span>
+        <span :for={w <- @contact.websites || []}>
+          <a href={w.url}>{website_display(w)}</a>
+        </span>
+      </div>
+    </header>
+    """
+  end
+
+  defp summary_section(%{summary: nil} = assigns), do: ~H""
+  defp summary_section(%{summary: ""} = assigns), do: ~H""
+
+  defp summary_section(assigns) do
+    ~H"""
+    <section class="elegant-section">
+      <h2 class="elegant-section-title">Summary</h2>
+      <p class="elegant-body">{@summary}</p>
+    </section>
+    """
+  end
+
+  defp work_experience_section(%{experiences: []} = assigns), do: ~H""
+
+  defp work_experience_section(assigns) do
+    ~H"""
+    <section class="elegant-section">
+      <h2 class="elegant-section-title">Experience</h2>
+      <div :for={exp <- @experiences} class="elegant-entry">
+        <div class="elegant-entry-header">
+          <span class="elegant-entry-title">{exp.role}</span>
+          <span class="elegant-entry-date">
+            {format_date_range(exp.start_date, exp.end_date, exp.current)}
+          </span>
+        </div>
+        <div class="elegant-entry-subtitle">{exp.company}</div>
+        <ul :if={exp.accomplishments != []} class="elegant-list">
+          <li :for={item <- exp.accomplishments}>{item}</li>
+        </ul>
+      </div>
+    </section>
+    """
+  end
+
+  defp education_section(%{entries: []} = assigns), do: ~H""
+
+  defp education_section(assigns) do
+    ~H"""
+    <section class="elegant-section">
+      <h2 class="elegant-section-title">Education</h2>
+      <div :for={edu <- @entries} class="elegant-entry">
+        <div class="elegant-entry-header">
+          <span class="elegant-entry-title">{edu.degree} in {edu.field}</span>
+          <span class="elegant-entry-date">
+            {format_date_range(edu.start_date, edu.end_date, false)}
+          </span>
+        </div>
+        <div class="elegant-entry-subtitle">{edu.institution}</div>
+      </div>
+    </section>
+    """
+  end
+
+  defp skills_section(%{groups: []} = assigns), do: ~H""
+
+  defp skills_section(assigns) do
+    ~H"""
+    <section class="elegant-section">
+      <h2 class="elegant-section-title">Skills</h2>
+      <div class="elegant-skills">
+        <div :for={group <- @groups} class="elegant-skill-group">
+          <span class="elegant-skill-category">{group.category}:</span>
+          <span class="elegant-skill-list">{Enum.join(group.skills, ", ")}</span>
+        </div>
+      </div>
+    </section>
+    """
+  end
+
+  defp certifications_section(%{certs: []} = assigns), do: ~H""
+
+  defp certifications_section(assigns) do
+    ~H"""
+    <section class="elegant-section">
+      <h2 class="elegant-section-title">Certifications</h2>
+      <div :for={cert <- @certs} class="elegant-entry">
+        <div class="elegant-entry-header">
+          <span class="elegant-entry-title">
+            {cert.name}
+            <span :if={cert.issuer} class="elegant-entry-issuer">&nbsp;&mdash; {cert.issuer}</span>
+          </span>
+          <span :if={cert.date} class="elegant-entry-date">{format_flex_date(cert.date)}</span>
+        </div>
+      </div>
+    </section>
+    """
+  end
+
+  defp projects_section(%{projects: []} = assigns), do: ~H""
+
+  defp projects_section(assigns) do
+    ~H"""
+    <section class="elegant-section">
+      <h2 class="elegant-section-title">Projects</h2>
+      <div :for={proj <- @projects} class="elegant-entry">
+        <div class="elegant-entry-header">
+          <span class="elegant-entry-title">
+            {proj.name}
+            <a :if={proj.url} href={proj.url} class="elegant-link">{proj.url}</a>
+          </span>
+        </div>
+        <p :if={proj.description} class="elegant-body">{proj.description}</p>
+        <ul :if={proj.highlights != []} class="elegant-list">
+          <li :for={item <- proj.highlights}>{item}</li>
+        </ul>
+      </div>
+    </section>
+    """
+  end
+
+  defp publications_section(%{pubs: []} = assigns), do: ~H""
+
+  defp publications_section(assigns) do
+    ~H"""
+    <section class="elegant-section">
+      <h2 class="elegant-section-title">Publications</h2>
+      <div :for={pub <- @pubs} class="elegant-entry">
+        <div class="elegant-entry-header">
+          <span class="elegant-entry-title">
+            {pub.title}
+            <span :if={pub.publisher} class="elegant-entry-issuer">
+              &nbsp;&mdash; {pub.publisher}
+            </span>
+            <a :if={pub.url} href={pub.url} class="elegant-link">Link</a>
+          </span>
+          <span :if={pub.date} class="elegant-entry-date">{format_flex_date(pub.date)}</span>
+        </div>
+      </div>
+    </section>
+    """
+  end
+
+  defp volunteer_section(%{entries: []} = assigns), do: ~H""
+
+  defp volunteer_section(assigns) do
+    ~H"""
+    <section class="elegant-section">
+      <h2 class="elegant-section-title">Volunteer Work</h2>
+      <div :for={vol <- @entries} class="elegant-entry">
+        <div class="elegant-entry-header">
+          <span class="elegant-entry-title">{vol.role}</span>
+          <span class="elegant-entry-date">
+            {format_date_range(vol.start_date, vol.end_date, false)}
+          </span>
+        </div>
+        <div class="elegant-entry-subtitle">{vol.organization}</div>
+        <p :if={vol.description} class="elegant-body">{vol.description}</p>
+      </div>
+    </section>
+    """
+  end
+
+  defp languages_section(%{languages: []} = assigns), do: ~H""
+
+  defp languages_section(assigns) do
+    ~H"""
+    <section class="elegant-section">
+      <h2 class="elegant-section-title">Languages</h2>
+      <div class="elegant-skills">
+        <span :for={lang <- @languages} class="elegant-language">
+          {lang.name}<span :if={lang.fluency} class="elegant-language-fluency"> ({lang.fluency})</span>
+        </span>
+      </div>
+    </section>
+    """
+  end
+
+  defp awards_section(%{awards: []} = assigns), do: ~H""
+
+  defp awards_section(assigns) do
+    ~H"""
+    <section class="elegant-section">
+      <h2 class="elegant-section-title">Awards</h2>
+      <div :for={award <- @awards} class="elegant-entry">
+        <div class="elegant-entry-header">
+          <span class="elegant-entry-title">
+            {award.title}
+            <span :if={award.issuer} class="elegant-entry-issuer">&nbsp;&mdash; {award.issuer}</span>
+          </span>
+          <span :if={award.date} class="elegant-entry-date">{format_flex_date(award.date)}</span>
+        </div>
+        <p :if={award.summary} class="elegant-body">{award.summary}</p>
+      </div>
+    </section>
+    """
+  end
+
+  @doc """
+  Returns the CSS string for the Elegant template.
+
+  Refined serif typography with warm gold accents and thin decorative borders.
+  """
+  def css do
+    """
+    @page {
+      size: letter;
+      margin: 0.85in 1in;
+    }
+
+    /* Root — serif base with warm tones */
+    .resume, .resume * {
+      font-family: Georgia, Garamond, "Times New Roman", serif !important;
+      color: #2c2c2c !important;
+    }
+
+    .resume {
+      font-size: 10pt;
+      line-height: 1.5;
+    }
+
+    .resume a {
+      color: #8B6914 !important;
+      text-decoration: none;
+    }
+
+    /* Header */
+    .resume .elegant-header {
+      text-align: center;
+      margin-bottom: 14pt;
+      padding-bottom: 10pt;
+      border-bottom: 0.5pt solid #8B6914;
+    }
+
+    .resume .elegant-name {
+      font-size: 24pt;
+      font-weight: 400;
+      letter-spacing: 2pt;
+      text-transform: uppercase;
+      margin: 0 0 6pt 0;
+      padding: 0;
+      color: #2c2c2c !important;
+    }
+
+    .resume .elegant-contact-details,
+    .resume .elegant-contact-details * {
+      font-size: 9pt;
+      color: #555 !important;
+      letter-spacing: 0.3pt;
+    }
+
+    .resume .elegant-contact-details span {
+      white-space: nowrap;
+    }
+
+    .resume .elegant-contact-details span + span::before {
+      content: " \\2022  ";
+      color: #8B6914 !important;
+    }
+
+    .resume .elegant-contact-details a {
+      color: #8B6914 !important;
+    }
+
+    /* Sections */
+    .resume .elegant-section {
+      margin-top: 14pt;
+    }
+
+    .resume .elegant-section-title {
+      font-size: 10pt;
+      font-weight: 400;
+      font-variant: small-caps;
+      letter-spacing: 1.5pt;
+      color: #8B6914 !important;
+      border-bottom: 0.5pt solid #d4c5a0;
+      padding-bottom: 3pt;
+      margin: 0 0 8pt 0;
+    }
+
+    .resume .elegant-body {
+      margin: 2pt 0 0 0;
+      font-size: 9.5pt;
+      color: #333 !important;
+      font-style: italic;
+    }
+
+    /* Entries */
+    .resume .elegant-entry {
+      margin-bottom: 8pt;
+      break-inside: avoid;
+    }
+
+    .resume .elegant-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .resume .elegant-entry-title {
+      font-weight: 700;
+      font-size: 10pt;
+      color: #2c2c2c !important;
+    }
+
+    .resume .elegant-entry-date {
+      font-size: 8.5pt;
+      font-style: italic;
+      color: #777 !important;
+      white-space: nowrap;
+      margin-left: 8pt;
+    }
+
+    .resume .elegant-entry-subtitle {
+      font-size: 9.5pt;
+      color: #666 !important;
+      font-style: italic;
+    }
+
+    .resume .elegant-entry-issuer {
+      font-weight: 400;
+      color: #666 !important;
+    }
+
+    .resume .elegant-link {
+      font-size: 8.5pt;
+      margin-left: 4pt;
+      color: #8B6914 !important;
+    }
+
+    /* Lists */
+    .resume .elegant-list {
+      margin: 3pt 0 0 0;
+      padding-left: 16pt;
+      font-size: 9.5pt;
+      color: #333 !important;
+      list-style-type: disc !important;
+    }
+
+    .resume .elegant-list li {
+      margin-bottom: 2pt;
+      display: list-item !important;
+    }
+
+    /* Skills */
+    .resume .elegant-skills {
+      font-size: 9.5pt;
+    }
+
+    .resume .elegant-skill-group {
+      margin-bottom: 3pt;
+    }
+
+    .resume .elegant-skill-category {
+      font-weight: 700;
+      color: #8B6914 !important;
+    }
+
+    .resume .elegant-skill-list {
+      color: #444 !important;
+    }
+
+    /* Languages */
+    .resume .elegant-language + .elegant-language::before {
+      content: " \\2022  ";
+      color: #8B6914 !important;
+    }
+
+    .resume .elegant-language-fluency {
+      font-weight: 400;
+      font-style: italic;
+      color: #666 !important;
+    }
+    """
+  end
+end
