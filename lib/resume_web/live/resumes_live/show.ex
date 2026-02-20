@@ -266,20 +266,27 @@ defmodule ResumeWeb.ResumesLive.Show do
 
           <div
             :if={@current_data}
-            class={[
-              "mx-auto max-w-[8.5in] bg-white border border-base-300 rounded-sm print:border-none print:p-0",
-              if(@resume.template == "executive", do: "p-0 overflow-hidden", else: "p-[0.85in]")
-            ]}
+            id="resume-scale-wrapper"
+            phx-hook=".ResumeScale"
+            class="overflow-hidden"
           >
             <div
-              :if={@preview_data}
-              class="flex items-center gap-2 mb-4 -mt-4 -mx-4 px-4 py-2 bg-warning/10 border-b border-warning/30"
+              id="resume-scale-inner"
+              class={[
+                "w-[8.5in] bg-white border border-base-300 rounded-sm print:border-none print:p-0 origin-top-left print:!transform-none",
+                if(@resume.template == "executive", do: "p-0 overflow-hidden", else: "p-[0.85in]")
+              ]}
             >
-              <.icon name="hero-eye-micro" class="size-4 text-warning" />
-              <span class="text-sm font-medium text-warning">Preview — unsaved changes</span>
+              <div
+                :if={@preview_data}
+                class="flex items-center gap-2 mb-4 -mt-4 -mx-4 px-4 py-2 bg-warning/10 border-b border-warning/30"
+              >
+                <.icon name="hero-eye-micro" class="size-4 text-warning" />
+                <span class="text-sm font-medium text-warning">Preview — unsaved changes</span>
+              </div>
+              {raw("<style>" <> @template_css <> "</style>")}
+              {raw(render_template(@template_mod, display_data(@preview_data, @current_data)))}
             </div>
-            {raw("<style>" <> @template_css <> "</style>")}
-            {raw(render_template(@template_mod, display_data(@preview_data, @current_data)))}
           </div>
         </div>
 
@@ -443,6 +450,36 @@ defmodule ResumeWeb.ResumesLive.Show do
           if (this.mediaRecorder && this.mediaRecorder.state === "recording") {
             this.mediaRecorder.stop();
           }
+        },
+      };
+    </script>
+
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".ResumeScale">
+      export default {
+        mounted() {
+          this.inner = this.el.querySelector("#resume-scale-inner");
+          this.observer = new ResizeObserver(() => this.rescale());
+          this.observer.observe(this.el);
+          this.rescale();
+        },
+        updated() {
+          this.rescale();
+        },
+        rescale() {
+          const inner = this.inner;
+          if (!inner) return;
+          inner.style.transform = "";
+          this.el.style.height = "";
+          const available = this.el.clientWidth;
+          const needed = inner.scrollWidth;
+          if (needed > available) {
+            const scale = available / needed;
+            inner.style.transform = `scale(${scale})`;
+            this.el.style.height = `${inner.offsetHeight * scale}px`;
+          }
+        },
+        destroyed() {
+          this.observer?.disconnect();
         },
       };
     </script>
