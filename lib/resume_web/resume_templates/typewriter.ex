@@ -127,7 +127,7 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
         <div class="tw-entry-header">
           <span class="tw-entry-title">
             {cert.name}
-            <span :if={cert.issuer} class="tw-entry-meta"> --   {cert.issuer}</span>
+            <span :if={cert.issuer} class="tw-entry-meta">&mdash; {cert.issuer}</span>
           </span>
           <span :if={cert.date} class="tw-entry-date">{format_flex_date(cert.date)}</span>
         </div>
@@ -168,7 +168,7 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
         <div class="tw-entry-header">
           <span class="tw-entry-title">
             {pub.title}
-            <span :if={pub.publisher} class="tw-entry-meta"> --   {pub.publisher}</span>
+            <span :if={pub.publisher} class="tw-entry-meta">&mdash; {pub.publisher}</span>
             <a :if={pub.url} href={pub.url} class="tw-link">Link</a>
           </span>
           <span :if={pub.date} class="tw-entry-date">{format_flex_date(pub.date)}</span>
@@ -223,7 +223,7 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
         <div class="tw-entry-header">
           <span class="tw-entry-title">
             {award.title}
-            <span :if={award.issuer} class="tw-entry-meta"> --   {award.issuer}</span>
+            <span :if={award.issuer} class="tw-entry-meta">&mdash; {award.issuer}</span>
           </span>
           <span :if={award.date} class="tw-entry-date">{format_flex_date(award.date)}</span>
         </div>
