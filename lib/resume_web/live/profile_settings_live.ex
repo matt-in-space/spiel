@@ -33,6 +33,8 @@ defmodule ResumeWeb.ProfileSettingsLive do
        active_tab: if(show_tutorial, do: :details_rules, else: :profile),
        show_tutorial: show_tutorial,
        input_form: to_form(%{"text" => ""}, as: "input"),
+       editing_item: nil,
+       item_form: to_form(%{"text" => ""}, as: "item"),
        filter: "",
        processing: false,
        upgrade_prompt: nil,
@@ -53,6 +55,15 @@ defmodule ResumeWeb.ProfileSettingsLive do
         {user, _inserted_at} = Accounts.get_user_by_session_token(token)
         user
     end
+  end
+
+  @impl true
+  def handle_params(%{"tab" => "details_rules"}, _uri, socket) do
+    {:noreply, assign(socket, active_tab: :details_rules)}
+  end
+
+  def handle_params(_params, _uri, socket) do
+    {:noreply, socket}
   end
 
   @impl true
@@ -308,7 +319,39 @@ defmodule ResumeWeb.ProfileSettingsLive do
                   <.icon name="hero-x-mark" class="size-4" />
                 </button>
               </div>
-              <p class="text-sm">{item.text}</p>
+              <%!-- View mode --%>
+              <p
+                :if={@editing_item != {item.type, item.index}}
+                class="text-sm cursor-pointer hover:bg-base-300/50 rounded px-1 -mx-1 transition-colors"
+                phx-click="edit_item"
+                phx-value-type={item.type}
+                phx-value-index={item.index}
+              >
+                {item.text}
+              </p>
+
+              <%!-- Edit mode --%>
+              <.form
+                :if={@editing_item == {item.type, item.index}}
+                for={@item_form}
+                phx-submit="save_item"
+                class="flex flex-col gap-2"
+              >
+                <textarea
+                  name="item[text]"
+                  rows="3"
+                  class="textarea textarea-bordered textarea-sm w-full"
+                  phx-key="Escape"
+                  phx-keydown="cancel_edit_item"
+                  autofocus
+                >{@item_form[:text].value}</textarea>
+                <div class="flex gap-1 justify-end">
+                  <button type="submit" class="btn btn-primary btn-xs">Save</button>
+                  <button type="button" phx-click="cancel_edit_item" class="btn btn-ghost btn-xs">
+                    Cancel
+                  </button>
+                </div>
+              </.form>
             </div>
           </div>
 
@@ -450,6 +493,48 @@ defmodule ResumeWeb.ProfileSettingsLive do
   @impl true
   def handle_event("clear_filter", _params, socket) do
     {:noreply, assign(socket, filter: "")}
+  end
+
+  # Inline editing
+
+  @impl true
+  def handle_event("edit_item", %{"type" => type, "index" => index}, socket) do
+    type_atom = String.to_existing_atom(type)
+    idx = String.to_integer(index)
+    list = if type_atom == :fact, do: socket.assigns.facts, else: socket.assigns.directives
+    current_text = Enum.at(list, idx, "")
+
+    {:noreply,
+     assign(socket,
+       editing_item: {type_atom, idx},
+       item_form: to_form(%{"text" => current_text}, as: "item")
+     )}
+  end
+
+  @impl true
+  def handle_event("save_item", %{"item" => %{"text" => text}}, socket) do
+    {type, index} = socket.assigns.editing_item
+    text = String.trim(text)
+
+    if text == "" do
+      {:noreply, assign(socket, editing_item: nil)}
+    else
+      {list_key, update_fn} =
+        if type == :fact,
+          do: {:facts, &Accounts.update_user_facts/2},
+          else: {:directives, &Accounts.update_user_directives/2}
+
+      updated_list = List.replace_at(socket.assigns[list_key], index, text)
+      {:ok, user} = update_fn.(socket.assigns.user, updated_list)
+
+      {:noreply,
+       assign(socket, [{list_key, Map.get(user, list_key)}, user: user, editing_item: nil])}
+    end
+  end
+
+  @impl true
+  def handle_event("cancel_edit_item", _params, socket) do
+    {:noreply, assign(socket, editing_item: nil)}
   end
 
   # Delete unified

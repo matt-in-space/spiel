@@ -24,7 +24,7 @@ defmodule ResumeWeb.ResumesLive.ShowTest do
 
     test "renders feedback input", %{conn: conn, resume: resume} do
       {:ok, _view, html} = live(conn, ~p"/resumes/#{resume}")
-      assert html =~ "Suggest changes to your resume"
+      assert html =~ ~s(phx-submit="send_feedback")
     end
 
     test "submit feedback shows processing state then preview", %{conn: conn, resume: resume} do

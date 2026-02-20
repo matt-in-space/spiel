@@ -29,6 +29,19 @@ defmodule ResumeWeb.ResumesLive.Show do
     "macchiato" => ResumeWeb.ResumeTemplates.Macchiato
   }
 
+  @feedback_placeholders [
+    "Can you emphasize my leadership experience more in the summary?",
+    "Make the summary focus more on my technical skills",
+    "Add more detail about my project management experience",
+    "Tone down the soft skills and highlight the engineering work",
+    "Can you make the summary sound more senior-level?",
+    "Rewrite the summary to better target a product management role",
+    "Emphasize my experience with distributed systems throughout",
+    "Can you highlight my mentoring and team-building contributions?",
+    "Make the work experience bullet points more results-oriented",
+    "Focus more on my cloud infrastructure and DevOps experience"
+  ]
+
   @template_options [
     {"Default", "default"},
     {"Mono", "mono"},
@@ -86,6 +99,7 @@ defmodule ResumeWeb.ResumesLive.Show do
        sidebar_open: false,
        show_tutorial: Accounts.show_tutorial?(user, "show-tutorial"),
        upgrade_prompt: nil,
+       feedback_placeholder: Enum.random(@feedback_placeholders),
        task_refs: %{}
      )}
   end
@@ -136,13 +150,6 @@ defmodule ResumeWeb.ResumesLive.Show do
           </label>
 
           <div class="space-y-1">
-            <div class="text-sm breadcrumbs p-0">
-              <ul>
-                <li><.link navigate={~p"/home"}>Home</.link></li>
-                <li>{@resume.title}</li>
-              </ul>
-            </div>
-
             <div class="flex items-center justify-between">
               <div :if={!@editing_title} class="flex items-center gap-2 group">
                 <h1 class="text-2xl font-bold">{@resume.title}</h1>
@@ -199,6 +206,9 @@ defmodule ResumeWeb.ResumesLive.Show do
                 Targeted
               </span>
               <span>Created {Calendar.strftime(@resume.inserted_at, "%b %d, %Y")}</span>
+              <.link navigate={~p"/profile?tab=details_rules"} class="link link-hover">
+                Edit Profile Details
+              </.link>
             </div>
           </div>
 
@@ -262,7 +272,7 @@ defmodule ResumeWeb.ResumesLive.Show do
                 <textarea
                   id={@feedback_form[:message].id}
                   name={@feedback_form[:message].name}
-                  placeholder="Suggest changes to your resume..."
+                  placeholder={@feedback_placeholder}
                   autocomplete="off"
                   rows="1"
                   phx-hook="AutoGrow"
