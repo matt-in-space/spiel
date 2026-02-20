@@ -67,6 +67,7 @@
               <li><.link href={~p"/profile"}>Profile</.link></li>
               <li><.link href={~p"/users/settings"}>Account</.link></li>
               <li><.link href={~p"/billing"}>Billing</.link></li>
+              <li><a href="mailto:support@giveyourspiel.app">Feedback</a></li>
               <%= if Resume.Accounts.User.admin?(@current_scope.user) do %>
                 <li class="border-t border-base-300 mt-1 pt-1">
                   <.link href={~p"/admin"} class="text-warning">
