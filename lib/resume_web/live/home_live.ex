@@ -44,25 +44,6 @@ defmodule ResumeWeb.HomeLive do
     ~H"""
     <Layouts.app flash={@flash}>
       <div class="space-y-8 max-w-2xl mx-auto">
-        <div class="flex items-center justify-between">
-          <div :if={@profile_name}>
-            <p class="font-medium text-sm">{@profile_name}</p>
-            <p class="text-xs opacity-50">
-              {ngettext("%{count} detail", "%{count} details", @fact_count)} · {ngettext(
-                "%{count} rule",
-                "%{count} rules",
-                @directive_count
-              )}
-            </p>
-          </div>
-          <p :if={!@profile_name} class="text-sm opacity-70">
-            Set up your profile to generate better resumes
-          </p>
-          <.link navigate={~p"/profile"} class="btn btn-ghost btn-xs">
-            {if @profile_name, do: "Edit Profile", else: "Set up"}
-          </.link>
-        </div>
-
         <div :if={@show_onboarding_cta} class="card bg-base-200 border border-base-300">
           <div class="card-body text-center space-y-2">
             <.icon name="hero-microphone" class="size-10 text-primary mx-auto" />

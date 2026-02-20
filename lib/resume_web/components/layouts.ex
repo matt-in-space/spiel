@@ -5,6 +5,13 @@ defmodule ResumeWeb.Layouts do
   """
   use ResumeWeb, :html
 
+  defp user_display_name(%{default_resume_data: %{"name" => name}})
+       when is_binary(name) and name != "" do
+    name |> String.split() |> List.first()
+  end
+
+  defp user_display_name(%{email: email}), do: email |> String.split("@") |> List.first()
+
   # Embed all files in layouts/* within this module.
   # The default root.html.heex file contains the HTML
   # skeleton of your application, namely HTML headers
