@@ -35,7 +35,7 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="flat-header">
+    <header data-section="contact_info" class="flat-header">
       <h1 class="flat-name">{@contact.name}</h1>
       <div class="flat-contact-details">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -54,7 +54,7 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="flat-section">
+    <section data-section="summary" class="flat-section">
       <h2 class="flat-section-title">Summary</h2>
       <p class="flat-body">{@summary}</p>
     </section>
@@ -67,7 +67,12 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
     ~H"""
     <section class="flat-section">
       <h2 class="flat-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="flat-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="flat-entry"
+      >
         <div class="flat-entry-header">
           <span class="flat-entry-title">{exp.role}</span>
           <span class="flat-entry-date">
@@ -89,7 +94,12 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
     ~H"""
     <section class="flat-section">
       <h2 class="flat-section-title">Education</h2>
-      <div :for={edu <- @entries} class="flat-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="flat-entry"
+      >
         <div class="flat-entry-header">
           <span class="flat-entry-title">{edu.degree} in {edu.field}</span>
           <span class="flat-entry-date">
@@ -109,7 +119,12 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
     <section class="flat-section">
       <h2 class="flat-section-title">Skills</h2>
       <div class="flat-skills">
-        <div :for={group <- @groups} class="flat-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="flat-skill-group"
+        >
           <span class="flat-skill-category">{group.category}:</span>
           <span class="flat-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -124,7 +139,12 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
     ~H"""
     <section class="flat-section">
       <h2 class="flat-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="flat-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="flat-entry"
+      >
         <div class="flat-entry-header">
           <span class="flat-entry-title">
             {cert.name}
@@ -143,7 +163,12 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
     ~H"""
     <section class="flat-section">
       <h2 class="flat-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="flat-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="flat-entry"
+      >
         <div class="flat-entry-header">
           <span class="flat-entry-title">
             {proj.name}
@@ -165,7 +190,12 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
     ~H"""
     <section class="flat-section">
       <h2 class="flat-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="flat-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="flat-entry"
+      >
         <div class="flat-entry-header">
           <span class="flat-entry-title">
             {pub.title}
@@ -185,7 +215,12 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
     ~H"""
     <section class="flat-section">
       <h2 class="flat-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="flat-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="flat-entry"
+      >
         <div class="flat-entry-header">
           <span class="flat-entry-title">{vol.role}</span>
           <span class="flat-entry-date">
@@ -206,7 +241,12 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
     <section class="flat-section">
       <h2 class="flat-section-title">Languages</h2>
       <div class="flat-skills">
-        <span :for={lang <- @languages} class="flat-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="flat-language"
+        >
           {lang.name}<span :if={lang.fluency} class="flat-language-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -220,7 +260,12 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
     ~H"""
     <section class="flat-section">
       <h2 class="flat-section-title">Awards</h2>
-      <div :for={award <- @awards} class="flat-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="flat-entry"
+      >
         <div class="flat-entry-header">
           <span class="flat-entry-title">
             {award.title}

@@ -4,7 +4,7 @@ defmodule Resume.Resumes.Version do
 
   alias Resume.Resumes.Resume
 
-  @triggers ~w(generation regeneration feedback)
+  @triggers ~w(generation regeneration feedback direct_edit)
 
   schema "resume_versions" do
     field :version, :integer

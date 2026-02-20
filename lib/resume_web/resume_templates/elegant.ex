@@ -34,7 +34,7 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="elegant-header">
+    <header data-section="contact_info" class="elegant-header">
       <h1 class="elegant-name">{@contact.name}</h1>
       <div class="elegant-contact-details">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -53,7 +53,7 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="elegant-section">
+    <section data-section="summary" class="elegant-section">
       <h2 class="elegant-section-title">Summary</h2>
       <p class="elegant-body">{@summary}</p>
     </section>
@@ -66,7 +66,12 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
     ~H"""
     <section class="elegant-section">
       <h2 class="elegant-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="elegant-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="elegant-entry"
+      >
         <div class="elegant-entry-header">
           <span class="elegant-entry-title">{exp.role}</span>
           <span class="elegant-entry-date">
@@ -88,7 +93,12 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
     ~H"""
     <section class="elegant-section">
       <h2 class="elegant-section-title">Education</h2>
-      <div :for={edu <- @entries} class="elegant-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="elegant-entry"
+      >
         <div class="elegant-entry-header">
           <span class="elegant-entry-title">{edu.degree} in {edu.field}</span>
           <span class="elegant-entry-date">
@@ -108,7 +118,12 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
     <section class="elegant-section">
       <h2 class="elegant-section-title">Skills</h2>
       <div class="elegant-skills">
-        <div :for={group <- @groups} class="elegant-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="elegant-skill-group"
+        >
           <span class="elegant-skill-category">{group.category}:</span>
           <span class="elegant-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -123,7 +138,12 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
     ~H"""
     <section class="elegant-section">
       <h2 class="elegant-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="elegant-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="elegant-entry"
+      >
         <div class="elegant-entry-header">
           <span class="elegant-entry-title">
             {cert.name}
@@ -142,7 +162,12 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
     ~H"""
     <section class="elegant-section">
       <h2 class="elegant-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="elegant-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="elegant-entry"
+      >
         <div class="elegant-entry-header">
           <span class="elegant-entry-title">
             {proj.name}
@@ -164,7 +189,12 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
     ~H"""
     <section class="elegant-section">
       <h2 class="elegant-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="elegant-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="elegant-entry"
+      >
         <div class="elegant-entry-header">
           <span class="elegant-entry-title">
             {pub.title}
@@ -186,7 +216,12 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
     ~H"""
     <section class="elegant-section">
       <h2 class="elegant-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="elegant-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="elegant-entry"
+      >
         <div class="elegant-entry-header">
           <span class="elegant-entry-title">{vol.role}</span>
           <span class="elegant-entry-date">
@@ -207,7 +242,12 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
     <section class="elegant-section">
       <h2 class="elegant-section-title">Languages</h2>
       <div class="elegant-skills">
-        <span :for={lang <- @languages} class="elegant-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="elegant-language"
+        >
           {lang.name}<span :if={lang.fluency} class="elegant-language-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -221,7 +261,12 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
     ~H"""
     <section class="elegant-section">
       <h2 class="elegant-section-title">Awards</h2>
-      <div :for={award <- @awards} class="elegant-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="elegant-entry"
+      >
         <div class="elegant-entry-header">
           <span class="elegant-entry-title">
             {award.title}

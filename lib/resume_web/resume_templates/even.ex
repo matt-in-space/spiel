@@ -35,7 +35,7 @@ defmodule ResumeWeb.ResumeTemplates.Even do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="even-header">
+    <header data-section="contact_info" class="even-header">
       <h1 class="even-name">{@contact.name}</h1>
       <div class="even-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -54,7 +54,7 @@ defmodule ResumeWeb.ResumeTemplates.Even do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="even-section">
+    <section data-section="summary" class="even-section">
       <h2 class="even-section-title">Summary</h2>
       <p class="even-body">{@summary}</p>
     </section>
@@ -67,7 +67,12 @@ defmodule ResumeWeb.ResumeTemplates.Even do
     ~H"""
     <section class="even-section">
       <h2 class="even-section-title">Work Experience</h2>
-      <div :for={exp <- @experiences} class="even-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="even-entry"
+      >
         <div class="even-entry-header">
           <span class="even-entry-title">{exp.role}</span>
           <span class="even-entry-date">
@@ -89,7 +94,12 @@ defmodule ResumeWeb.ResumeTemplates.Even do
     ~H"""
     <section class="even-section">
       <h2 class="even-section-title">Education</h2>
-      <div :for={edu <- @entries} class="even-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="even-entry"
+      >
         <div class="even-entry-header">
           <span class="even-entry-title">{edu.degree} in {edu.field}</span>
           <span class="even-entry-date">
@@ -109,7 +119,12 @@ defmodule ResumeWeb.ResumeTemplates.Even do
     <section class="even-section">
       <h2 class="even-section-title">Skills</h2>
       <div class="even-skills-grid">
-        <div :for={group <- @groups} class="even-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="even-skill-group"
+        >
           <span class="even-skill-category">{group.category}</span>
           <span class="even-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -124,7 +139,12 @@ defmodule ResumeWeb.ResumeTemplates.Even do
     ~H"""
     <section class="even-section">
       <h2 class="even-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="even-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="even-entry"
+      >
         <div class="even-entry-header">
           <span class="even-entry-title">
             {cert.name}
@@ -143,7 +163,12 @@ defmodule ResumeWeb.ResumeTemplates.Even do
     ~H"""
     <section class="even-section">
       <h2 class="even-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="even-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="even-entry"
+      >
         <div class="even-entry-header">
           <span class="even-entry-title">
             {proj.name}
@@ -165,7 +190,12 @@ defmodule ResumeWeb.ResumeTemplates.Even do
     ~H"""
     <section class="even-section">
       <h2 class="even-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="even-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="even-entry"
+      >
         <div class="even-entry-header">
           <span class="even-entry-title">
             {pub.title}
@@ -185,7 +215,12 @@ defmodule ResumeWeb.ResumeTemplates.Even do
     ~H"""
     <section class="even-section">
       <h2 class="even-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="even-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="even-entry"
+      >
         <div class="even-entry-header">
           <span class="even-entry-title">{vol.role}</span>
           <span class="even-entry-date">
@@ -206,7 +241,12 @@ defmodule ResumeWeb.ResumeTemplates.Even do
     <section class="even-section">
       <h2 class="even-section-title">Languages</h2>
       <div class="even-languages">
-        <span :for={lang <- @languages} class="even-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="even-language"
+        >
           {lang.name}<span :if={lang.fluency} class="even-lang-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -220,7 +260,12 @@ defmodule ResumeWeb.ResumeTemplates.Even do
     ~H"""
     <section class="even-section">
       <h2 class="even-section-title">Awards</h2>
-      <div :for={award <- @awards} class="even-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="even-entry"
+      >
         <div class="even-entry-header">
           <span class="even-entry-title">
             {award.title}

@@ -35,7 +35,7 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="classic-header">
+    <header data-section="contact_info" class="classic-header">
       <div class="classic-header-rule-top"></div>
       <h1 class="classic-name">{@contact.name}</h1>
       <div class="classic-contact-details">
@@ -56,7 +56,7 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="classic-section">
+    <section data-section="summary" class="classic-section">
       <h2 class="classic-section-title">PROFESSIONAL SUMMARY</h2>
       <p class="classic-body">{@summary}</p>
     </section>
@@ -69,7 +69,12 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
     ~H"""
     <section class="classic-section">
       <h2 class="classic-section-title">WORK EXPERIENCE</h2>
-      <div :for={exp <- @experiences} class="classic-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="classic-entry"
+      >
         <div class="classic-entry-header">
           <span class="classic-entry-title">{exp.role}</span>
           <span class="classic-entry-date">
@@ -91,7 +96,12 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
     ~H"""
     <section class="classic-section">
       <h2 class="classic-section-title">EDUCATION</h2>
-      <div :for={edu <- @entries} class="classic-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="classic-entry"
+      >
         <div class="classic-entry-header">
           <span class="classic-entry-title">{edu.degree} in {edu.field}</span>
           <span class="classic-entry-date">
@@ -111,7 +121,12 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
     <section class="classic-section">
       <h2 class="classic-section-title">SKILLS</h2>
       <div class="classic-skills">
-        <div :for={group <- @groups} class="classic-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="classic-skill-group"
+        >
           <span class="classic-skill-category">{group.category}:</span>
           <span class="classic-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -126,7 +141,12 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
     ~H"""
     <section class="classic-section">
       <h2 class="classic-section-title">CERTIFICATIONS</h2>
-      <div :for={cert <- @certs} class="classic-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="classic-entry"
+      >
         <div class="classic-entry-header">
           <span class="classic-entry-title">
             {cert.name}
@@ -145,7 +165,12 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
     ~H"""
     <section class="classic-section">
       <h2 class="classic-section-title">PROJECTS</h2>
-      <div :for={proj <- @projects} class="classic-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="classic-entry"
+      >
         <div class="classic-entry-header">
           <span class="classic-entry-title">
             {proj.name}
@@ -167,7 +192,12 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
     ~H"""
     <section class="classic-section">
       <h2 class="classic-section-title">PUBLICATIONS</h2>
-      <div :for={pub <- @pubs} class="classic-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="classic-entry"
+      >
         <div class="classic-entry-header">
           <span class="classic-entry-title">
             {pub.title}
@@ -189,7 +219,12 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
     ~H"""
     <section class="classic-section">
       <h2 class="classic-section-title">VOLUNTEER WORK</h2>
-      <div :for={vol <- @entries} class="classic-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="classic-entry"
+      >
         <div class="classic-entry-header">
           <span class="classic-entry-title">{vol.role}</span>
           <span class="classic-entry-date">
@@ -210,7 +245,12 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
     <section class="classic-section">
       <h2 class="classic-section-title">LANGUAGES</h2>
       <div class="classic-skills">
-        <span :for={lang <- @languages} class="classic-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="classic-language"
+        >
           {lang.name}<span :if={lang.fluency} class="classic-language-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -224,7 +264,12 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
     ~H"""
     <section class="classic-section">
       <h2 class="classic-section-title">AWARDS</h2>
-      <div :for={award <- @awards} class="classic-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="classic-entry"
+      >
         <div class="classic-entry-header">
           <span class="classic-entry-title">
             {award.title}

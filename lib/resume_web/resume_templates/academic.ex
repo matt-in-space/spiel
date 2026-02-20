@@ -34,7 +34,7 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="acad-header">
+    <header class="acad-header" data-section="contact_info">
       <h1 class="acad-name">{@contact.name}</h1>
       <div class="acad-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -53,7 +53,7 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="acad-section">
+    <section class="acad-section" data-section="summary">
       <h2 class="acad-section-title">Summary</h2>
       <p class="acad-body">{@summary}</p>
     </section>
@@ -66,7 +66,12 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
     ~H"""
     <section class="acad-section">
       <h2 class="acad-section-title">Professional Experience</h2>
-      <div :for={exp <- @experiences} class="acad-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="acad-entry"
+      >
         <div class="acad-entry-header">
           <span class="acad-entry-title">{exp.role}</span>
           <span class="acad-entry-date">
@@ -88,7 +93,12 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
     ~H"""
     <section class="acad-section">
       <h2 class="acad-section-title">Education</h2>
-      <div :for={edu <- @entries} class="acad-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="acad-entry"
+      >
         <div class="acad-entry-header">
           <span class="acad-entry-title">{edu.degree} in {edu.field}</span>
           <span class="acad-entry-date">
@@ -108,7 +118,12 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
     <section class="acad-section">
       <h2 class="acad-section-title">Skills</h2>
       <div class="acad-skills">
-        <div :for={group <- @groups} class="acad-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="acad-skill-group"
+        >
           <span class="acad-skill-category">{group.category}:</span>
           <span class="acad-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -123,7 +138,12 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
     ~H"""
     <section class="acad-section">
       <h2 class="acad-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="acad-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="acad-entry"
+      >
         <div class="acad-entry-header">
           <span class="acad-entry-title">
             {cert.name}
@@ -142,7 +162,12 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
     ~H"""
     <section class="acad-section">
       <h2 class="acad-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="acad-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="acad-entry"
+      >
         <div class="acad-entry-header">
           <span class="acad-entry-title">
             {proj.name}
@@ -164,7 +189,12 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
     ~H"""
     <section class="acad-section">
       <h2 class="acad-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="acad-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="acad-entry"
+      >
         <div class="acad-entry-header">
           <span class="acad-entry-title acad-pub-title">
             {pub.title}
@@ -184,7 +214,12 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
     ~H"""
     <section class="acad-section">
       <h2 class="acad-section-title">Service &amp; Volunteer Work</h2>
-      <div :for={vol <- @entries} class="acad-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="acad-entry"
+      >
         <div class="acad-entry-header">
           <span class="acad-entry-title">{vol.role}</span>
           <span class="acad-entry-date">
@@ -205,7 +240,12 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
     <section class="acad-section">
       <h2 class="acad-section-title">Languages</h2>
       <div class="acad-skills">
-        <span :for={lang <- @languages} class="acad-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="acad-language"
+        >
           {lang.name}<span :if={lang.fluency} class="acad-lang-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -219,7 +259,12 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
     ~H"""
     <section class="acad-section">
       <h2 class="acad-section-title">Honors &amp; Awards</h2>
-      <div :for={award <- @awards} class="acad-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="acad-entry"
+      >
         <div class="acad-entry-header">
           <span class="acad-entry-title">
             {award.title}

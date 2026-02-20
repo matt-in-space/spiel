@@ -35,7 +35,7 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="cons-header">
+    <header data-section="contact_info" class="cons-header">
       <h1 class="cons-name">{@contact.name}</h1>
       <div class="cons-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -54,7 +54,7 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="cons-section">
+    <section data-section="summary" class="cons-section">
       <h2 class="cons-section-title">Professional Summary</h2>
       <p class="cons-body">{@summary}</p>
     </section>
@@ -67,7 +67,12 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
     ~H"""
     <section class="cons-section">
       <h2 class="cons-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="cons-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="cons-entry"
+      >
         <div class="cons-entry-header">
           <span class="cons-entry-title">{exp.role}</span>
           <span class="cons-entry-date">
@@ -89,7 +94,12 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
     ~H"""
     <section class="cons-section">
       <h2 class="cons-section-title">Education</h2>
-      <div :for={edu <- @entries} class="cons-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="cons-entry"
+      >
         <div class="cons-entry-header">
           <span class="cons-entry-title">{edu.degree} in {edu.field}</span>
           <span class="cons-entry-date">
@@ -109,7 +119,12 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
     <section class="cons-section">
       <h2 class="cons-section-title">Skills</h2>
       <div class="cons-skills">
-        <div :for={group <- @groups} class="cons-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="cons-skill-group"
+        >
           <span class="cons-skill-category">{group.category}:</span>
           <span class="cons-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -124,7 +139,12 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
     ~H"""
     <section class="cons-section">
       <h2 class="cons-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="cons-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="cons-entry"
+      >
         <div class="cons-entry-header">
           <span class="cons-entry-title">
             {cert.name}
@@ -143,7 +163,12 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
     ~H"""
     <section class="cons-section">
       <h2 class="cons-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="cons-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="cons-entry"
+      >
         <div class="cons-entry-header">
           <span class="cons-entry-title">
             {proj.name}
@@ -165,7 +190,12 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
     ~H"""
     <section class="cons-section">
       <h2 class="cons-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="cons-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="cons-entry"
+      >
         <div class="cons-entry-header">
           <span class="cons-entry-title">
             {pub.title}
@@ -185,7 +215,12 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
     ~H"""
     <section class="cons-section">
       <h2 class="cons-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="cons-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="cons-entry"
+      >
         <div class="cons-entry-header">
           <span class="cons-entry-title">{vol.role}</span>
           <span class="cons-entry-date">
@@ -206,7 +241,12 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
     <section class="cons-section">
       <h2 class="cons-section-title">Languages</h2>
       <div class="cons-languages">
-        <span :for={lang <- @languages} class="cons-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="cons-language"
+        >
           {lang.name}<span :if={lang.fluency} class="cons-lang-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -220,7 +260,12 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
     ~H"""
     <section class="cons-section">
       <h2 class="cons-section-title">Awards</h2>
-      <div :for={award <- @awards} class="cons-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="cons-entry"
+      >
         <div class="cons-entry-header">
           <span class="cons-entry-title">
             {award.title}

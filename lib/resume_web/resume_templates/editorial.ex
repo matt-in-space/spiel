@@ -34,7 +34,7 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="edit-header">
+    <header data-section="contact_info" class="edit-header">
       <h1 class="edit-name">{@contact.name}</h1>
       <div class="edit-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -53,7 +53,7 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="edit-section">
+    <section data-section="summary" class="edit-section">
       <h2 class="edit-section-title">Summary</h2>
       <p class="edit-body">{@summary}</p>
     </section>
@@ -66,7 +66,12 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
     ~H"""
     <section class="edit-section">
       <h2 class="edit-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="edit-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="edit-entry"
+      >
         <div class="edit-entry-header">
           <span class="edit-entry-title">{exp.role}</span>
           <span class="edit-entry-date">
@@ -88,7 +93,12 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
     ~H"""
     <section class="edit-section">
       <h2 class="edit-section-title">Education</h2>
-      <div :for={edu <- @entries} class="edit-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="edit-entry"
+      >
         <div class="edit-entry-header">
           <span class="edit-entry-title">{edu.degree} in {edu.field}</span>
           <span class="edit-entry-date">
@@ -108,7 +118,12 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
     <section class="edit-section">
       <h2 class="edit-section-title">Skills</h2>
       <div class="edit-skills">
-        <div :for={group <- @groups} class="edit-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="edit-skill-group"
+        >
           <span class="edit-skill-category">{group.category}:</span>
           <span class="edit-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -123,7 +138,12 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
     ~H"""
     <section class="edit-section">
       <h2 class="edit-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="edit-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="edit-entry"
+      >
         <div class="edit-entry-header">
           <span class="edit-entry-title">
             {cert.name}
@@ -142,7 +162,12 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
     ~H"""
     <section class="edit-section">
       <h2 class="edit-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="edit-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="edit-entry"
+      >
         <div class="edit-entry-header">
           <span class="edit-entry-title">
             {proj.name}
@@ -164,7 +189,12 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
     ~H"""
     <section class="edit-section">
       <h2 class="edit-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="edit-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="edit-entry"
+      >
         <div class="edit-entry-header">
           <span class="edit-entry-title">
             {pub.title}
@@ -184,7 +214,12 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
     ~H"""
     <section class="edit-section">
       <h2 class="edit-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="edit-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="edit-entry"
+      >
         <div class="edit-entry-header">
           <span class="edit-entry-title">{vol.role}</span>
           <span class="edit-entry-date">
@@ -205,7 +240,12 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
     <section class="edit-section">
       <h2 class="edit-section-title">Languages</h2>
       <div class="edit-languages">
-        <span :for={lang <- @languages} class="edit-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="edit-language"
+        >
           {lang.name}<span :if={lang.fluency} class="edit-language-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -219,7 +259,12 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
     ~H"""
     <section class="edit-section">
       <h2 class="edit-section-title">Awards</h2>
-      <div :for={award <- @awards} class="edit-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="edit-entry"
+      >
         <div class="edit-entry-header">
           <span class="edit-entry-title">
             {award.title}

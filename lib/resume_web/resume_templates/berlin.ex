@@ -35,7 +35,7 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="bln-header">
+    <header data-section="contact_info" class="bln-header">
       <h1 class="bln-name">{@contact.name}</h1>
       <div class="bln-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -54,7 +54,7 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="bln-section">
+    <section data-section="summary" class="bln-section">
       <h2 class="bln-section-title">Profile</h2>
       <p class="bln-body">{@summary}</p>
     </section>
@@ -67,7 +67,12 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
     ~H"""
     <section class="bln-section">
       <h2 class="bln-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="bln-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="bln-entry"
+      >
         <div class="bln-entry-header">
           <span class="bln-entry-title">{exp.role}</span>
           <span class="bln-entry-date">
@@ -89,7 +94,12 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
     ~H"""
     <section class="bln-section">
       <h2 class="bln-section-title">Education</h2>
-      <div :for={edu <- @entries} class="bln-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="bln-entry"
+      >
         <div class="bln-entry-header">
           <span class="bln-entry-title">{edu.degree} in {edu.field}</span>
           <span class="bln-entry-date">
@@ -109,7 +119,12 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
     <section class="bln-section">
       <h2 class="bln-section-title">Skills</h2>
       <div class="bln-skills">
-        <div :for={group <- @groups} class="bln-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="bln-skill-group"
+        >
           <span class="bln-skill-category">{group.category}:</span>
           <span class="bln-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -124,7 +139,12 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
     ~H"""
     <section class="bln-section">
       <h2 class="bln-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="bln-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="bln-entry"
+      >
         <div class="bln-entry-header">
           <span class="bln-entry-title">
             {cert.name}
@@ -143,7 +163,12 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
     ~H"""
     <section class="bln-section">
       <h2 class="bln-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="bln-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="bln-entry"
+      >
         <div class="bln-entry-header">
           <span class="bln-entry-title">
             {proj.name}
@@ -165,7 +190,12 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
     ~H"""
     <section class="bln-section">
       <h2 class="bln-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="bln-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="bln-entry"
+      >
         <div class="bln-entry-header">
           <span class="bln-entry-title">
             {pub.title}
@@ -185,7 +215,12 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
     ~H"""
     <section class="bln-section">
       <h2 class="bln-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="bln-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="bln-entry"
+      >
         <div class="bln-entry-header">
           <span class="bln-entry-title">{vol.role}</span>
           <span class="bln-entry-date">
@@ -206,7 +241,12 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
     <section class="bln-section">
       <h2 class="bln-section-title">Languages</h2>
       <div class="bln-languages">
-        <span :for={lang <- @languages} class="bln-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="bln-language"
+        >
           {lang.name}<span :if={lang.fluency} class="bln-language-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -220,7 +260,12 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
     ~H"""
     <section class="bln-section">
       <h2 class="bln-section-title">Awards</h2>
-      <div :for={award <- @awards} class="bln-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="bln-entry"
+      >
         <div class="bln-entry-header">
           <span class="bln-entry-title">
             {award.title}

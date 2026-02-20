@@ -35,7 +35,7 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="macc-header">
+    <header class="macc-header" data-section="contact_info">
       <h1 class="macc-name">{@contact.name}</h1>
       <div class="macc-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -54,7 +54,7 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="macc-section">
+    <section class="macc-section" data-section="summary">
       <h2 class="macc-section-title">Summary</h2>
       <p class="macc-body">{@summary}</p>
     </section>
@@ -67,7 +67,12 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
     ~H"""
     <section class="macc-section">
       <h2 class="macc-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="macc-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="macc-entry"
+      >
         <div class="macc-entry-header">
           <span class="macc-entry-title">{exp.role}</span>
           <span class="macc-entry-date">
@@ -89,7 +94,12 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
     ~H"""
     <section class="macc-section">
       <h2 class="macc-section-title">Education</h2>
-      <div :for={edu <- @entries} class="macc-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="macc-entry"
+      >
         <div class="macc-entry-header">
           <span class="macc-entry-title">{edu.degree} in {edu.field}</span>
           <span class="macc-entry-date">
@@ -109,7 +119,12 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
     <section class="macc-section">
       <h2 class="macc-section-title">Skills</h2>
       <div class="macc-skills">
-        <div :for={group <- @groups} class="macc-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="macc-skill-group"
+        >
           <span class="macc-skill-category">{group.category}</span>
           <div class="macc-skill-tags">
             <span :for={skill <- group.skills} class="macc-skill-tag">{skill}</span>
@@ -126,7 +141,12 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
     ~H"""
     <section class="macc-section">
       <h2 class="macc-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="macc-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="macc-entry"
+      >
         <div class="macc-entry-header">
           <span class="macc-entry-title">
             {cert.name}
@@ -145,7 +165,12 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
     ~H"""
     <section class="macc-section">
       <h2 class="macc-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="macc-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="macc-entry"
+      >
         <div class="macc-entry-header">
           <span class="macc-entry-title">
             {proj.name}
@@ -167,7 +192,12 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
     ~H"""
     <section class="macc-section">
       <h2 class="macc-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="macc-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="macc-entry"
+      >
         <div class="macc-entry-header">
           <span class="macc-entry-title">
             {pub.title}
@@ -187,7 +217,12 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
     ~H"""
     <section class="macc-section">
       <h2 class="macc-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="macc-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="macc-entry"
+      >
         <div class="macc-entry-header">
           <span class="macc-entry-title">{vol.role}</span>
           <span class="macc-entry-date">
@@ -208,7 +243,12 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
     <section class="macc-section">
       <h2 class="macc-section-title">Languages</h2>
       <div class="macc-skill-tags">
-        <span :for={lang <- @languages} class="macc-skill-tag">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="macc-skill-tag"
+        >
           {lang.name}<span :if={lang.fluency} class="macc-entry-meta"> ({lang.fluency})</span>
         </span>
       </div>
@@ -222,7 +262,12 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
     ~H"""
     <section class="macc-section">
       <h2 class="macc-section-title">Awards</h2>
-      <div :for={award <- @awards} class="macc-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="macc-entry"
+      >
         <div class="macc-entry-header">
           <span class="macc-entry-title">
             {award.title}

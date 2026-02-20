@@ -34,7 +34,7 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="tw-header">
+    <header data-section="contact_info" class="tw-header">
       <h1 class="tw-name">{@contact.name}</h1>
       <div class="tw-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -53,7 +53,7 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="tw-section">
+    <section data-section="summary" class="tw-section">
       <h2 class="tw-section-title">Summary</h2>
       <p class="tw-body">{@summary}</p>
     </section>
@@ -66,7 +66,12 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
     ~H"""
     <section class="tw-section">
       <h2 class="tw-section-title">Work Experience</h2>
-      <div :for={exp <- @experiences} class="tw-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="tw-entry"
+      >
         <div class="tw-entry-header">
           <span class="tw-entry-title">{exp.role}</span>
           <span class="tw-entry-date">
@@ -88,7 +93,12 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
     ~H"""
     <section class="tw-section">
       <h2 class="tw-section-title">Education</h2>
-      <div :for={edu <- @entries} class="tw-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="tw-entry"
+      >
         <div class="tw-entry-header">
           <span class="tw-entry-title">{edu.degree} in {edu.field}</span>
           <span class="tw-entry-date">
@@ -108,7 +118,12 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
     <section class="tw-section">
       <h2 class="tw-section-title">Skills</h2>
       <div class="tw-skills">
-        <div :for={group <- @groups} class="tw-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="tw-skill-group"
+        >
           <span class="tw-skill-category">{group.category}:</span>
           <span class="tw-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -123,7 +138,12 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
     ~H"""
     <section class="tw-section">
       <h2 class="tw-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="tw-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="tw-entry"
+      >
         <div class="tw-entry-header">
           <span class="tw-entry-title">
             {cert.name}
@@ -142,7 +162,12 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
     ~H"""
     <section class="tw-section">
       <h2 class="tw-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="tw-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="tw-entry"
+      >
         <div class="tw-entry-header">
           <span class="tw-entry-title">
             {proj.name}
@@ -164,7 +189,12 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
     ~H"""
     <section class="tw-section">
       <h2 class="tw-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="tw-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="tw-entry"
+      >
         <div class="tw-entry-header">
           <span class="tw-entry-title">
             {pub.title}
@@ -184,7 +214,12 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
     ~H"""
     <section class="tw-section">
       <h2 class="tw-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="tw-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="tw-entry"
+      >
         <div class="tw-entry-header">
           <span class="tw-entry-title">{vol.role}</span>
           <span class="tw-entry-date">
@@ -205,7 +240,12 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
     <section class="tw-section">
       <h2 class="tw-section-title">Languages</h2>
       <div class="tw-languages">
-        <span :for={lang <- @languages} class="tw-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="tw-language"
+        >
           {lang.name}<span :if={lang.fluency} class="tw-language-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -219,7 +259,12 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
     ~H"""
     <section class="tw-section">
       <h2 class="tw-section-title">Awards</h2>
-      <div :for={award <- @awards} class="tw-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="tw-entry"
+      >
         <div class="tw-entry-header">
           <span class="tw-entry-title">
             {award.title}

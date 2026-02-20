@@ -33,7 +33,7 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="mono-header">
+    <header data-section="contact_info" class="mono-header">
       <h1 class="mono-name">{@contact.name}</h1>
       <div class="mono-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -52,7 +52,7 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="mono-section">
+    <section data-section="summary" class="mono-section">
       <h2 class="mono-section-title">Summary</h2>
       <p class="mono-body">{@summary}</p>
     </section>
@@ -65,7 +65,12 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
     ~H"""
     <section class="mono-section">
       <h2 class="mono-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="mono-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="mono-entry"
+      >
         <div class="mono-entry-header">
           <span class="mono-entry-title">{exp.role}</span>
           <span class="mono-entry-date">
@@ -87,7 +92,12 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
     ~H"""
     <section class="mono-section">
       <h2 class="mono-section-title">Education</h2>
-      <div :for={edu <- @entries} class="mono-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="mono-entry"
+      >
         <div class="mono-entry-header">
           <span class="mono-entry-title">{edu.degree} in {edu.field}</span>
           <span class="mono-entry-date">
@@ -107,7 +117,12 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
     <section class="mono-section">
       <h2 class="mono-section-title">Skills</h2>
       <div class="mono-skills">
-        <div :for={group <- @groups} class="mono-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="mono-skill-group"
+        >
           <span class="mono-skill-category">{group.category}:</span>
           <span>{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -122,7 +137,12 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
     ~H"""
     <section class="mono-section">
       <h2 class="mono-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="mono-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="mono-entry"
+      >
         <div class="mono-entry-header">
           <span class="mono-entry-title">
             {cert.name}
@@ -141,7 +161,12 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
     ~H"""
     <section class="mono-section">
       <h2 class="mono-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="mono-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="mono-entry"
+      >
         <div class="mono-entry-header">
           <span class="mono-entry-title">
             {proj.name}
@@ -163,7 +188,12 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
     ~H"""
     <section class="mono-section">
       <h2 class="mono-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="mono-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="mono-entry"
+      >
         <div class="mono-entry-header">
           <span class="mono-entry-title">
             {pub.title}
@@ -183,7 +213,12 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
     ~H"""
     <section class="mono-section">
       <h2 class="mono-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="mono-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="mono-entry"
+      >
         <div class="mono-entry-header">
           <span class="mono-entry-title">{vol.role}</span>
           <span class="mono-entry-date">
@@ -204,7 +239,12 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
     <section class="mono-section">
       <h2 class="mono-section-title">Languages</h2>
       <div class="mono-skills">
-        <span :for={lang <- @languages} class="mono-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="mono-language"
+        >
           {lang.name}<span :if={lang.fluency} class="mono-entry-meta"> ({lang.fluency})</span>
         </span>
       </div>
@@ -218,7 +258,12 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
     ~H"""
     <section class="mono-section">
       <h2 class="mono-section-title">Awards</h2>
-      <div :for={award <- @awards} class="mono-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="mono-entry"
+      >
         <div class="mono-entry-header">
           <span class="mono-entry-title">
             {award.title}

@@ -34,7 +34,7 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="nord-header">
+    <header data-section="contact_info" class="nord-header">
       <h1 class="nord-name">{@contact.name}</h1>
       <div class="nord-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -53,7 +53,7 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="nord-section">
+    <section data-section="summary" class="nord-section">
       <h2 class="nord-section-title">Summary</h2>
       <p class="nord-body">{@summary}</p>
     </section>
@@ -66,7 +66,12 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
     ~H"""
     <section class="nord-section">
       <h2 class="nord-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="nord-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="nord-entry"
+      >
         <div class="nord-entry-header">
           <span class="nord-entry-title">{exp.role}</span>
           <span class="nord-entry-date">
@@ -88,7 +93,12 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
     ~H"""
     <section class="nord-section">
       <h2 class="nord-section-title">Education</h2>
-      <div :for={edu <- @entries} class="nord-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="nord-entry"
+      >
         <div class="nord-entry-header">
           <span class="nord-entry-title">{edu.degree} in {edu.field}</span>
           <span class="nord-entry-date">
@@ -108,7 +118,12 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
     <section class="nord-section">
       <h2 class="nord-section-title">Skills</h2>
       <div class="nord-skills">
-        <div :for={group <- @groups} class="nord-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="nord-skill-group"
+        >
           <span class="nord-skill-category">{group.category}:</span>
           <span class="nord-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -123,7 +138,12 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
     ~H"""
     <section class="nord-section">
       <h2 class="nord-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="nord-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="nord-entry"
+      >
         <div class="nord-entry-header">
           <span class="nord-entry-title">
             {cert.name}
@@ -142,7 +162,12 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
     ~H"""
     <section class="nord-section">
       <h2 class="nord-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="nord-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="nord-entry"
+      >
         <div class="nord-entry-header">
           <span class="nord-entry-title">
             {proj.name}
@@ -164,7 +189,12 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
     ~H"""
     <section class="nord-section">
       <h2 class="nord-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="nord-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="nord-entry"
+      >
         <div class="nord-entry-header">
           <span class="nord-entry-title">
             {pub.title}
@@ -184,7 +214,12 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
     ~H"""
     <section class="nord-section">
       <h2 class="nord-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="nord-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="nord-entry"
+      >
         <div class="nord-entry-header">
           <span class="nord-entry-title">{vol.role}</span>
           <span class="nord-entry-date">
@@ -205,7 +240,12 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
     <section class="nord-section">
       <h2 class="nord-section-title">Languages</h2>
       <div class="nord-languages">
-        <span :for={lang <- @languages} class="nord-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="nord-language"
+        >
           {lang.name}<span :if={lang.fluency} class="nord-language-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -219,7 +259,12 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
     ~H"""
     <section class="nord-section">
       <h2 class="nord-section-title">Awards</h2>
-      <div :for={award <- @awards} class="nord-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="nord-entry"
+      >
         <div class="nord-entry-header">
           <span class="nord-entry-title">
             {award.title}

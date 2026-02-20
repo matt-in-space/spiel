@@ -35,7 +35,7 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="paper-header">
+    <header data-section="contact_info" class="paper-header">
       <h1 class="paper-name">{@contact.name}</h1>
       <div class="paper-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -54,7 +54,7 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="paper-section">
+    <section data-section="summary" class="paper-section">
       <h2 class="paper-section-title">Summary</h2>
       <p class="paper-summary">{@summary}</p>
     </section>
@@ -67,7 +67,12 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
     ~H"""
     <section class="paper-section">
       <h2 class="paper-section-title">Work Experience</h2>
-      <div :for={exp <- @experiences} class="paper-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="paper-entry"
+      >
         <div class="paper-entry-header">
           <span class="paper-entry-title">{exp.role}</span>
           <span class="paper-entry-date">
@@ -89,7 +94,12 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
     ~H"""
     <section class="paper-section">
       <h2 class="paper-section-title">Education</h2>
-      <div :for={edu <- @entries} class="paper-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="paper-entry"
+      >
         <div class="paper-entry-header">
           <span class="paper-entry-title">{edu.degree} in {edu.field}</span>
           <span class="paper-entry-date">
@@ -109,7 +119,12 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
     <section class="paper-section">
       <h2 class="paper-section-title">Skills</h2>
       <div class="paper-skills">
-        <div :for={group <- @groups} class="paper-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="paper-skill-group"
+        >
           <span class="paper-skill-category">{group.category}:</span>
           <span class="paper-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -124,7 +139,12 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
     ~H"""
     <section class="paper-section">
       <h2 class="paper-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="paper-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="paper-entry"
+      >
         <div class="paper-entry-header">
           <span class="paper-entry-title">
             {cert.name}
@@ -143,7 +163,12 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
     ~H"""
     <section class="paper-section">
       <h2 class="paper-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="paper-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="paper-entry"
+      >
         <div class="paper-entry-header">
           <span class="paper-entry-title">
             {proj.name}
@@ -165,7 +190,12 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
     ~H"""
     <section class="paper-section">
       <h2 class="paper-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="paper-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="paper-entry"
+      >
         <div class="paper-entry-header">
           <span class="paper-entry-title">
             {pub.title}
@@ -185,7 +215,12 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
     ~H"""
     <section class="paper-section">
       <h2 class="paper-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="paper-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="paper-entry"
+      >
         <div class="paper-entry-header">
           <span class="paper-entry-title">{vol.role}</span>
           <span class="paper-entry-date">
@@ -206,7 +241,12 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
     <section class="paper-section">
       <h2 class="paper-section-title">Languages</h2>
       <div class="paper-languages">
-        <span :for={lang <- @languages} class="paper-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="paper-language"
+        >
           {lang.name}<span :if={lang.fluency} class="paper-lang-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -220,7 +260,12 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
     ~H"""
     <section class="paper-section">
       <h2 class="paper-section-title">Awards</h2>
-      <div :for={award <- @awards} class="paper-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="paper-entry"
+      >
         <div class="paper-entry-header">
           <span class="paper-entry-title">
             {award.title}

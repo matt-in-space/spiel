@@ -33,7 +33,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="fresh-header">
+    <header data-section="contact_info" class="fresh-header">
       <h1 class="fresh-name">{@contact.name}</h1>
       <div class="fresh-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -52,7 +52,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="fresh-section">
+    <section data-section="summary" class="fresh-section">
       <h2 class="fresh-section-title">Summary</h2>
       <p class="fresh-body">{@summary}</p>
     </section>
@@ -65,7 +65,12 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     ~H"""
     <section class="fresh-section">
       <h2 class="fresh-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="fresh-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="fresh-entry"
+      >
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">{exp.role}</span>
           <span class="fresh-entry-date">
@@ -87,7 +92,12 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     ~H"""
     <section class="fresh-section">
       <h2 class="fresh-section-title">Education</h2>
-      <div :for={edu <- @entries} class="fresh-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="fresh-entry"
+      >
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">{edu.degree} in {edu.field}</span>
           <span class="fresh-entry-date">
@@ -107,7 +117,12 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     <section class="fresh-section">
       <h2 class="fresh-section-title">Skills</h2>
       <div class="fresh-skills">
-        <div :for={group <- @groups} class="fresh-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="fresh-skill-group"
+        >
           <span class="fresh-skill-category">{group.category}</span>
           <div class="fresh-skill-tags">
             <span :for={skill <- group.skills} class="fresh-skill-tag">{skill}</span>
@@ -124,7 +139,12 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     ~H"""
     <section class="fresh-section">
       <h2 class="fresh-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="fresh-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="fresh-entry"
+      >
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">
             {cert.name}
@@ -143,7 +163,12 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     ~H"""
     <section class="fresh-section">
       <h2 class="fresh-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="fresh-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="fresh-entry"
+      >
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">
             {proj.name}
@@ -165,7 +190,12 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     ~H"""
     <section class="fresh-section">
       <h2 class="fresh-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="fresh-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="fresh-entry"
+      >
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">
             {pub.title}
@@ -185,7 +215,12 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     ~H"""
     <section class="fresh-section">
       <h2 class="fresh-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="fresh-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="fresh-entry"
+      >
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">{vol.role}</span>
           <span class="fresh-entry-date">
@@ -206,7 +241,12 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     <section class="fresh-section">
       <h2 class="fresh-section-title">Languages</h2>
       <div class="fresh-skill-tags">
-        <span :for={lang <- @languages} class="fresh-skill-tag">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="fresh-skill-tag"
+        >
           {lang.name}<span :if={lang.fluency} class="fresh-entry-meta">&nbsp;&mdash; {lang.fluency}</span>
         </span>
       </div>
@@ -220,7 +260,12 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     ~H"""
     <section class="fresh-section">
       <h2 class="fresh-section-title">Awards</h2>
-      <div :for={award <- @awards} class="fresh-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="fresh-entry"
+      >
         <div class="fresh-entry-header">
           <span class="fresh-entry-title">
             {award.title}

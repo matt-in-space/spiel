@@ -35,7 +35,7 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="kendall-header">
+    <header data-section="contact_info" class="kendall-header">
       <h1 class="kendall-name">{@contact.name}</h1>
       <div class="kendall-contact-details">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -54,7 +54,7 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="kendall-section">
+    <section data-section="summary" class="kendall-section">
       <h2 class="kendall-section-title">Summary</h2>
       <p class="kendall-body">{@summary}</p>
     </section>
@@ -67,7 +67,12 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
     ~H"""
     <section class="kendall-section">
       <h2 class="kendall-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="kendall-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="kendall-entry"
+      >
         <div class="kendall-entry-header">
           <span class="kendall-entry-title">
             {exp.role}<span class="kendall-entry-sep">, </span>
@@ -93,7 +98,12 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
     ~H"""
     <section class="kendall-section">
       <h2 class="kendall-section-title">Education</h2>
-      <div :for={edu <- @entries} class="kendall-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="kendall-entry"
+      >
         <div class="kendall-entry-header">
           <span class="kendall-entry-title">
             {edu.degree} in {edu.field}<span class="kendall-entry-sep">, </span>
@@ -117,7 +127,12 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
     <section class="kendall-section">
       <h2 class="kendall-section-title">Skills</h2>
       <div class="kendall-skills-inline">
-        <span :for={group <- @groups} class="kendall-skill-group">
+        <span
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="kendall-skill-group"
+        >
           <span class="kendall-skill-category">{group.category}:</span>
           {Enum.join(group.skills, ", ")}
         </span>
@@ -132,7 +147,12 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
     ~H"""
     <section class="kendall-section">
       <h2 class="kendall-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="kendall-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="kendall-entry"
+      >
         <div class="kendall-entry-header">
           <span class="kendall-entry-title">
             {cert.name}
@@ -151,7 +171,12 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
     ~H"""
     <section class="kendall-section">
       <h2 class="kendall-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="kendall-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="kendall-entry"
+      >
         <div class="kendall-entry-header">
           <span class="kendall-entry-title">
             {proj.name}
@@ -173,7 +198,12 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
     ~H"""
     <section class="kendall-section">
       <h2 class="kendall-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="kendall-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="kendall-entry"
+      >
         <div class="kendall-entry-header">
           <span class="kendall-entry-title">
             {pub.title}
@@ -195,7 +225,12 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
     ~H"""
     <section class="kendall-section">
       <h2 class="kendall-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="kendall-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="kendall-entry"
+      >
         <div class="kendall-entry-header">
           <span class="kendall-entry-title">
             {vol.role}<span class="kendall-entry-sep">, </span>
@@ -220,7 +255,12 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
     <section class="kendall-section">
       <h2 class="kendall-section-title">Languages</h2>
       <div class="kendall-skills-inline">
-        <span :for={lang <- @languages} class="kendall-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="kendall-language"
+        >
           {lang.name}<span :if={lang.fluency} class="kendall-language-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -234,7 +274,12 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
     ~H"""
     <section class="kendall-section">
       <h2 class="kendall-section-title">Awards</h2>
-      <div :for={award <- @awards} class="kendall-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="kendall-entry"
+      >
         <div class="kendall-entry-header">
           <span class="kendall-entry-title">
             {award.title}

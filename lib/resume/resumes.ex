@@ -229,4 +229,11 @@ defmodule Resume.Resumes do
   def confirm_feedback_changes(%Resume{} = resume, data, explanation) do
     create_version(resume, "feedback", data, explanation)
   end
+
+  @doc """
+  Creates a new version from a direct section edit (no LLM call).
+  """
+  def confirm_direct_edit(%Resume{} = resume, data, section_label) do
+    create_version(resume, "direct_edit", data, "Edited #{section_label}")
+  end
 end

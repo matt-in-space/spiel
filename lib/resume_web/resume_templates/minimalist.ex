@@ -34,7 +34,7 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
 
   defp contact_info(assigns) do
     ~H"""
-    <header class="mini-header">
+    <header class="mini-header" data-section="contact_info">
       <h1 class="mini-name">{@contact.name}</h1>
       <div class="mini-contact-row">
         <span :if={@contact.email}>{@contact.email}</span>
@@ -53,7 +53,7 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="mini-section">
+    <section class="mini-section" data-section="summary">
       <h2 class="mini-section-title">Summary</h2>
       <p class="mini-body">{@summary}</p>
     </section>
@@ -66,7 +66,12 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     ~H"""
     <section class="mini-section">
       <h2 class="mini-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="mini-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="mini-entry"
+      >
         <div class="mini-entry-header">
           <span class="mini-entry-title">{exp.role}</span>
           <span class="mini-entry-date">
@@ -88,7 +93,12 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     ~H"""
     <section class="mini-section">
       <h2 class="mini-section-title">Education</h2>
-      <div :for={edu <- @entries} class="mini-entry">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="mini-entry"
+      >
         <div class="mini-entry-header">
           <span class="mini-entry-title">{edu.degree} in {edu.field}</span>
           <span class="mini-entry-date">
@@ -108,7 +118,12 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     <section class="mini-section">
       <h2 class="mini-section-title">Skills</h2>
       <div class="mini-skills">
-        <div :for={group <- @groups} class="mini-skill-group">
+        <div
+          :for={{group, idx} <- Enum.with_index(@groups)}
+          data-section="skills"
+          data-section-index={idx}
+          class="mini-skill-group"
+        >
           <span class="mini-skill-category">{group.category}:</span>
           <span class="mini-skill-list">{Enum.join(group.skills, ", ")}</span>
         </div>
@@ -123,7 +138,12 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     ~H"""
     <section class="mini-section">
       <h2 class="mini-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="mini-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="mini-entry"
+      >
         <div class="mini-entry-header">
           <span class="mini-entry-title">
             {cert.name}
@@ -142,7 +162,12 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     ~H"""
     <section class="mini-section">
       <h2 class="mini-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="mini-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="mini-entry"
+      >
         <div class="mini-entry-header">
           <span class="mini-entry-title">
             {proj.name}
@@ -164,7 +189,12 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     ~H"""
     <section class="mini-section">
       <h2 class="mini-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="mini-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="mini-entry"
+      >
         <div class="mini-entry-header">
           <span class="mini-entry-title">
             {pub.title}
@@ -184,7 +214,12 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     ~H"""
     <section class="mini-section">
       <h2 class="mini-section-title">Volunteer</h2>
-      <div :for={vol <- @entries} class="mini-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="mini-entry"
+      >
         <div class="mini-entry-header">
           <span class="mini-entry-title">{vol.role}</span>
           <span class="mini-entry-date">
@@ -205,7 +240,12 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     <section class="mini-section">
       <h2 class="mini-section-title">Languages</h2>
       <div class="mini-skills">
-        <span :for={lang <- @languages} class="mini-language">
+        <span
+          :for={{lang, idx} <- Enum.with_index(@languages)}
+          data-section="languages"
+          data-section-index={idx}
+          class="mini-language"
+        >
           {lang.name}<span :if={lang.fluency} class="mini-lang-fluency"> ({lang.fluency})</span>
         </span>
       </div>
@@ -219,7 +259,12 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     ~H"""
     <section class="mini-section">
       <h2 class="mini-section-title">Awards</h2>
-      <div :for={award <- @awards} class="mini-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="mini-entry"
+      >
         <div class="mini-entry-header">
           <span class="mini-entry-title">
             {award.title}

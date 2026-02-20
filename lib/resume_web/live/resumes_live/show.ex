@@ -81,6 +81,8 @@ defmodule ResumeWeb.ResumesLive.Show do
        transcribing: false,
        editing_title: false,
        title_form: to_form(%{"title" => resume.title}, as: "title"),
+       editing_section: nil,
+       section_form: nil,
        sidebar_open: false,
        show_tutorial: Accounts.show_tutorial?(user, "show-tutorial"),
        upgrade_prompt: nil,
@@ -304,6 +306,7 @@ defmodule ResumeWeb.ResumesLive.Show do
           >
             <div
               id="resume-scale-inner"
+              phx-hook=".SectionEditor"
               class={[
                 "w-[8.5in] bg-white border border-base-300 rounded-sm print:border-none print:p-0 origin-top-left print:!transform-none",
                 if(@resume.template in ~w(executive sidebar),
@@ -319,7 +322,7 @@ defmodule ResumeWeb.ResumesLive.Show do
                 <.icon name="hero-eye-micro" class="size-4 text-warning" />
                 <span class="text-sm font-medium text-warning">Preview — unsaved changes</span>
               </div>
-              {raw("<style>" <> @template_css <> "</style>")}
+              {raw("<style>" <> @template_css <> section_editor_css() <> "</style>")}
               {raw(render_template(@template_mod, display_data(@preview_data, @current_data)))}
             </div>
           </div>
@@ -411,6 +414,31 @@ defmodule ResumeWeb.ResumesLive.Show do
           </div>
         </div>
       </div>
+
+      <dialog
+        :if={@editing_section}
+        id="section-editor-modal"
+        class="modal modal-open"
+        phx-window-keydown="close_section_editor"
+        phx-key="Escape"
+      >
+        <div class="modal-box">
+          <h3 class="text-lg font-bold mb-4">Edit {section_label(@editing_section)}</h3>
+          <.form for={@section_form} phx-submit="save_section_edit" autocomplete="off">
+            <.section_editor_fields
+              section={elem(@editing_section, 0)}
+              form={@section_form}
+            />
+            <div class="modal-action">
+              <button type="button" phx-click="close_section_editor" class="btn">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+          </.form>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button type="button" phx-click="close_section_editor">close</button>
+        </form>
+      </dialog>
 
       <.tutorial
         id="show-tutorial"
@@ -515,6 +543,40 @@ defmodule ResumeWeb.ResumesLive.Show do
         },
         destroyed() {
           this.observer?.disconnect();
+        },
+      };
+    </script>
+
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".SectionEditor">
+      export default {
+        mounted() {
+          this.el.addEventListener("click", (e) => {
+            const target = e.target.closest("[data-section]");
+            if (!target) return;
+            e.preventDefault();
+            this.pushEvent("open_section_editor", {
+              section: target.dataset.section,
+              index: target.dataset.sectionIndex ?? null,
+            });
+          });
+
+          this.el.addEventListener("mouseover", (e) => {
+            const target = e.target.closest("[data-section]");
+            if (this._hovered && this._hovered !== target) {
+              this._hovered.classList.remove("section-editable-hover");
+            }
+            if (target) {
+              target.classList.add("section-editable-hover");
+              this._hovered = target;
+            }
+          });
+
+          this.el.addEventListener("mouseout", (e) => {
+            if (this._hovered) {
+              this._hovered.classList.remove("section-editable-hover");
+              this._hovered = null;
+            }
+          });
         },
       };
     </script>
@@ -739,6 +801,63 @@ defmodule ResumeWeb.ResumesLive.Show do
      |> push_navigate(to: ~p"/home")}
   end
 
+  # Section editor events
+
+  @impl true
+  def handle_event("open_section_editor", %{"section" => section} = params, socket) do
+    if socket.assigns.preview_data do
+      {:noreply, socket}
+    else
+      index =
+        case params["index"] do
+          nil -> nil
+          "" -> nil
+          idx -> String.to_integer(idx)
+        end
+
+      current_data = version_data(socket.assigns.current_version)
+      section_form = build_section_form(current_data, section, index)
+
+      {:noreply,
+       assign(socket,
+         editing_section: {section, index},
+         section_form: section_form
+       )}
+    end
+  end
+
+  @impl true
+  def handle_event("save_section_edit", %{"section" => params}, socket) do
+    {section, index} = socket.assigns.editing_section
+    resume = socket.assigns.resume
+    data_map = version_data_to_map(socket.assigns.current_version)
+    updated_data = apply_section_edit(data_map, section, index, params)
+    label = section_label({section, index})
+
+    case Resumes.confirm_direct_edit(resume, updated_data, label) do
+      {:ok, version} ->
+        versions = Resumes.list_versions(resume.id)
+
+        {:noreply,
+         socket
+         |> assign(
+           versions: versions,
+           current_version: version,
+           template_previews: build_template_previews(version_data(version)),
+           editing_section: nil,
+           section_form: nil
+         )}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to save changes.")}
+    end
+  end
+
+  @impl true
+  def handle_event("close_section_editor", _params, socket) do
+    {:noreply, assign(socket, editing_section: nil, section_form: nil)}
+  end
+
   @impl true
   def handle_info({ref, result}, socket) do
     Process.demonitor(ref, [:flush])
@@ -907,5 +1026,524 @@ defmodule ResumeWeb.ResumesLive.Show do
     data
     |> Jason.encode!()
     |> Jason.decode!()
+  end
+
+  # Section editor helpers
+
+  defp section_editor_css do
+    """
+    [data-section] { cursor: pointer; transition: outline 0.15s; border-radius: 2px; }
+    [data-section].section-editable-hover { outline: 2px solid oklch(0.65 0.2 250 / 0.5); outline-offset: 4px; }
+    """
+  end
+
+  defp section_label({"contact_info", _}), do: "Contact Info"
+  defp section_label({"summary", _}), do: "Summary"
+  defp section_label({"work_experience", _}), do: "Work Experience"
+  defp section_label({"education", _}), do: "Education"
+  defp section_label({"skills", _}), do: "Skills"
+  defp section_label({"certifications", _}), do: "Certifications"
+  defp section_label({"projects", _}), do: "Projects"
+  defp section_label({"publications", _}), do: "Publications"
+  defp section_label({"volunteer_work", _}), do: "Volunteer Work"
+  defp section_label({"languages", _}), do: "Languages"
+  defp section_label({"awards", _}), do: "Awards"
+
+  # Section editor form fields component
+
+  attr :section, :string, required: true
+  attr :form, :any, required: true
+
+  defp section_editor_fields(%{section: "contact_info"} = assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <.input field={@form[:name]} type="text" label="Name" />
+      <.input field={@form[:email]} type="text" label="Email" />
+      <.input field={@form[:phone]} type="text" label="Phone" />
+      <.input field={@form[:location]} type="text" label="Location" />
+    </div>
+    """
+  end
+
+  defp section_editor_fields(%{section: "summary"} = assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <.input field={@form[:summary]} type="textarea" label="Summary" rows="5" />
+    </div>
+    """
+  end
+
+  defp section_editor_fields(%{section: "work_experience"} = assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <.input field={@form[:role]} type="text" label="Role" />
+      <.input field={@form[:company]} type="text" label="Company" />
+      <.input field={@form[:current]} type="checkbox" label="Current position" />
+      <div class="grid grid-cols-2 gap-3">
+        <.input field={@form[:start_date_year]} type="number" label="Start year" />
+        <.input field={@form[:start_date_month]} type="number" label="Start month" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <.input field={@form[:end_date_year]} type="number" label="End year" />
+        <.input field={@form[:end_date_month]} type="number" label="End month" />
+      </div>
+      <.input
+        field={@form[:accomplishments]}
+        type="textarea"
+        label="Accomplishments (one per line)"
+        rows="5"
+      />
+    </div>
+    """
+  end
+
+  defp section_editor_fields(%{section: "education"} = assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <.input field={@form[:institution]} type="text" label="Institution" />
+      <.input field={@form[:degree]} type="text" label="Degree" />
+      <.input field={@form[:field]} type="text" label="Field of study" />
+      <div class="grid grid-cols-2 gap-3">
+        <.input field={@form[:start_date_year]} type="number" label="Start year" />
+        <.input field={@form[:start_date_month]} type="number" label="Start month" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <.input field={@form[:end_date_year]} type="number" label="End year" />
+        <.input field={@form[:end_date_month]} type="number" label="End month" />
+      </div>
+    </div>
+    """
+  end
+
+  defp section_editor_fields(%{section: "skills"} = assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <.input field={@form[:category]} type="text" label="Category" />
+      <.input field={@form[:skills]} type="textarea" label="Skills (comma-separated)" rows="3" />
+    </div>
+    """
+  end
+
+  defp section_editor_fields(%{section: "certifications"} = assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <.input field={@form[:name]} type="text" label="Name" />
+      <.input field={@form[:issuer]} type="text" label="Issuer" />
+      <div class="grid grid-cols-2 gap-3">
+        <.input field={@form[:date_year]} type="number" label="Year" />
+        <.input field={@form[:date_month]} type="number" label="Month" />
+      </div>
+    </div>
+    """
+  end
+
+  defp section_editor_fields(%{section: "projects"} = assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <.input field={@form[:name]} type="text" label="Name" />
+      <.input field={@form[:description]} type="textarea" label="Description" rows="3" />
+      <.input field={@form[:url]} type="text" label="URL" />
+      <.input
+        field={@form[:highlights]}
+        type="textarea"
+        label="Highlights (one per line)"
+        rows="4"
+      />
+    </div>
+    """
+  end
+
+  defp section_editor_fields(%{section: "publications"} = assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <.input field={@form[:title]} type="text" label="Title" />
+      <.input field={@form[:publisher]} type="text" label="Publisher" />
+      <.input field={@form[:url]} type="text" label="URL" />
+      <div class="grid grid-cols-2 gap-3">
+        <.input field={@form[:date_year]} type="number" label="Year" />
+        <.input field={@form[:date_month]} type="number" label="Month" />
+      </div>
+    </div>
+    """
+  end
+
+  defp section_editor_fields(%{section: "volunteer_work"} = assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <.input field={@form[:role]} type="text" label="Role" />
+      <.input field={@form[:organization]} type="text" label="Organization" />
+      <.input field={@form[:description]} type="textarea" label="Description" rows="3" />
+      <div class="grid grid-cols-2 gap-3">
+        <.input field={@form[:start_date_year]} type="number" label="Start year" />
+        <.input field={@form[:start_date_month]} type="number" label="Start month" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <.input field={@form[:end_date_year]} type="number" label="End year" />
+        <.input field={@form[:end_date_month]} type="number" label="End month" />
+      </div>
+    </div>
+    """
+  end
+
+  defp section_editor_fields(%{section: "languages"} = assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <.input field={@form[:name]} type="text" label="Language" />
+      <.input field={@form[:fluency]} type="text" label="Fluency" />
+    </div>
+    """
+  end
+
+  defp section_editor_fields(%{section: "awards"} = assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <.input field={@form[:title]} type="text" label="Title" />
+      <.input field={@form[:issuer]} type="text" label="Issuer" />
+      <.input field={@form[:summary]} type="textarea" label="Summary" rows="3" />
+      <div class="grid grid-cols-2 gap-3">
+        <.input field={@form[:date_year]} type="number" label="Year" />
+        <.input field={@form[:date_month]} type="number" label="Month" />
+      </div>
+    </div>
+    """
+  end
+
+  # Build form for section editing
+
+  defp build_section_form(data, "contact_info", _index) do
+    contact = data.contact_info
+
+    to_form(
+      %{
+        "name" => (contact && contact.name) || "",
+        "email" => (contact && contact.email) || "",
+        "phone" => (contact && contact.phone) || "",
+        "location" => (contact && contact.location) || ""
+      },
+      as: "section"
+    )
+  end
+
+  defp build_section_form(data, "summary", _index) do
+    to_form(%{"summary" => data.summary || ""}, as: "section")
+  end
+
+  defp build_section_form(data, "work_experience", index) do
+    exp = Enum.at(data.work_experience || [], index)
+
+    to_form(
+      %{
+        "role" => (exp && exp.role) || "",
+        "company" => (exp && exp.company) || "",
+        "current" => to_string((exp && exp.current) || false),
+        "start_date_year" => flex_date_field(exp && exp.start_date, :year),
+        "start_date_month" => flex_date_field(exp && exp.start_date, :month),
+        "end_date_year" => flex_date_field(exp && exp.end_date, :year),
+        "end_date_month" => flex_date_field(exp && exp.end_date, :month),
+        "accomplishments" => Enum.join((exp && exp.accomplishments) || [], "\n")
+      },
+      as: "section"
+    )
+  end
+
+  defp build_section_form(data, "education", index) do
+    edu = Enum.at(data.education || [], index)
+
+    to_form(
+      %{
+        "institution" => (edu && edu.institution) || "",
+        "degree" => (edu && edu.degree) || "",
+        "field" => (edu && edu.field) || "",
+        "start_date_year" => flex_date_field(edu && edu.start_date, :year),
+        "start_date_month" => flex_date_field(edu && edu.start_date, :month),
+        "end_date_year" => flex_date_field(edu && edu.end_date, :year),
+        "end_date_month" => flex_date_field(edu && edu.end_date, :month)
+      },
+      as: "section"
+    )
+  end
+
+  defp build_section_form(data, "skills", index) do
+    group = Enum.at(data.skills || [], index)
+
+    to_form(
+      %{
+        "category" => (group && group.category) || "",
+        "skills" => Enum.join((group && group.skills) || [], ", ")
+      },
+      as: "section"
+    )
+  end
+
+  defp build_section_form(data, "certifications", index) do
+    cert = Enum.at(data.certifications || [], index)
+
+    to_form(
+      %{
+        "name" => (cert && cert.name) || "",
+        "issuer" => (cert && cert.issuer) || "",
+        "date_year" => flex_date_field(cert && cert.date, :year),
+        "date_month" => flex_date_field(cert && cert.date, :month)
+      },
+      as: "section"
+    )
+  end
+
+  defp build_section_form(data, "projects", index) do
+    proj = Enum.at(data.projects || [], index)
+
+    to_form(
+      %{
+        "name" => (proj && proj.name) || "",
+        "description" => (proj && proj.description) || "",
+        "url" => (proj && proj.url) || "",
+        "highlights" => Enum.join((proj && proj.highlights) || [], "\n")
+      },
+      as: "section"
+    )
+  end
+
+  defp build_section_form(data, "publications", index) do
+    pub = Enum.at(data.publications || [], index)
+
+    to_form(
+      %{
+        "title" => (pub && pub.title) || "",
+        "publisher" => (pub && pub.publisher) || "",
+        "url" => (pub && pub.url) || "",
+        "date_year" => flex_date_field(pub && pub.date, :year),
+        "date_month" => flex_date_field(pub && pub.date, :month)
+      },
+      as: "section"
+    )
+  end
+
+  defp build_section_form(data, "volunteer_work", index) do
+    vol = Enum.at(data.volunteer_work || [], index)
+
+    to_form(
+      %{
+        "role" => (vol && vol.role) || "",
+        "organization" => (vol && vol.organization) || "",
+        "description" => (vol && vol.description) || "",
+        "start_date_year" => flex_date_field(vol && vol.start_date, :year),
+        "start_date_month" => flex_date_field(vol && vol.start_date, :month),
+        "end_date_year" => flex_date_field(vol && vol.end_date, :year),
+        "end_date_month" => flex_date_field(vol && vol.end_date, :month)
+      },
+      as: "section"
+    )
+  end
+
+  defp build_section_form(data, "languages", index) do
+    lang = Enum.at(data.languages || [], index)
+
+    to_form(
+      %{
+        "name" => (lang && lang.name) || "",
+        "fluency" => (lang && lang.fluency) || ""
+      },
+      as: "section"
+    )
+  end
+
+  defp build_section_form(data, "awards", index) do
+    award = Enum.at(data.awards || [], index)
+
+    to_form(
+      %{
+        "title" => (award && award.title) || "",
+        "issuer" => (award && award.issuer) || "",
+        "summary" => (award && award.summary) || "",
+        "date_year" => flex_date_field(award && award.date, :year),
+        "date_month" => flex_date_field(award && award.date, :month)
+      },
+      as: "section"
+    )
+  end
+
+  # Apply section edits to the data map
+
+  defp apply_section_edit(data_map, "contact_info", _index, params) do
+    existing = data_map["contact_info"] || %{}
+
+    Map.put(data_map, "contact_info", %{
+      "name" => params["name"],
+      "email" => params["email"],
+      "phone" => params["phone"],
+      "location" => params["location"],
+      "websites" => existing["websites"] || []
+    })
+  end
+
+  defp apply_section_edit(data_map, "summary", _index, params) do
+    Map.put(data_map, "summary", params["summary"])
+  end
+
+  defp apply_section_edit(data_map, "work_experience", index, params) do
+    entries = data_map["work_experience"] || []
+    existing = Enum.at(entries, index) || %{}
+
+    updated =
+      Map.merge(existing, %{
+        "role" => params["role"],
+        "company" => params["company"],
+        "current" => params["current"] == "true",
+        "start_date" => build_flex_date(params["start_date_year"], params["start_date_month"]),
+        "end_date" => build_flex_date(params["end_date_year"], params["end_date_month"]),
+        "accomplishments" => split_lines(params["accomplishments"])
+      })
+
+    Map.put(data_map, "work_experience", List.replace_at(entries, index, updated))
+  end
+
+  defp apply_section_edit(data_map, "education", index, params) do
+    entries = data_map["education"] || []
+    existing = Enum.at(entries, index) || %{}
+
+    updated =
+      Map.merge(existing, %{
+        "institution" => params["institution"],
+        "degree" => params["degree"],
+        "field" => params["field"],
+        "start_date" => build_flex_date(params["start_date_year"], params["start_date_month"]),
+        "end_date" => build_flex_date(params["end_date_year"], params["end_date_month"])
+      })
+
+    Map.put(data_map, "education", List.replace_at(entries, index, updated))
+  end
+
+  defp apply_section_edit(data_map, "skills", index, params) do
+    entries = data_map["skills"] || []
+    existing = Enum.at(entries, index) || %{}
+
+    updated =
+      Map.merge(existing, %{
+        "category" => params["category"],
+        "skills" => split_comma(params["skills"])
+      })
+
+    Map.put(data_map, "skills", List.replace_at(entries, index, updated))
+  end
+
+  defp apply_section_edit(data_map, "certifications", index, params) do
+    entries = data_map["certifications"] || []
+    existing = Enum.at(entries, index) || %{}
+
+    updated =
+      Map.merge(existing, %{
+        "name" => params["name"],
+        "issuer" => params["issuer"],
+        "date" => build_flex_date(params["date_year"], params["date_month"])
+      })
+
+    Map.put(data_map, "certifications", List.replace_at(entries, index, updated))
+  end
+
+  defp apply_section_edit(data_map, "projects", index, params) do
+    entries = data_map["projects"] || []
+    existing = Enum.at(entries, index) || %{}
+
+    updated =
+      Map.merge(existing, %{
+        "name" => params["name"],
+        "description" => params["description"],
+        "url" => params["url"],
+        "highlights" => split_lines(params["highlights"])
+      })
+
+    Map.put(data_map, "projects", List.replace_at(entries, index, updated))
+  end
+
+  defp apply_section_edit(data_map, "publications", index, params) do
+    entries = data_map["publications"] || []
+    existing = Enum.at(entries, index) || %{}
+
+    updated =
+      Map.merge(existing, %{
+        "title" => params["title"],
+        "publisher" => params["publisher"],
+        "url" => params["url"],
+        "date" => build_flex_date(params["date_year"], params["date_month"])
+      })
+
+    Map.put(data_map, "publications", List.replace_at(entries, index, updated))
+  end
+
+  defp apply_section_edit(data_map, "volunteer_work", index, params) do
+    entries = data_map["volunteer_work"] || []
+    existing = Enum.at(entries, index) || %{}
+
+    updated =
+      Map.merge(existing, %{
+        "role" => params["role"],
+        "organization" => params["organization"],
+        "description" => params["description"],
+        "start_date" => build_flex_date(params["start_date_year"], params["start_date_month"]),
+        "end_date" => build_flex_date(params["end_date_year"], params["end_date_month"])
+      })
+
+    Map.put(data_map, "volunteer_work", List.replace_at(entries, index, updated))
+  end
+
+  defp apply_section_edit(data_map, "languages", index, params) do
+    entries = data_map["languages"] || []
+    existing = Enum.at(entries, index) || %{}
+
+    updated =
+      Map.merge(existing, %{
+        "name" => params["name"],
+        "fluency" => params["fluency"]
+      })
+
+    Map.put(data_map, "languages", List.replace_at(entries, index, updated))
+  end
+
+  defp apply_section_edit(data_map, "awards", index, params) do
+    entries = data_map["awards"] || []
+    existing = Enum.at(entries, index) || %{}
+
+    updated =
+      Map.merge(existing, %{
+        "title" => params["title"],
+        "issuer" => params["issuer"],
+        "summary" => params["summary"],
+        "date" => build_flex_date(params["date_year"], params["date_month"])
+      })
+
+    Map.put(data_map, "awards", List.replace_at(entries, index, updated))
+  end
+
+  defp flex_date_field(nil, _field), do: ""
+  defp flex_date_field(date, field), do: to_string(Map.get(date, field) || "")
+
+  defp build_flex_date(year_str, month_str) do
+    year = parse_int(year_str)
+    month = parse_int(month_str)
+    if year, do: %{"year" => year, "month" => month}, else: nil
+  end
+
+  defp parse_int(nil), do: nil
+  defp parse_int(""), do: nil
+
+  defp parse_int(str) when is_binary(str) do
+    case Integer.parse(str) do
+      {n, _} -> n
+      :error -> nil
+    end
+  end
+
+  defp split_lines(nil), do: []
+  defp split_lines(""), do: []
+
+  defp split_lines(text) do
+    text |> String.split("\n") |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == ""))
+  end
+
+  defp split_comma(nil), do: []
+  defp split_comma(""), do: []
+
+  defp split_comma(text) do
+    text |> String.split(",") |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == ""))
   end
 end

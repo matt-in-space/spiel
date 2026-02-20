@@ -40,7 +40,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
 
   defp sidebar_contact(assigns) do
     ~H"""
-    <div class="exec-sidebar-section">
+    <div class="exec-sidebar-section" data-section="contact_info">
       <h2 class="exec-sidebar-title">Contact</h2>
       <div class="exec-sidebar-contact">
         <div :if={@contact.email}>{@contact.email}</div>
@@ -60,7 +60,12 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
     ~H"""
     <div class="exec-sidebar-section">
       <h2 class="exec-sidebar-title">Skills</h2>
-      <div :for={group <- @groups} class="exec-sidebar-skill-group">
+      <div
+        :for={{group, idx} <- Enum.with_index(@groups)}
+        data-section="skills"
+        data-section-index={idx}
+        class="exec-sidebar-skill-group"
+      >
         <div class="exec-sidebar-skill-category">{group.category}</div>
         <div class="exec-sidebar-skill-list">{Enum.join(group.skills, ", ")}</div>
       </div>
@@ -74,7 +79,12 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
     ~H"""
     <div class="exec-sidebar-section">
       <h2 class="exec-sidebar-title">Education</h2>
-      <div :for={edu <- @entries} class="exec-sidebar-edu">
+      <div
+        :for={{edu, idx} <- Enum.with_index(@entries)}
+        data-section="education"
+        data-section-index={idx}
+        class="exec-sidebar-edu"
+      >
         <div class="exec-sidebar-edu-degree">{edu.degree} in {edu.field}</div>
         <div class="exec-sidebar-edu-school">{edu.institution}</div>
         <div class="exec-sidebar-edu-date">
@@ -91,7 +101,12 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
     ~H"""
     <div class="exec-sidebar-section">
       <h2 class="exec-sidebar-title">Languages</h2>
-      <div :for={lang <- @languages} class="exec-sidebar-language">
+      <div
+        :for={{lang, idx} <- Enum.with_index(@languages)}
+        data-section="languages"
+        data-section-index={idx}
+        class="exec-sidebar-language"
+      >
         {lang.name}
         <span :if={lang.fluency} class="exec-sidebar-lang-fluency">&nbsp;&mdash; {lang.fluency}</span>
       </div>
@@ -105,7 +120,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
 
   defp main_header(assigns) do
     ~H"""
-    <header class="exec-main-header">
+    <header class="exec-main-header" data-section="contact_info">
       <h1 class="exec-name">{@contact.name}</h1>
     </header>
     """
@@ -116,7 +131,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
 
   defp summary_section(assigns) do
     ~H"""
-    <section class="exec-section">
+    <section class="exec-section" data-section="summary">
       <h2 class="exec-section-title">Professional Summary</h2>
       <p class="exec-body">{@summary}</p>
     </section>
@@ -129,7 +144,12 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
     ~H"""
     <section class="exec-section">
       <h2 class="exec-section-title">Experience</h2>
-      <div :for={exp <- @experiences} class="exec-entry">
+      <div
+        :for={{exp, idx} <- Enum.with_index(@experiences)}
+        data-section="work_experience"
+        data-section-index={idx}
+        class="exec-entry"
+      >
         <div class="exec-entry-header">
           <span class="exec-entry-title">{exp.role}</span>
           <span class="exec-entry-date">
@@ -151,7 +171,12 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
     ~H"""
     <section class="exec-section">
       <h2 class="exec-section-title">Projects</h2>
-      <div :for={proj <- @projects} class="exec-entry">
+      <div
+        :for={{proj, idx} <- Enum.with_index(@projects)}
+        data-section="projects"
+        data-section-index={idx}
+        class="exec-entry"
+      >
         <div class="exec-entry-header">
           <span class="exec-entry-title">
             {proj.name}
@@ -173,7 +198,12 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
     ~H"""
     <section class="exec-section">
       <h2 class="exec-section-title">Certifications</h2>
-      <div :for={cert <- @certs} class="exec-entry">
+      <div
+        :for={{cert, idx} <- Enum.with_index(@certs)}
+        data-section="certifications"
+        data-section-index={idx}
+        class="exec-entry"
+      >
         <div class="exec-entry-header">
           <span class="exec-entry-title">
             {cert.name}
@@ -192,7 +222,12 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
     ~H"""
     <section class="exec-section">
       <h2 class="exec-section-title">Awards</h2>
-      <div :for={award <- @awards} class="exec-entry">
+      <div
+        :for={{award, idx} <- Enum.with_index(@awards)}
+        data-section="awards"
+        data-section-index={idx}
+        class="exec-entry"
+      >
         <div class="exec-entry-header">
           <span class="exec-entry-title">
             {award.title}
@@ -212,7 +247,12 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
     ~H"""
     <section class="exec-section">
       <h2 class="exec-section-title">Publications</h2>
-      <div :for={pub <- @pubs} class="exec-entry">
+      <div
+        :for={{pub, idx} <- Enum.with_index(@pubs)}
+        data-section="publications"
+        data-section-index={idx}
+        class="exec-entry"
+      >
         <div class="exec-entry-header">
           <span class="exec-entry-title">
             {pub.title}
@@ -232,7 +272,12 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
     ~H"""
     <section class="exec-section">
       <h2 class="exec-section-title">Volunteer Work</h2>
-      <div :for={vol <- @entries} class="exec-entry">
+      <div
+        :for={{vol, idx} <- Enum.with_index(@entries)}
+        data-section="volunteer_work"
+        data-section-index={idx}
+        class="exec-entry"
+      >
         <div class="exec-entry-header">
           <span class="exec-entry-title">{vol.role}</span>
           <span class="exec-entry-date">
