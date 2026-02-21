@@ -15,6 +15,8 @@ defmodule ResumeWeb.ResumesLive.New do
            as: "resume"
          ),
        generating: false,
+       fetching_url: false,
+       url_fetch_failed: false,
        task_refs: %{}
      )}
   end
@@ -41,13 +43,26 @@ defmodule ResumeWeb.ResumesLive.New do
           <:subtitle>We'll build a resume from what we know about you.</:subtitle>
         </.header>
 
-        <div :if={@generating} class="flex flex-col items-center gap-3 py-12">
+        <div :if={@generating || @fetching_url} class="flex flex-col items-center gap-3 py-12">
           <span class="loading loading-spinner loading-lg"></span>
-          <p class="text-sm opacity-70">Fetching job posting and generating your resume...</p>
+          <p :if={@fetching_url} class="text-sm opacity-70">Fetching job posting...</p>
+          <p :if={@generating} class="text-sm opacity-70">Generating your resume...</p>
         </div>
 
-        <.form :if={!@generating} for={@form} phx-change="validate" phx-submit="generate">
+        <.form
+          :if={!@generating && !@fetching_url}
+          for={@form}
+          phx-change="validate"
+          phx-submit="generate"
+        >
           <div class="space-y-4">
+            <div :if={@url_fetch_failed} role="alert" class="alert alert-warning">
+              <.icon name="hero-exclamation-triangle-micro" class="size-5" />
+              <span>
+                We couldn't read that page. Paste the job description below.
+              </span>
+            </div>
+
             <.input
               field={@form[:title]}
               label="Title (optional)"
@@ -87,6 +102,28 @@ defmodule ResumeWeb.ResumesLive.New do
 
   @impl true
   def handle_event("generate", %{"resume" => params}, socket) do
+    url = non_blank(params["job_posting_url"])
+    text = non_blank(params["job_posting_text"])
+
+    if url != nil and text == nil do
+      # URL provided but no pasted text — fetch URL first
+      task = Task.async(fn -> JobPostings.fetch_text(url) end)
+
+      {:noreply,
+       socket
+       |> assign(
+         fetching_url: true,
+         url_fetch_failed: false,
+         form: to_form(params, as: "resume")
+       )
+       |> update(:task_refs, &Map.put(&1, task.ref, {:fetch_url, params}))}
+    else
+      # Text already provided (or no URL) — generate directly
+      start_generation(socket, params)
+    end
+  end
+
+  defp start_generation(socket, params) do
     user = Accounts.get_user!(socket.assigns.user.id)
 
     title = non_blank(params["title"])
@@ -95,34 +132,19 @@ defmodule ResumeWeb.ResumesLive.New do
 
     task =
       Task.async(fn ->
-        {job_posting_text, url_failed?} = resolve_job_posting_text(url, text)
-
         opts =
           []
           |> maybe_add_opt(:title, title)
-          |> maybe_add_opt(:job_posting_text, job_posting_text)
+          |> maybe_add_opt(:job_posting_text, text)
           |> maybe_add_opt(:job_posting_url, url)
 
-        case Retry.with_retry(fn -> Resumes.generate_resume(user, opts) end) do
-          {:ok, resume} -> {:ok, resume, url_failed?}
-          error -> error
-        end
+        Retry.with_retry(fn -> Resumes.generate_resume(user, opts) end)
       end)
 
     {:noreply,
      socket
      |> assign(generating: true)
      |> update(:task_refs, &Map.put(&1, task.ref, :generate))}
-  end
-
-  defp resolve_job_posting_text(nil, nil), do: {nil, false}
-  defp resolve_job_posting_text(_url, text) when is_binary(text), do: {text, false}
-
-  defp resolve_job_posting_text(url, nil) do
-    case JobPostings.fetch_text(url) do
-      {:ok, text} -> {text, false}
-      {:error, _reason} -> {nil, true}
-    end
   end
 
   defp non_blank(nil), do: nil
@@ -144,16 +166,23 @@ defmodule ResumeWeb.ResumesLive.New do
     socket = assign(socket, task_refs: task_refs)
 
     case {tag, result} do
-      {:generate, {:ok, resume, true}} ->
+      {{:fetch_url, params}, {:ok, text}} ->
+        # URL fetched successfully — inject text and start generation
+        params = Map.put(params, "job_posting_text", text)
+        socket = assign(socket, fetching_url: false)
+        start_generation(socket, params)
+
+      {{:fetch_url, params}, {:error, _reason}} ->
+        # URL fetch failed — show paste fallback
         {:noreply,
          socket
-         |> put_flash(
-           :error,
-           "Couldn't fetch the job posting URL. You can paste the text on the resume page."
-         )
-         |> push_navigate(to: ~p"/resumes/#{resume}")}
+         |> assign(
+           fetching_url: false,
+           url_fetch_failed: true,
+           form: to_form(params, as: "resume")
+         )}
 
-      {:generate, {:ok, resume, _}} ->
+      {:generate, {:ok, resume}} ->
         {:noreply, push_navigate(socket, to: ~p"/resumes/#{resume}")}
 
       {:generate, {:error, _reason}} ->

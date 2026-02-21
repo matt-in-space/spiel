@@ -15,6 +15,20 @@ defmodule Resume.JobPostings do
   Accepts any `Req` options (e.g. `plug:` for testing).
   """
   def fetch_text(url, opts \\ []) do
+    opts = Keyword.merge(base_req_opts(), opts)
+
+    case fetch_from_ats_api(url, opts) do
+      {:ok, _text} = success -> success
+      :not_ats -> fetch_text_html(url, opts)
+      {:error, _reason} -> fetch_text_html(url, opts)
+    end
+  end
+
+  defp base_req_opts do
+    Application.get_env(:resume, :job_postings_req_opts, [])
+  end
+
+  defp fetch_text_html(url, opts) do
     req_opts = Keyword.merge([max_redirects: 5, receive_timeout: 15_000], opts)
 
     case Req.get(url, req_opts) do
@@ -34,6 +48,76 @@ defmodule Resume.JobPostings do
       {:error, reason} ->
         Logger.error("Failed to fetch job posting from #{url}: #{inspect(reason)}")
         {:error, reason}
+    end
+  end
+
+  # ATS API sniffing — try structured APIs before falling back to HTML scraping.
+
+  @greenhouse_hosts ~w(boards.greenhouse.io job-boards.greenhouse.io)
+
+  defp fetch_from_ats_api(url, opts) do
+    uri = URI.parse(url)
+
+    cond do
+      uri.host in @greenhouse_hosts -> fetch_greenhouse(uri, opts)
+      uri.host == "jobs.lever.co" -> fetch_lever(uri, opts)
+      true -> :not_ats
+    end
+  end
+
+  defp fetch_greenhouse(uri, opts) do
+    case Path.split(uri.path || "") do
+      ["/" | [board, "jobs", id | _]] ->
+        api_url = "https://boards-api.greenhouse.io/v1/boards/#{board}/jobs/#{id}"
+        req_opts = Keyword.merge([receive_timeout: 10_000], opts)
+
+        case Req.get(api_url, req_opts) do
+          {:ok, %Req.Response{status: 200, body: %{"content" => content}}}
+          when is_binary(content) ->
+            text = extract_text(content)
+            if usable_text?(text), do: {:ok, text}, else: {:error, :unusable_content}
+
+          {:ok, %Req.Response{status: status}} ->
+            Logger.warning("Greenhouse API returned #{status} for #{uri}")
+            {:error, {:http_status, status}}
+
+          {:error, reason} ->
+            Logger.warning("Greenhouse API error for #{uri}: #{inspect(reason)}")
+            {:error, reason}
+        end
+
+      _ ->
+        :not_ats
+    end
+  end
+
+  defp fetch_lever(uri, opts) do
+    case Path.split(uri.path || "") do
+      ["/" | [company, posting_id | _]] ->
+        api_url = "https://api.lever.co/v0/postings/#{company}/#{posting_id}"
+        req_opts = Keyword.merge([receive_timeout: 10_000], opts)
+
+        case Req.get(api_url, req_opts) do
+          {:ok, %Req.Response{status: 200, body: %{"descriptionPlain" => text}}}
+          when is_binary(text) ->
+            text = String.trim(text)
+            if usable_text?(text), do: {:ok, text}, else: {:error, :unusable_content}
+
+          {:ok, %Req.Response{status: 200, body: body}} when is_map(body) ->
+            Logger.warning("Lever API response missing descriptionPlain for #{uri}")
+            {:error, :unusable_content}
+
+          {:ok, %Req.Response{status: status}} ->
+            Logger.warning("Lever API returned #{status} for #{uri}")
+            {:error, {:http_status, status}}
+
+          {:error, reason} ->
+            Logger.warning("Lever API error for #{uri}: #{inspect(reason)}")
+            {:error, reason}
+        end
+
+      _ ->
+        :not_ats
     end
   end
 

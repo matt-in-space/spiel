@@ -52,6 +52,9 @@ config :resume, llm_adapter: Resume.LLM.Mock
 # Use mock PDF adapter in tests
 config :resume, pdf_adapter: Resume.PDF.Mock
 
+# Route JobPostings HTTP calls through Req.Test in tests
+config :resume, job_postings_req_opts: [plug: {Req.Test, Resume.JobPostings}]
+
 # Stripe test config
 config :resume,
   stripe_secret_key: "sk_test_fake",
