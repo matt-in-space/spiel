@@ -252,7 +252,7 @@ defmodule ResumeWeb.ResumesLive.Show do
           <div :if={!@generating && @current_data} class="space-y-4">
             <div
               id="audio-recorder"
-              phx-hook=".AudioRecorder"
+              phx-hook="AudioRecorder"
               phx-update="ignore"
               data-recording={to_string(@recording)}
             >
@@ -306,7 +306,15 @@ defmodule ResumeWeb.ResumesLive.Show do
                 phx-change="validate_feedback"
                 class="rounded-lg border border-base-300 focus-within:border-primary transition-colors"
               >
+                <div :if={@recording} class="flex items-center justify-center gap-1 h-10 px-3">
+                  <div
+                    :for={i <- 1..5}
+                    class="w-1 bg-error rounded-full animate-waveform"
+                    style={"animation-delay: #{i * 0.1}s"}
+                  />
+                </div>
                 <textarea
+                  :if={!@recording}
                   id={@feedback_form[:message].id}
                   name={@feedback_form[:message].name}
                   placeholder={@feedback_placeholder}
@@ -336,7 +344,7 @@ defmodule ResumeWeb.ResumesLive.Show do
                   <button
                     type="submit"
                     class="btn btn-primary btn-xs btn-circle"
-                    disabled={@transcribing}
+                    disabled={@recording || @transcribing}
                   >
                     <.icon name="hero-paper-airplane-solid" class="size-3.5" />
                   </button>
@@ -510,59 +518,6 @@ defmodule ResumeWeb.ResumesLive.Show do
         ]}
       />
     </Layouts.app>
-
-    <script :type={Phoenix.LiveView.ColocatedHook} name=".AudioRecorder">
-      export default {
-        mounted() {
-          this.mediaRecorder = null;
-          this.audioChunks = [];
-
-          this.handleEvent("start_recording", () => this.startRecording());
-          this.handleEvent("stop_recording", () => this.stopRecording());
-        },
-
-        async startRecording() {
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            this.audioChunks = [];
-            this.mediaRecorder = new MediaRecorder(stream);
-
-            this.mediaRecorder.ondataavailable = (event) => {
-              if (event.data.size > 0) {
-                this.audioChunks.push(event.data);
-              }
-            };
-
-            this.mediaRecorder.onstop = () => {
-              const blob = new Blob(this.audioChunks, { type: this.mediaRecorder.mimeType });
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                const base64 = reader.result.split(",")[1];
-                this.pushEvent("audio_data", {
-                  data: base64,
-                  size: blob.size,
-                  type: blob.type,
-                });
-              };
-              reader.readAsDataURL(blob);
-
-              stream.getTracks().forEach((track) => track.stop());
-            };
-
-            this.mediaRecorder.start();
-          } catch (error) {
-            console.error("Recording error:", error);
-            this.pushEvent("recording_error", { reason: error.message });
-          }
-        },
-
-        stopRecording() {
-          if (this.mediaRecorder && this.mediaRecorder.state === "recording") {
-            this.mediaRecorder.stop();
-          }
-        },
-      };
-    </script>
 
     <script :type={Phoenix.LiveView.ColocatedHook} name=".ResumeScale">
       export default {

@@ -109,6 +109,15 @@
 
 /* This file is for your main application CSS */
 
+@keyframes waveform {
+  0%, 100% { height: 0.5rem; }
+  50% { height: 1.25rem; }
+}
+
+.animate-waveform {
+  animation: waveform 0.8s ease-in-out infinite;
+}
+
 h1, h2, h3 {
   letter-spacing: -0.025em;
 }

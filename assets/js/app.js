@@ -25,13 +25,14 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/resume"
 import topbar from "../vendor/topbar"
 import AutoGrow from "./hooks/auto_grow"
+import AudioRecorder from "./hooks/audio_recorder"
 import Tutorial from "./hooks/tutorial"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, AutoGrow, Tutorial},
+  hooks: {...colocatedHooks, AutoGrow, AudioRecorder, Tutorial},
 })
 
 // Show progress bar on live navigation and form submits
