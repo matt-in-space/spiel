@@ -10,11 +10,12 @@
     </div>
     <div class="max-w-xl lg:w-2/5 shrink-0">
       <h1 class="text-5xl font-medium tracking-tight leading-tight">
-        Talk about your career. Get a resume.
+        Talk about your career. Get a resume for every job.
       </h1>
       <p class="py-6 text-lg text-base-content/70">
-        Spiel turns a simple conversation about your experience into a polished,
-        job-ready resume. No blank-page anxiety — just tell your story.
+        Tell your story once. Spiel learns your experience, then generates a
+        tailored resume for every job you apply to — so each application puts
+        your best foot forward.
       </p>
       <div class="flex flex-wrap gap-4">
         <.link href={~p"/users/register"} class="btn btn-primary btn-lg">
@@ -57,9 +58,9 @@
         <div class="bg-base-200 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
           <.icon name="hero-document-text" class="size-8 text-primary" />
         </div>
-        <h3 class="text-xl font-semibold">2. Generate a resume</h3>
+        <h3 class="text-xl font-semibold">2. Paste a job description</h3>
         <p class="text-base-content/60">
-          Spiel structures your experience into a clean, professional resume — formatted and ready to go.
+          Drop in a job posting URL or paste the description. Spiel generates a resume tailored to what that employer is looking for.
         </p>
         <img
           src={~p"/images/landing/generation.webp"}
@@ -88,8 +89,47 @@
   </div>
 </section>
 
-<%!-- Features --%>
+<%!-- Why It Matters --%>
 <section class="py-24 px-4 bg-base-200">
+  <div class="max-w-4xl mx-auto text-center">
+    <h2 class="text-3xl font-semibold tracking-tight mb-4">
+      Tailored resumes get more interviews
+    </h2>
+    <p class="text-base-content/60 max-w-2xl mx-auto mb-16">
+      Most applicants send the same resume everywhere. Employers — and their AI screening
+      tools — notice. A resume matched to the job description is far more likely to pass
+      automated filters and land on a human's desk.
+    </p>
+
+    <div class="grid sm:grid-cols-3 gap-8">
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body items-center">
+          <span class="text-5xl font-bold text-primary">2-3x</span>
+          <p class="text-base-content/60">more interview requests with a tailored resume</p>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body items-center">
+          <span class="text-5xl font-bold text-primary">63%</span>
+          <p class="text-base-content/60">of recruiters prefer resumes tailored to the role</p>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body items-center">
+          <span class="text-5xl font-bold text-primary">54%</span>
+          <p class="text-base-content/60">
+            of applicants never tailor — stand out from the crowd
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%!-- Features --%>
+<section class="py-24 px-4 bg-base-100">
   <div class="max-w-5xl mx-auto">
     <h2 class="text-3xl font-semibold tracking-tight text-center mb-4">Everything you need</h2>
     <p class="text-center text-base-content/60 mb-16 max-w-2xl mx-auto">
@@ -97,6 +137,16 @@
     </p>
 
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body">
+          <.icon name="hero-briefcase" class="size-8 text-primary" />
+          <h3 class="card-title mt-2">Tailored to each role</h3>
+          <p class="text-base-content/60">
+            Paste a job posting and get a resume that highlights the experience that matters most for that specific role.
+          </p>
+        </div>
+      </div>
+
       <div class="card bg-base-100 border border-base-300">
         <div class="card-body">
           <.icon name="hero-microphone" class="size-8 text-primary" />
@@ -109,20 +159,10 @@
 
       <div class="card bg-base-100 border border-base-300">
         <div class="card-body">
-          <.icon name="hero-document-duplicate" class="size-8 text-primary" />
-          <h3 class="card-title mt-2">Multiple templates</h3>
+          <.icon name="hero-arrow-path" class="size-8 text-primary" />
+          <h3 class="card-title mt-2">Easy revisions</h3>
           <p class="text-base-content/60">
-            Choose from professional resume designs that highlight your strengths.
-          </p>
-        </div>
-      </div>
-
-      <div class="card bg-base-100 border border-base-300">
-        <div class="card-body">
-          <.icon name="hero-briefcase" class="size-8 text-primary" />
-          <h3 class="card-title mt-2">Job-tailored</h3>
-          <p class="text-base-content/60">
-            Provide a job description and get a resume tuned to what the employer is looking for.
+            New job posting? A new tailored resume in seconds. Your career profile carries over so you never start from scratch.
           </p>
         </div>
       </div>
@@ -139,20 +179,20 @@
 
       <div class="card bg-base-100 border border-base-300">
         <div class="card-body">
-          <.icon name="hero-arrow-down-tray" class="size-8 text-primary" />
-          <h3 class="card-title mt-2">PDF export</h3>
+          <.icon name="hero-document-duplicate" class="size-8 text-primary" />
+          <h3 class="card-title mt-2">Multiple templates</h3>
           <p class="text-base-content/60">
-            Download a polished PDF ready to send to employers or upload to job boards.
+            Choose from professional resume designs that highlight your strengths.
           </p>
         </div>
       </div>
 
       <div class="card bg-base-100 border border-base-300">
         <div class="card-body">
-          <.icon name="hero-arrow-path" class="size-8 text-primary" />
-          <h3 class="card-title mt-2">Easy revisions</h3>
+          <.icon name="hero-arrow-down-tray" class="size-8 text-primary" />
+          <h3 class="card-title mt-2">PDF export</h3>
           <p class="text-base-content/60">
-            New role? New resume in minutes. Your career data carries over so you never start from scratch.
+            Download a polished PDF ready to send to employers or upload to job boards.
           </p>
         </div>
       </div>
@@ -161,11 +201,11 @@
 </section>
 
 <%!-- Final CTA --%>
-<section class="py-24 px-4 bg-base-100">
+<section class="py-24 px-4 bg-base-200">
   <div class="max-w-2xl mx-auto text-center space-y-6">
     <h2 class="text-4xl font-medium tracking-tight">Ready to give your spiel?</h2>
     <p class="text-lg text-base-content/60">
-      Stop staring at a blank page. Just talk about what you've done and let Spiel handle the rest.
+      Your next application deserves more than a generic resume. Tell your story once, then tailor it for every role.
     </p>
     <.link href={~p"/users/register"} class="btn btn-primary btn-lg">
       Get Started Free
