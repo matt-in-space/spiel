@@ -74,7 +74,7 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       |> render_click()
 
       html = render(view)
-      assert html =~ "Add details or rules"
+      assert html =~ "Add Detail"
       refute html =~ "Full Name"
     end
 
@@ -314,46 +314,6 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
     end
   end
 
-  describe "process input" do
-    setup :register_and_log_in_user
-
-    test "processes text input and creates facts and directives", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/profile")
-
-      view
-      |> element(~s(button[phx-value-tab="details_rules"]))
-      |> render_click()
-
-      view
-      |> form(~s(form[phx-submit="process_input"]),
-        input: %{text: "I worked at Google. Always emphasize leadership."}
-      )
-      |> render_submit()
-
-      # Wait for the async task to complete and re-render
-      Process.sleep(100)
-      html = render(view)
-
-      assert html =~ "Mock fact from profile input"
-      assert html =~ "Mock directive from profile input"
-    end
-
-    test "ignores empty input", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/profile")
-
-      view
-      |> element(~s(button[phx-value-tab="details_rules"]))
-      |> render_click()
-
-      view
-      |> form(~s(form[phx-submit="process_input"]), input: %{text: ""})
-      |> render_submit()
-
-      html = render(view)
-      refute html =~ "Processing input"
-    end
-  end
-
   describe "tutorial" do
     setup :register_and_log_in_user
 
@@ -376,7 +336,7 @@ defmodule ResumeWeb.ProfileSettingsLiveTest do
       {:ok, _} = Resume.Accounts.update_user_facts(user, ["Fact 1"])
       {:ok, _view, html} = live(conn, ~p"/profile")
       # Should see details & rules content, not profile form
-      assert html =~ "Add details or rules"
+      assert html =~ "Add Detail"
     end
 
     test "does not show tutorial for dismissed user", %{conn: conn, user: user} do

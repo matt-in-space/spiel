@@ -20,7 +20,7 @@ defmodule Resume.Billing do
   @caller_map %{
     generation: ["generator"],
     adjustment: ["feedback"],
-    fact_update: ["facts", "facts_input"]
+    fact_update: ["facts", "facts_input", "interview"]
   }
 
   @doc """

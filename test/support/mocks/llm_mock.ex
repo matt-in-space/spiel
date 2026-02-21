@@ -18,6 +18,11 @@ defmodule Resume.LLM.Mock do
       String.contains?(system, "resume generation") ->
         {:ok, resume_json(), mock_usage()}
 
+      String.contains?(system, "career coach") ->
+        {:ok,
+         ~s({"question": "What's been happening in your career lately? Any new roles, projects, or skills?"}),
+         mock_usage()}
+
       String.contains?(system, "interviewer") and String.contains?(system, "gathering facts") ->
         {:ok,
          ~s({"question": "Tell me a bit about yourself — what do you do now, or what kind of work are you looking for?"}),

@@ -35,6 +35,32 @@ defmodule Resume.Interview do
   end
 
   @doc """
+  Generates the opening question for a career coach catch-up session.
+
+  Returns `{:ok, question_string}` or `{:error, reason}`.
+  """
+  def coach_opening_question(existing_facts, profile, opts \\ []) do
+    prompt = """
+    #{profile_context(profile)}
+    #{existing_facts_context(existing_facts)}
+
+    Generate your opening question for a career catch-up session.
+    The candidate has existing facts on file.
+    Ask what's changed recently — new roles, promotions, projects, skills.
+    If they have very few facts, ask what they'd like to add or flesh out.
+
+    Return ONLY a JSON object: {"question": "your question here"}
+    """
+
+    tracking = %{user_id: Keyword.get(opts, :user_id), caller: "interview"}
+
+    case Resume.LLM.tracked_complete(prompt, [system: coach_system_prompt()], tracking) do
+      {:ok, response, _usage} -> parse_question(response)
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
   Processes a user's response: extracts new facts and generates the next question.
 
   Returns `{:ok, %{facts: [...], question: "...", should_wrap_up: bool}}` or `{:error, reason}`.
@@ -141,6 +167,10 @@ defmodule Resume.Interview do
 
   defp career_goal_system_prompt do
     "You are a career advisor helping refine a candidate's career goal statement. Return only valid JSON."
+  end
+
+  defp coach_system_prompt do
+    "You are a friendly career coach checking in with someone whose profile you already know. Ask about recent changes and updates. Be warm and conversational. Return only valid JSON."
   end
 
   defp opening_system_prompt do

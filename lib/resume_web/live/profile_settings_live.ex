@@ -32,14 +32,9 @@ defmodule ResumeWeb.ProfileSettingsLive do
        directives: user.directives || [],
        active_tab: if(show_tutorial, do: :details_rules, else: :profile),
        show_tutorial: show_tutorial,
-       input_form: to_form(%{"text" => ""}, as: "input"),
        editing_item: nil,
        item_form: to_form(%{"text" => ""}, as: "item"),
        filter: "",
-       processing: false,
-       upgrade_prompt: nil,
-       recording: false,
-       transcribing: false,
        task_refs: %{},
        page_title: "Profile"
      )}
@@ -197,99 +192,57 @@ defmodule ResumeWeb.ProfileSettingsLive do
 
         <%!-- Details & Rules Tab --%>
         <div :if={@active_tab == :details_rules} class="space-y-6">
-          <div :if={@upgrade_prompt} class="alert alert-warning mb-4">
-            <.icon name="hero-lock-closed-micro" class="size-5" />
-            <span>{@upgrade_prompt}</span>
-            <.link navigate={~p"/billing"} class="btn btn-sm btn-primary">
-              Get Unlimited Access
-            </.link>
-          </div>
-          <%!-- Agentic Input --%>
-          <div class="space-y-3">
-            <.form
-              for={@input_form}
-              phx-change="validate_input"
-              phx-submit="process_input"
-              class="rounded-lg border border-base-300 focus-within:border-primary transition-colors"
-            >
-              <textarea
-                id={@input_form[:text].id}
-                name={@input_form[:text].name}
-                placeholder="Add details or rules — just type naturally, e.g. 'I worked at Google for 3 years as a senior engineer' or 'always emphasize leadership skills'"
-                autocomplete="off"
-                rows="2"
-                phx-hook="AutoGrow"
-                class="w-full resize-none overflow-hidden border-none bg-transparent px-3 pt-3 pb-1 text-sm focus:outline-none focus:ring-0"
-              >{Phoenix.HTML.Form.normalize_value("textarea", @input_form[:text].value)}</textarea>
-              <div class="flex items-center justify-end gap-1 px-2 pb-2">
-                <%= if @recording do %>
-                  <button
-                    type="button"
-                    phx-click="stop_recording"
-                    class="btn btn-error btn-xs btn-circle"
-                  >
-                    <.icon name="hero-stop-solid" class="size-3.5" />
-                  </button>
-                <% else %>
-                  <button
-                    type="button"
-                    phx-click="start_recording"
-                    class="btn btn-ghost btn-xs btn-circle"
-                  >
-                    <.icon name="hero-microphone-solid" class="size-3.5" />
-                  </button>
-                <% end %>
-                <button
-                  type="submit"
-                  class="btn btn-primary btn-xs btn-circle"
-                  disabled={@processing || @transcribing}
-                >
-                  <.icon name="hero-sparkles-micro" class="size-3.5" />
-                </button>
-              </div>
-            </.form>
+          <p class="text-sm opacity-70">
+            <strong>Details</strong>
+            are facts about your career — jobs, skills, education, projects — that
+            we use to generate your resumes. <strong>Rules</strong>
+            are instructions that shape how resumes are written, like "emphasize
+            leadership" or "keep it to one page."
+          </p>
 
-            <div
-              id="audio-recorder"
-              phx-hook=".AudioRecorder"
-              phx-update="ignore"
-              data-recording={to_string(@recording)}
-            >
+          <div id="coach-banner" class="alert bg-primary/10 border-primary/20">
+            <.icon name="hero-chat-bubble-left-right" class="size-5 text-primary" />
+            <div>
+              <p class="font-medium text-sm">
+                Want to update your profile through a guided conversation?
+              </p>
+              <p class="text-xs opacity-70">
+                The Career Coach will ask what's changed and update your details.
+              </p>
             </div>
-
-            <div :if={@transcribing} class="flex items-center gap-2 text-sm">
-              <span class="loading loading-spinner loading-xs"></span> Transcribing audio...
-            </div>
-
-            <div :if={@processing} class="flex items-center gap-2 text-sm">
-              <span class="loading loading-spinner loading-xs"></span> Processing input...
-            </div>
+            <.link navigate={~p"/coach"} class="btn btn-sm btn-primary">Start Session</.link>
           </div>
 
-          <%!-- Filter --%>
-          <form
-            :if={length(@facts) + length(@directives) > 0}
-            phx-change="filter_items"
-            phx-submit="filter_items"
-            class="flex items-center gap-2"
-          >
-            <input
-              type="text"
-              placeholder="Filter items..."
-              value={@filter}
-              phx-debounce="200"
-              name="filter"
-              class="input input-bordered input-sm w-full max-w-xs"
-            />
-            <button
-              :if={@filter != ""}
-              type="button"
-              phx-click="clear_filter"
-              class="btn btn-ghost btn-xs"
+          <%!-- Toolbar --%>
+          <div class="flex items-center justify-between gap-2">
+            <form
+              :if={length(@facts) + length(@directives) > 0}
+              phx-change="filter_items"
+              phx-submit="filter_items"
+              class="flex items-center gap-2"
             >
-              <.icon name="hero-x-mark-micro" class="size-4" /> Clear
+              <input
+                type="text"
+                placeholder="Filter items..."
+                value={@filter}
+                phx-debounce="200"
+                name="filter"
+                class="input input-bordered input-sm w-full max-w-xs"
+              />
+              <button
+                :if={@filter != ""}
+                type="button"
+                phx-click="clear_filter"
+                class="btn btn-ghost btn-xs"
+              >
+                <.icon name="hero-x-mark-micro" class="size-4" /> Clear
+              </button>
+            </form>
+            <div :if={length(@facts) + length(@directives) == 0} />
+            <button phx-click="add_detail" class="btn btn-ghost btn-sm ml-auto">
+              <.icon name="hero-plus-micro" class="size-4" /> Add Detail
             </button>
-          </form>
+          </div>
 
           <%!-- Card Grid --%>
           <div
@@ -359,8 +312,8 @@ defmodule ResumeWeb.ProfileSettingsLive do
             :if={@facts == [] && @directives == []}
             class="text-sm opacity-50 text-center py-8"
           >
-            No details or rules yet. Use the input above to add some — just describe your
-            experience or instructions naturally.
+            No details or rules yet. Add a detail manually, or start a Career Coach session
+            to build your profile through conversation.
           </div>
 
           <div
@@ -380,73 +333,19 @@ defmodule ResumeWeb.ProfileSettingsLive do
         show={@show_tutorial}
         steps={[
           %{
-            target: "#input_text",
-            message:
-              "Tell the Resume Coach about your experience, skills, or rules — just type naturally.",
+            target: "#coach-banner",
+            message: "Start a Career Coach session to add details through a guided conversation.",
             position: "bottom"
           },
           %{
             target: "#facts-grid",
             message:
-              "These are the details and rules we know about you. You can delete anything that's wrong.",
+              "These are the details and rules we know about you. You can edit or delete anything.",
             position: "top"
           }
         ]}
       />
     </Layouts.app>
-
-    <script :type={Phoenix.LiveView.ColocatedHook} name=".AudioRecorder">
-      export default {
-        mounted() {
-          this.mediaRecorder = null;
-          this.audioChunks = [];
-
-          this.handleEvent("start_recording", () => this.startRecording());
-          this.handleEvent("stop_recording", () => this.stopRecording());
-        },
-
-        async startRecording() {
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            this.audioChunks = [];
-            this.mediaRecorder = new MediaRecorder(stream);
-
-            this.mediaRecorder.ondataavailable = (event) => {
-              if (event.data.size > 0) {
-                this.audioChunks.push(event.data);
-              }
-            };
-
-            this.mediaRecorder.onstop = () => {
-              const blob = new Blob(this.audioChunks, { type: this.mediaRecorder.mimeType });
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                const base64 = reader.result.split(",")[1];
-                this.pushEvent("audio_data", {
-                  data: base64,
-                  size: blob.size,
-                  type: blob.type,
-                });
-              };
-              reader.readAsDataURL(blob);
-
-              stream.getTracks().forEach((track) => track.stop());
-            };
-
-            this.mediaRecorder.start();
-          } catch (error) {
-            console.error("Recording error:", error);
-            this.pushEvent("recording_error", { reason: error.message });
-          }
-        },
-
-        stopRecording() {
-          if (this.mediaRecorder && this.mediaRecorder.state === "recording") {
-            this.mediaRecorder.stop();
-          }
-        },
-      };
-    </script>
     """
   end
 
@@ -516,14 +415,19 @@ defmodule ResumeWeb.ProfileSettingsLive do
     {type, index} = socket.assigns.editing_item
     text = String.trim(text)
 
-    if text == "" do
-      {:noreply, assign(socket, editing_item: nil)}
-    else
-      {list_key, update_fn} =
-        if type == :fact,
-          do: {:facts, &Accounts.update_user_facts/2},
-          else: {:directives, &Accounts.update_user_directives/2}
+    {list_key, update_fn} =
+      if type == :fact,
+        do: {:facts, &Accounts.update_user_facts/2},
+        else: {:directives, &Accounts.update_user_directives/2}
 
+    if text == "" do
+      # Remove empty items (e.g. cancelled new detail)
+      updated_list = List.delete_at(socket.assigns[list_key], index)
+      {:ok, user} = update_fn.(socket.assigns.user, updated_list)
+
+      {:noreply,
+       assign(socket, [{list_key, Map.get(user, list_key)}, user: user, editing_item: nil])}
+    else
       updated_list = List.replace_at(socket.assigns[list_key], index, text)
       {:ok, user} = update_fn.(socket.assigns.user, updated_list)
 
@@ -534,7 +438,24 @@ defmodule ResumeWeb.ProfileSettingsLive do
 
   @impl true
   def handle_event("cancel_edit_item", _params, socket) do
-    {:noreply, assign(socket, editing_item: nil)}
+    # Remove empty placeholder facts (from "Add Detail" that was cancelled)
+    facts = Enum.reject(socket.assigns.facts, &(&1 == ""))
+    {:noreply, assign(socket, editing_item: nil, facts: facts)}
+  end
+
+  # Add detail
+
+  @impl true
+  def handle_event("add_detail", _params, socket) do
+    facts = socket.assigns.facts ++ [""]
+    new_index = length(facts) - 1
+
+    {:noreply,
+     assign(socket,
+       facts: facts,
+       editing_item: {:fact, new_index},
+       item_form: to_form(%{"text" => ""}, as: "item")
+     )}
   end
 
   # Delete unified
@@ -553,92 +474,6 @@ defmodule ResumeWeb.ProfileSettingsLive do
     directives = List.delete_at(socket.assigns.directives, index)
     {:ok, user} = Accounts.update_user_directives(socket.assigns.user, directives)
     {:noreply, assign(socket, directives: user.directives, user: user)}
-  end
-
-  # Agentic input
-
-  @impl true
-  def handle_event("validate_input", %{"input" => params}, socket) do
-    {:noreply, assign(socket, input_form: to_form(params, as: "input"))}
-  end
-
-  @impl true
-  def handle_event("process_input", %{"input" => %{"text" => text}}, socket) do
-    text = String.trim(text)
-
-    if text == "" do
-      {:noreply, socket}
-    else
-      case Resume.Billing.check_allowance(socket.assigns.user, :fact_update) do
-        :ok ->
-          task =
-            Task.async(fn ->
-              Resume.Facts.process_input(
-                text,
-                socket.assigns.facts,
-                socket.assigns.directives,
-                user_id: socket.assigns.user.id
-              )
-            end)
-
-          {:noreply,
-           socket
-           |> assign(processing: true)
-           |> update(:task_refs, &Map.put(&1, task.ref, :process_input))}
-
-        {:error, :limit_reached, message} ->
-          {:noreply, assign(socket, upgrade_prompt: message)}
-      end
-    end
-  end
-
-  # Audio recording
-
-  @impl true
-  def handle_event("start_recording", _params, socket) do
-    socket =
-      socket
-      |> assign(:recording, true)
-      |> push_event("start_recording", %{})
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("stop_recording", _params, socket) do
-    socket =
-      socket
-      |> assign(:recording, false)
-      |> push_event("stop_recording", %{})
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("audio_data", %{"data" => data, "type" => type}, socket) do
-    audio_binary = Base.decode64!(data)
-    user_id = socket.assigns.user.id
-
-    task =
-      Task.async(fn ->
-        Resume.Transcription.tracked_transcribe(audio_binary, [content_type: type], %{
-          user_id: user_id,
-          caller: "transcription"
-        })
-      end)
-
-    {:noreply,
-     socket
-     |> assign(transcribing: true)
-     |> update(:task_refs, &Map.put(&1, task.ref, :transcribe_input))}
-  end
-
-  @impl true
-  def handle_event("recording_error", %{"reason" => reason}, socket) do
-    {:noreply,
-     socket
-     |> assign(recording: false)
-     |> put_flash(:error, "Recording failed: #{reason}")}
   end
 
   # Career goal
@@ -751,57 +586,6 @@ defmodule ResumeWeb.ProfileSettingsLive do
     socket = assign(socket, task_refs: task_refs)
 
     case {tag, result} do
-      {:process_input, {:ok, %{fact_operations: fact_ops, directive_operations: dir_ops}}} ->
-        user = socket.assigns.user
-        facts = socket.assigns.facts
-        directives = socket.assigns.directives
-
-        {updated_facts, fact_descs} = Resume.Facts.apply_changes(facts, fact_ops)
-        {updated_directives, dir_descs} = Resume.Facts.apply_changes(directives, dir_ops)
-
-        all_descs = fact_descs ++ dir_descs
-
-        socket =
-          socket
-          |> assign(processing: false, input_form: to_form(%{"text" => ""}, as: "input"))
-
-        socket =
-          if all_descs == [] do
-            put_flash(socket, :info, "No changes detected from your input.")
-          else
-            {:ok, user} = Accounts.update_user_facts(user, updated_facts)
-            {:ok, user} = Accounts.update_user_directives(user, updated_directives)
-
-            socket
-            |> assign(facts: user.facts, directives: user.directives, user: user)
-            |> put_flash(:info, Enum.join(all_descs, "; "))
-          end
-
-        {:noreply, socket}
-
-      {:process_input, {:error, _reason}} ->
-        {:noreply,
-         socket
-         |> assign(processing: false)
-         |> put_flash(:error, "Failed to process input. Please try again.")}
-
-      {:transcribe_input, {:ok, transcript}} ->
-        current = socket.assigns.input_form.params["text"] || ""
-        new_text = if current == "", do: transcript, else: current <> "\n" <> transcript
-
-        {:noreply,
-         socket
-         |> assign(
-           transcribing: false,
-           input_form: to_form(%{"text" => new_text}, as: "input")
-         )}
-
-      {:transcribe_input, {:error, _reason}} ->
-        {:noreply,
-         socket
-         |> assign(transcribing: false)
-         |> put_flash(:error, "Transcription failed. Please try again.")}
-
       {:career_goal, {:ok, new_goal}} ->
         user = socket.assigns.user
 
