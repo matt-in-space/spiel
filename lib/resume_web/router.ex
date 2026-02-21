@@ -68,7 +68,6 @@ defmodule ResumeWeb.Router do
     live "/onboarding", OnboardingLive
     live "/profile", ProfileSettingsLive
     live "/coach", CoachLive
-    live "/resumes/new", ResumesLive.New
     live "/resumes/:id", ResumesLive.Show
     live "/billing", BillingLive
 

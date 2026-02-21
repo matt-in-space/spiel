@@ -194,8 +194,58 @@ defmodule Resume.Resumes do
     end
   end
 
-  defp fallback_title do
+  def fallback_title do
     "Resume - #{Calendar.strftime(DateTime.utc_now(), "%b %d, %Y")}"
+  end
+
+  @doc """
+  Generates version 1 for an existing resume that has no versions yet.
+
+  Builds generation opts from the resume's stored job posting fields,
+  calls the LLM, creates version 1, and updates the resume title if the
+  user left it as the fallback pattern.
+
+  Billing must be checked before calling this function.
+  """
+  def generate_initial_version(%Resume{} = resume, user) do
+    opts =
+      []
+      |> then(fn o ->
+        if resume.job_posting_text,
+          do: Keyword.put(o, :job_posting_text, resume.job_posting_text),
+          else: o
+      end)
+      |> then(fn o ->
+        if resume.job_posting_url,
+          do: Keyword.put(o, :job_posting_url, resume.job_posting_url),
+          else: o
+      end)
+
+    case Generator.generate(user, opts) do
+      {:ok, data, %{explanation: explanation, title: generated_title}} ->
+        case create_version(resume, "generation", data, explanation) do
+          {:ok, _version} ->
+            resume = maybe_update_fallback_title(resume, generated_title)
+            {:ok, resume}
+
+          {:error, changeset} ->
+            {:error, changeset}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp maybe_update_fallback_title(resume, generated_title) do
+    if generated_title && Regex.match?(~r/^Resume - \w{3} \d{2}, \d{4}$/, resume.title) do
+      case update_resume(resume, %{title: generated_title}) do
+        {:ok, updated} -> updated
+        {:error, _} -> resume
+      end
+    else
+      resume
+    end
   end
 
   @doc """

@@ -29,6 +29,15 @@ defmodule ResumeWeb.ResumesLive.Show do
     "macchiato" => ResumeWeb.ResumeTemplates.Macchiato
   }
 
+  @generating_messages [
+    "Reviewing your career history...",
+    "Rephrasing your accomplishments...",
+    "Highlighting your specific skills...",
+    "Crafting your professional summary...",
+    "Tailoring details to the job description...",
+    "Polishing the final details..."
+  ]
+
   @feedback_placeholders [
     "Can you emphasize my leadership experience more in the summary?",
     "Make the summary focus more on my technical skills",
@@ -71,37 +80,57 @@ defmodule ResumeWeb.ResumesLive.Show do
     resume = Resumes.get_user_resume!(user.id, id)
     versions = Resumes.list_versions(resume.id)
     current_version = List.first(versions)
+    generating = versions == []
     template_mod = Map.get(@templates, resume.template, Default)
     current_data = version_data(current_version)
 
-    {:ok,
-     assign(socket,
-       user: user,
-       resume: resume,
-       versions: versions,
-       current_version: current_version,
-       template_mod: template_mod,
-       template_css: template_mod.css(),
-       template_options: @template_options,
-       template_previews: build_template_previews(current_data),
-       feedback_form: to_form(%{"message" => ""}, as: "feedback"),
-       preview_data: nil,
-       preview_explanation: nil,
-       pending_directive: nil,
-       pending_fact_changes: [],
-       processing_feedback: false,
-       recording: false,
-       transcribing: false,
-       editing_title: false,
-       title_form: to_form(%{"title" => resume.title}, as: "title"),
-       editing_section: nil,
-       section_form: nil,
-       sidebar_open: false,
-       show_tutorial: Accounts.show_tutorial?(user, "show-tutorial"),
-       upgrade_prompt: nil,
-       feedback_placeholder: Enum.random(@feedback_placeholders),
-       task_refs: %{}
-     )}
+    socket =
+      assign(socket,
+        user: user,
+        resume: resume,
+        versions: versions,
+        current_version: current_version,
+        template_mod: template_mod,
+        template_css: template_mod.css(),
+        template_options: @template_options,
+        template_previews: build_template_previews(current_data),
+        feedback_form: to_form(%{"message" => ""}, as: "feedback"),
+        preview_data: nil,
+        preview_explanation: nil,
+        pending_directive: nil,
+        pending_fact_changes: [],
+        processing_feedback: false,
+        recording: false,
+        transcribing: false,
+        editing_title: false,
+        title_form: to_form(%{"title" => resume.title}, as: "title"),
+        editing_section: nil,
+        section_form: nil,
+        sidebar_open: false,
+        show_tutorial: Accounts.show_tutorial?(user, "show-tutorial"),
+        upgrade_prompt: nil,
+        feedback_placeholder: Enum.random(@feedback_placeholders),
+        generating: generating,
+        generating_messages: @generating_messages,
+        generating_message_index: 0,
+        task_refs: %{}
+      )
+
+    socket =
+      if generating and connected?(socket) do
+        task =
+          Task.async(fn ->
+            Retry.with_retry(fn -> Resumes.generate_initial_version(resume, user) end)
+          end)
+
+        Process.send_after(self(), :rotate_generating_message, 3_000)
+
+        update(socket, :task_refs, &Map.put(&1, task.ref, :generate))
+      else
+        socket
+      end
+
+    {:ok, socket}
   end
 
   defp get_user(socket, session) do
@@ -143,6 +172,7 @@ defmodule ResumeWeb.ResumesLive.Show do
             </.link>
           </div>
           <label
+            :if={!@generating}
             for="sidebar-toggle"
             class="fixed right-0 top-1/2 -translate-y-1/2 z-10 bg-base-200 hover:bg-base-300 transition-colors rounded-l-lg px-2.5 py-5 cursor-pointer shadow-md"
           >
@@ -212,7 +242,14 @@ defmodule ResumeWeb.ResumesLive.Show do
             </div>
           </div>
 
-          <div :if={@current_data} class="space-y-4">
+          <div :if={@generating} class="flex flex-col items-center justify-center py-32 gap-6">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+            <p class="text-lg text-base-content/60 animate-pulse">
+              {Enum.at(@generating_messages, @generating_message_index)}
+            </p>
+          </div>
+
+          <div :if={!@generating && @current_data} class="space-y-4">
             <div
               id="audio-recorder"
               phx-hook=".AudioRecorder"
@@ -309,7 +346,7 @@ defmodule ResumeWeb.ResumesLive.Show do
           </div>
 
           <div
-            :if={@current_data}
+            :if={!@generating && @current_data}
             id="resume-scale-wrapper"
             phx-hook=".ResumeScale"
             class="overflow-hidden"
@@ -869,12 +906,52 @@ defmodule ResumeWeb.ResumesLive.Show do
   end
 
   @impl true
+  def handle_info(:rotate_generating_message, socket) do
+    if socket.assigns.generating do
+      next_index =
+        rem(socket.assigns.generating_message_index + 1, length(@generating_messages))
+
+      Process.send_after(self(), :rotate_generating_message, 3_000)
+      {:noreply, assign(socket, generating_message_index: next_index)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
   def handle_info({ref, result}, socket) do
     Process.demonitor(ref, [:flush])
     {tag, task_refs} = Map.pop(socket.assigns.task_refs, ref)
     socket = assign(socket, task_refs: task_refs)
 
     case {tag, result} do
+      {:generate, {:ok, resume}} ->
+        resume = Resumes.get_user_resume!(socket.assigns.user.id, resume.id)
+        versions = Resumes.list_versions(resume.id)
+        current_version = List.first(versions)
+        current_data = version_data(current_version)
+        template_mod = Map.get(@templates, resume.template, Default)
+
+        {:noreply,
+         socket
+         |> assign(
+           generating: false,
+           resume: resume,
+           versions: versions,
+           current_version: current_version,
+           template_mod: template_mod,
+           template_css: template_mod.css(),
+           template_previews: build_template_previews(current_data),
+           title_form: to_form(%{"title" => resume.title}, as: "title")
+         )
+         |> put_flash(:info, "Your resume is ready!")}
+
+      {:generate, {:error, _reason}} ->
+        {:noreply,
+         socket
+         |> assign(generating: false)
+         |> put_flash(:error, "Failed to generate resume. Please try again.")}
+
       {:feedback, {:ok, result}} ->
         {:noreply, handle_feedback_result(socket, result)}
 

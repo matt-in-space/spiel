@@ -1,7 +1,7 @@
 defmodule ResumeWeb.HomeLive do
   use ResumeWeb, :live_view
 
-  alias Resume.{Accounts, JobPostings, Resumes, Retry}
+  alias Resume.{Accounts, Billing, JobPostings, Resumes}
 
   @impl true
   def mount(_params, session, socket) do
@@ -22,6 +22,7 @@ defmodule ResumeWeb.HomeLive do
        form: to_form(%{"job_target" => ""}, as: "generate"),
        generating: false,
        upgrade_prompt: nil,
+       pending_url: nil,
        task_refs: %{}
      )
      |> stream(:resumes, resumes)}
@@ -75,7 +76,7 @@ defmodule ResumeWeb.HomeLive do
 
         <div :if={!@show_onboarding_cta && @generating} class="flex flex-col items-center gap-3 py-12">
           <span class="loading loading-spinner loading-lg"></span>
-          <p class="text-sm opacity-70">Generating your resume...</p>
+          <p class="text-sm opacity-70">Fetching job posting...</p>
         </div>
 
         <.form
@@ -187,25 +188,25 @@ defmodule ResumeWeb.HomeLive do
     else
       user = Accounts.get_user!(socket.assigns.user.id)
 
-      task =
-        Task.async(fn ->
-          {job_posting_text, job_posting_url, url_failed?} = resolve_input(input)
+      case Billing.check_allowance(user, :generation) do
+        :ok ->
+          if String.starts_with?(input, "http") do
+            # URL provided — fetch async, then create record + redirect
+            url = input |> String.split("\n") |> List.first() |> String.trim()
+            task = Task.async(fn -> JobPostings.fetch_text(url) end)
 
-          opts =
-            []
-            |> maybe_add_opt(:job_posting_text, job_posting_text)
-            |> maybe_add_opt(:job_posting_url, job_posting_url)
-
-          case Retry.with_retry(fn -> Resumes.generate_resume(user, opts) end) do
-            {:ok, resume} -> {:ok, resume, url_failed?}
-            error -> error
+            {:noreply,
+             socket
+             |> assign(generating: true, pending_url: url)
+             |> update(:task_refs, &Map.put(&1, task.ref, :fetch_url))}
+          else
+            # Plain text — create record and redirect immediately
+            create_and_redirect(socket, input, nil)
           end
-        end)
 
-      {:noreply,
-       socket
-       |> assign(generating: true)
-       |> update(:task_refs, &Map.put(&1, task.ref, :generate))}
+        {:error, :limit_reached, message} ->
+          {:noreply, assign(socket, generating: false, upgrade_prompt: message)}
+      end
     end
   end
 
@@ -223,28 +224,20 @@ defmodule ResumeWeb.HomeLive do
     socket = assign(socket, task_refs: task_refs)
 
     case {tag, result} do
-      {:generate, {:ok, resume, true}} ->
-        {:noreply,
-         socket
-         |> put_flash(
-           :error,
-           "Couldn't fetch that URL. Try pasting the job description text instead."
-         )
-         |> push_navigate(to: ~p"/resumes/#{resume}")}
+      {:fetch_url, {:ok, text}} ->
+        url = socket.assigns.pending_url
+        create_and_redirect(socket, text, url)
 
-      {:generate, {:ok, resume, _}} ->
-        {:noreply, push_navigate(socket, to: ~p"/resumes/#{resume}")}
+      {:fetch_url, {:error, _reason}} ->
+        # URL fetch failed — create record without text, redirect with warning
+        url = socket.assigns.pending_url
 
-      {:generate, {:error, :limit_reached, message}} ->
-        {:noreply,
-         socket
-         |> assign(generating: false, upgrade_prompt: message)}
-
-      {:generate, {:error, _reason}} ->
-        {:noreply,
-         socket
-         |> assign(generating: false)
-         |> put_flash(:error, "Failed to generate resume. Please try again.")}
+        create_and_redirect(
+          socket,
+          nil,
+          url,
+          "Couldn't fetch that URL. The resume was generated without it."
+        )
 
       _ ->
         {:noreply, socket}
@@ -256,19 +249,24 @@ defmodule ResumeWeb.HomeLive do
     {:noreply, socket}
   end
 
-  defp resolve_input(input) do
-    if String.starts_with?(input, "http") do
-      url = input |> String.split("\n") |> List.first() |> String.trim()
+  defp create_and_redirect(socket, job_posting_text, job_posting_url, flash_error \\ nil) do
+    title = Resumes.fallback_title()
 
-      case JobPostings.fetch_text(url) do
-        {:ok, text} -> {text, url, false}
-        {:error, _} -> {nil, url, true}
-      end
-    else
-      {input, nil, false}
+    case Resumes.create_resume(%{
+           title: title,
+           user_id: socket.assigns.user.id,
+           job_posting_text: job_posting_text,
+           job_posting_url: job_posting_url
+         }) do
+      {:ok, resume} ->
+        socket = if flash_error, do: put_flash(socket, :error, flash_error), else: socket
+        {:noreply, push_navigate(socket, to: ~p"/resumes/#{resume}")}
+
+      {:error, _changeset} ->
+        {:noreply,
+         socket
+         |> assign(generating: false)
+         |> put_flash(:error, "Failed to create resume. Please try again.")}
     end
   end
-
-  defp maybe_add_opt(opts, _key, nil), do: opts
-  defp maybe_add_opt(opts, key, value), do: Keyword.put(opts, key, value)
 end
