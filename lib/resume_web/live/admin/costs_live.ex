@@ -41,16 +41,25 @@ defmodule ResumeWeb.Admin.CostsLive do
     caller_breakdown = Costs.caller_breakdown(since)
     recent_calls = Costs.global_recent_calls(50)
 
-    avg_cost =
+    avg_cost_per_call =
       if call_count > 0,
         do: total_cents / call_count,
+        else: 0.0
+
+    user_count = length(user_breakdown)
+
+    avg_cost_per_user =
+      if user_count > 0,
+        do: total_cents / user_count,
         else: 0.0
 
     socket
     |> assign(
       total_cents: total_cents,
       call_count: call_count,
-      avg_cost: avg_cost,
+      avg_cost_per_call: avg_cost_per_call,
+      user_count: user_count,
+      avg_cost_per_user: avg_cost_per_user,
       user_breakdown: user_breakdown,
       caller_breakdown: caller_breakdown
     )
@@ -111,8 +120,16 @@ defmodule ResumeWeb.Admin.CostsLive do
           <div class="stat-value text-lg">{@call_count}</div>
         </div>
         <div class="stat">
-          <div class="stat-title">Avg Cost / Call</div>
-          <div class="stat-value text-lg">{format_dollars(@avg_cost)}</div>
+          <div class="stat-title">Avg / Call</div>
+          <div class="stat-value text-lg">{format_dollars(@avg_cost_per_call)}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">Users</div>
+          <div class="stat-value text-lg">{@user_count}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">Avg / User</div>
+          <div class="stat-value text-lg">{format_dollars(@avg_cost_per_user)}</div>
         </div>
       </div>
 
