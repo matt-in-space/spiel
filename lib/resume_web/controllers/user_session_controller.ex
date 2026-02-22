@@ -4,6 +4,10 @@ defmodule ResumeWeb.UserSessionController do
   alias Resume.Accounts
   alias ResumeWeb.UserAuth
 
+  plug ResumeWeb.Plugs.RateLimiter,
+       [key: "login", scale: :timer.minutes(15), limit: 5]
+       when action in [:create, :confirm]
+
   def new(conn, _params) do
     email = get_in(conn.assigns, [:current_scope, Access.key(:user), Access.key(:email)])
     form = Phoenix.Component.to_form(%{"email" => email}, as: "user")

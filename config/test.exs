@@ -60,3 +60,6 @@ config :resume,
   stripe_secret_key: "sk_test_fake",
   stripe_price_id: "price_test_fake",
   stripe_webhook_secret: "whsec_test_secret"
+
+# Disable rate limiting in tests (all requests share 127.0.0.1)
+config :resume, :rate_limiting_enabled, false

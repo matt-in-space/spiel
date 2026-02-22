@@ -14,6 +14,7 @@ defmodule Resume.Application do
       {Phoenix.PubSub, name: Resume.PubSub},
       # Start a worker by calling: Resume.Worker.start_link(arg)
       # {Resume.Worker, arg},
+      {Resume.RateLimiter, []},
       # Start to serve requests, typically the last entry
       ResumeWeb.Endpoint
     ]
