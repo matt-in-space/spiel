@@ -49,19 +49,31 @@ defmodule Resume.Billing.Stripe do
     timestamp = parts["t"]
     v1_signature = parts["v1"]
 
-    if is_nil(timestamp) or is_nil(v1_signature) do
-      :error
+    with {timestamp, v1_signature} when not is_nil(timestamp) and not is_nil(v1_signature) <-
+           {timestamp, v1_signature},
+         true <- valid_hmac?(timestamp, payload, secret, v1_signature),
+         true <- fresh_timestamp?(timestamp) do
+      :ok
     else
-      signed_payload = "#{timestamp}.#{payload}"
+      _ -> :error
+    end
+  end
 
-      expected =
-        :crypto.mac(:hmac, :sha256, secret, signed_payload) |> Base.encode16(case: :lower)
+  @max_age_seconds 300
 
-      if Plug.Crypto.secure_compare(expected, v1_signature) do
-        :ok
-      else
-        :error
-      end
+  defp valid_hmac?(timestamp, payload, secret, v1_signature) do
+    signed_payload = "#{timestamp}.#{payload}"
+
+    expected =
+      :crypto.mac(:hmac, :sha256, secret, signed_payload) |> Base.encode16(case: :lower)
+
+    Plug.Crypto.secure_compare(expected, v1_signature)
+  end
+
+  defp fresh_timestamp?(timestamp) do
+    case Integer.parse(timestamp) do
+      {ts, ""} -> abs(System.system_time(:second) - ts) <= @max_age_seconds
+      _ -> false
     end
   end
 

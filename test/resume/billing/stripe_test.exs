@@ -4,10 +4,10 @@ defmodule Resume.Billing.StripeTest do
   alias Resume.Billing.Stripe
 
   describe "verify_webhook_signature/3" do
-    test "returns :ok for valid signature" do
+    test "returns :ok for valid signature with fresh timestamp" do
       secret = "whsec_test_secret"
       payload = ~s({"type":"checkout.session.completed"})
-      timestamp = "1234567890"
+      timestamp = to_string(System.system_time(:second))
 
       signed = "#{timestamp}.#{payload}"
       expected = :crypto.mac(:hmac, :sha256, secret, signed) |> Base.encode16(case: :lower)
@@ -19,7 +19,20 @@ defmodule Resume.Billing.StripeTest do
     test "returns :error for invalid signature" do
       secret = "whsec_test_secret"
       payload = ~s({"type":"checkout.session.completed"})
-      signature = "t=1234567890,v1=invalidsignature"
+      timestamp = to_string(System.system_time(:second))
+      signature = "t=#{timestamp},v1=invalidsignature"
+
+      assert :error = Stripe.verify_webhook_signature(payload, signature, secret)
+    end
+
+    test "returns :error for stale timestamp" do
+      secret = "whsec_test_secret"
+      payload = ~s({"type":"checkout.session.completed"})
+      stale_timestamp = to_string(System.system_time(:second) - 600)
+
+      signed = "#{stale_timestamp}.#{payload}"
+      expected = :crypto.mac(:hmac, :sha256, secret, signed) |> Base.encode16(case: :lower)
+      signature = "t=#{stale_timestamp},v1=#{expected}"
 
       assert :error = Stripe.verify_webhook_signature(payload, signature, secret)
     end
