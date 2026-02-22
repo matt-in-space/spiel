@@ -68,7 +68,7 @@ defmodule Resume.Admin do
 
     users_with_counts =
       Enum.map(users, fn user ->
-        %{user: user, resume_count: Map.get(resume_counts, user.id, 0)}
+        %{id: user.id, user: user, resume_count: Map.get(resume_counts, user.id, 0)}
       end)
 
     %{users: users_with_counts, page: page, total_pages: total_pages, total: total}
