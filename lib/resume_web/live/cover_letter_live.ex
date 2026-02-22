@@ -94,30 +94,20 @@ defmodule ResumeWeb.CoverLetterLive do
           phx-click="toggle_sidebar"
         />
         <div class="drawer-content space-y-6">
-          <div class="space-y-1">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <h1 class="text-2xl font-bold">{@resume.title}</h1>
-              </div>
-              <div class="flex items-center gap-2">
-                <.link
-                  :if={@cover_letter}
-                  href={~p"/resumes/#{@resume}/cover-letter/pdf"}
-                  class="btn btn-sm"
-                >
-                  <.icon name="hero-arrow-down-tray-micro" class="size-4" /> Download PDF
-                </.link>
-              </div>
+          <div class="flex items-center justify-between">
+            <div role="tablist" class="tabs tabs-box tabs-sm">
+              <.link navigate={~p"/resumes/#{@resume}"} role="tab" class="tab">
+                Resume
+              </.link>
+              <span role="tab" class="tab tab-active">Cover Letter</span>
             </div>
-
-            <div class="flex items-center gap-3 text-sm text-base-content/60">
-              <div role="tablist" class="tabs tabs-box tabs-sm">
-                <.link navigate={~p"/resumes/#{@resume}"} role="tab" class="tab">
-                  Resume
-                </.link>
-                <span role="tab" class="tab tab-active">Cover Letter</span>
-              </div>
-            </div>
+            <.link
+              :if={@cover_letter}
+              href={~p"/resumes/#{@resume}/cover-letter/pdf"}
+              class="btn btn-ghost btn-sm"
+            >
+              <.icon name="hero-arrow-down-tray-micro" class="size-4" /> Download PDF
+            </.link>
           </div>
 
           <%= if !@paid do %>

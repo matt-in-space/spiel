@@ -133,76 +133,67 @@ defmodule ResumeWeb.ResumesLive.Show do
             <.icon name="hero-chevron-left-micro" class="size-5" />
           </label>
 
-          <div class="space-y-1">
-            <div class="flex items-center justify-between">
-              <div :if={!@editing_title} class="flex items-center gap-2 group">
-                <h1 class="text-2xl font-bold">{@resume.title}</h1>
-                <button
-                  phx-click="edit_title"
-                  class="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
-                >
-                  <.icon name="hero-pencil-square-micro" class="size-4" />
-                </button>
-              </div>
-              <.form
-                :if={@editing_title}
-                for={@title_form}
-                phx-submit="save_title"
-                class="flex items-center gap-2"
-              >
-                <input
-                  type="text"
-                  name="title[title]"
-                  value={@title_form[:title].value}
-                  class="input input-sm w-full max-w-md"
-                  autofocus
-                  phx-key="Escape"
-                  phx-keydown="cancel_edit_title"
-                />
-                <button type="submit" class="btn btn-primary btn-sm">Save</button>
-                <button type="button" phx-click="cancel_edit_title" class="btn btn-ghost btn-sm">
-                  Cancel
-                </button>
-              </.form>
-              <div class="flex items-center gap-2">
-                <.link
-                  :if={@current_version}
-                  href={~p"/resumes/#{@resume}/pdf"}
-                  class="btn btn-sm"
-                >
-                  <.icon name="hero-arrow-down-tray-micro" class="size-4" /> Download PDF
-                </.link>
-                <button
-                  phx-click="delete"
-                  data-confirm="Are you sure you want to delete this resume?"
-                  class="btn btn-ghost btn-sm text-error"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
+          <div :if={@editing_title}>
+            <.form
+              for={@title_form}
+              phx-submit="save_title"
+              class="flex items-center gap-2"
+            >
+              <input
+                type="text"
+                name="title[title]"
+                value={@title_form[:title].value}
+                class="input input-sm w-full max-w-md"
+                autofocus
+                phx-key="Escape"
+                phx-keydown="cancel_edit_title"
+              />
+              <button type="submit" class="btn btn-primary btn-sm">Save</button>
+              <button type="button" phx-click="cancel_edit_title" class="btn btn-ghost btn-sm">
+                Cancel
+              </button>
+            </.form>
+          </div>
 
-            <div class="flex items-center gap-3 text-sm text-base-content/60">
-              <div role="tablist" class="tabs tabs-box tabs-sm">
-                <span role="tab" class="tab tab-active">Resume</span>
-                <.link
-                  navigate={~p"/resumes/#{@resume}/cover-letter"}
-                  role="tab"
-                  class="tab"
-                >
-                  Cover Letter
-                </.link>
-              </div>
-              <span
-                :if={@resume.job_posting_text || @resume.job_posting_url}
-                class="badge badge-accent badge-sm cursor-default"
+          <div :if={!@editing_title} class="flex items-center justify-between">
+            <div role="tablist" class="tabs tabs-box tabs-sm">
+              <span role="tab" class="tab tab-active">Resume</span>
+              <.link
+                navigate={~p"/resumes/#{@resume}/cover-letter"}
+                role="tab"
+                class="tab"
               >
-                Targeted
-              </span>
-              <span>Created {Calendar.strftime(@resume.inserted_at, "%b %d, %Y")}</span>
-              <.link navigate={~p"/profile?tab=details_rules"} class="link link-hover">
-                Edit Profile Details
+                Cover Letter
               </.link>
+            </div>
+            <div id="actions-dropdown" class="dropdown dropdown-end">
+              <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-square">
+                <.icon name="hero-ellipsis-vertical-micro" class="size-5" />
+              </div>
+              <ul
+                tabindex="0"
+                class="dropdown-content menu bg-base-100 rounded-box z-10 w-52 p-2 shadow-sm"
+              >
+                <li :if={@current_version}>
+                  <.link href={~p"/resumes/#{@resume}/pdf"}>
+                    <.icon name="hero-arrow-down-tray-micro" class="size-4" /> Download PDF
+                  </.link>
+                </li>
+                <li>
+                  <button phx-click="edit_title">
+                    <.icon name="hero-pencil-square-micro" class="size-4" /> Rename
+                  </button>
+                </li>
+                <li>
+                  <button
+                    phx-click="delete"
+                    data-confirm="Are you sure you want to delete this resume?"
+                    class="text-error"
+                  >
+                    <.icon name="hero-trash-micro" class="size-4" /> Delete
+                  </button>
+                </li>
+              </ul>
             </div>
           </div>
 
@@ -430,6 +421,18 @@ defmodule ResumeWeb.ResumesLive.Show do
                 </button>
               </div>
             </div>
+
+            <div class="space-y-2">
+              <h3 class="text-sm font-medium">Details</h3>
+              <div class="text-sm space-y-1.5">
+                <p class="text-base-content/60">
+                  Created {Calendar.strftime(@resume.inserted_at, "%b %d, %Y")}
+                </p>
+                <.link navigate={~p"/profile?tab=details_rules"} class="link link-primary text-sm">
+                  Edit Profile Details
+                </.link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -475,8 +478,8 @@ defmodule ResumeWeb.ResumesLive.Show do
             position: "bottom"
           },
           %{
-            target: "a[href$='/pdf']",
-            message: "Download your resume as a PDF when you're ready.",
+            target: "#actions-dropdown",
+            message: "Download your PDF, rename, or delete your resume from here.",
             position: "bottom"
           }
         ]}
