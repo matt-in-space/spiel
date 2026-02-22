@@ -50,3 +50,4 @@ Dev routes available at `/dev/dashboard` and `/dev/mailbox`.
 - **Router scopes** auto-alias modules — don't add redundant aliases.
 - **Ecto**: Schema fields use `:string` type even for text columns. Always preload associations accessed in templates. Use `Ecto.Changeset.get_field/2` to read changeset fields.
 - **Billing gates**: Any feature that makes an LLM call must check `Resume.Billing.check_allowance(user, action)` first. Gate at the context level for `:generation` and `:adjustment`; gate at the LiveView level for `:fact_update` (because onboarding must stay free). Returns `{:error, :limit_reached, message}` when over the free limit.
+- **Resume templates**: When adding a new resume template, register it in `lib/resume_web/resume_templates.ex` — the gallery page, show page, and PDF controller all read from this single registry.

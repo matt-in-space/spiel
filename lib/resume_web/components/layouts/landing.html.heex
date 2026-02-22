@@ -4,6 +4,42 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
+    <meta
+      name="description"
+      content={
+        assigns[:meta_description] ||
+          "Talk about your career and get a tailored resume for every job. Free AI resume builder with voice input and 20+ professional templates."
+      }
+    />
+    <link rel="canonical" href={assigns[:canonical_url] || url(~p"/")} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Spiel" />
+    <meta property="og:title" content={assigns[:page_title] || "Spiel"} />
+    <meta
+      property="og:description"
+      content={
+        assigns[:meta_description] ||
+          "Talk about your career and get a tailored resume for every job. Free AI resume builder with voice input and 20+ professional templates."
+      }
+    />
+    <meta property="og:url" content={assigns[:canonical_url] || url(~p"/")} />
+    <meta
+      property="og:image"
+      content={assigns[:og_image] || url(~p"/images/landing/resume.webp")}
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={assigns[:page_title] || "Spiel"} />
+    <meta
+      name="twitter:description"
+      content={
+        assigns[:meta_description] ||
+          "Talk about your career and get a tailored resume for every job. Free AI resume builder with voice input and 20+ professional templates."
+      }
+    />
+    <meta
+      name="twitter:image"
+      content={assigns[:og_image] || url(~p"/images/landing/resume.webp")}
+    />
     <.live_title default="Spiel">
       {assigns[:page_title]}
     </.live_title>
@@ -55,6 +91,7 @@
         <p class="font-semibold text-lg">Spiel</p>
         <p>Talk about your career. Get a resume.</p>
         <nav class="flex gap-4 text-sm">
+          <a href="/templates" class="link link-hover">Templates</a>
           <a href="/privacy" class="link link-hover">Privacy</a>
           <a href="/terms" class="link link-hover">Terms</a>
         </nav>

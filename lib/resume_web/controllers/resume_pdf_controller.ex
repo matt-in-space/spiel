@@ -3,29 +3,6 @@ defmodule ResumeWeb.ResumePDFController do
 
   alias Resume.{PDF, Resumes}
 
-  @templates %{
-    "default" => ResumeWeb.ResumeTemplates.Default,
-    "mono" => ResumeWeb.ResumeTemplates.Mono,
-    "fresh" => ResumeWeb.ResumeTemplates.Fresh,
-    "executive" => ResumeWeb.ResumeTemplates.Executive,
-    "elegant" => ResumeWeb.ResumeTemplates.Elegant,
-    "classic" => ResumeWeb.ResumeTemplates.Classic,
-    "flat" => ResumeWeb.ResumeTemplates.Flat,
-    "kendall" => ResumeWeb.ResumeTemplates.Kendall,
-    "editorial" => ResumeWeb.ResumeTemplates.Editorial,
-    "typewriter" => ResumeWeb.ResumeTemplates.Typewriter,
-    "nordic" => ResumeWeb.ResumeTemplates.Nordic,
-    "berlin" => ResumeWeb.ResumeTemplates.Berlin,
-    "even" => ResumeWeb.ResumeTemplates.Even,
-    "paper" => ResumeWeb.ResumeTemplates.Paper,
-    "consultant" => ResumeWeb.ResumeTemplates.Consultant,
-    "sidebar" => ResumeWeb.ResumeTemplates.Sidebar,
-    "stackoverflow" => ResumeWeb.ResumeTemplates.Stackoverflow,
-    "academic" => ResumeWeb.ResumeTemplates.Academic,
-    "minimalist" => ResumeWeb.ResumeTemplates.Minimalist,
-    "macchiato" => ResumeWeb.ResumeTemplates.Macchiato
-  }
-
   def show(conn, %{"id" => id} = params) do
     user = conn.assigns.current_scope.user
     resume = Resumes.get_user_resume!(user.id, id)
@@ -37,7 +14,7 @@ defmodule ResumeWeb.ResumePDFController do
       end
 
     data = Resumes.dump_version_data(version)
-    template_mod = Map.get(@templates, resume.template, ResumeWeb.ResumeTemplates.Default)
+    template_mod = ResumeWeb.ResumeTemplates.get(resume.template)
 
     html =
       template_mod.render(%{data: data})

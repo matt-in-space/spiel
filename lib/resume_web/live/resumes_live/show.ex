@@ -4,30 +4,7 @@ defmodule ResumeWeb.ResumesLive.Show do
   require Logger
 
   alias Resume.{Accounts, Feedback, Resumes, Retry}
-  alias ResumeWeb.ResumeTemplates.Default
-
-  @templates %{
-    "default" => ResumeWeb.ResumeTemplates.Default,
-    "mono" => ResumeWeb.ResumeTemplates.Mono,
-    "fresh" => ResumeWeb.ResumeTemplates.Fresh,
-    "executive" => ResumeWeb.ResumeTemplates.Executive,
-    "elegant" => ResumeWeb.ResumeTemplates.Elegant,
-    "classic" => ResumeWeb.ResumeTemplates.Classic,
-    "flat" => ResumeWeb.ResumeTemplates.Flat,
-    "kendall" => ResumeWeb.ResumeTemplates.Kendall,
-    "editorial" => ResumeWeb.ResumeTemplates.Editorial,
-    "typewriter" => ResumeWeb.ResumeTemplates.Typewriter,
-    "nordic" => ResumeWeb.ResumeTemplates.Nordic,
-    "berlin" => ResumeWeb.ResumeTemplates.Berlin,
-    "even" => ResumeWeb.ResumeTemplates.Even,
-    "paper" => ResumeWeb.ResumeTemplates.Paper,
-    "consultant" => ResumeWeb.ResumeTemplates.Consultant,
-    "sidebar" => ResumeWeb.ResumeTemplates.Sidebar,
-    "stackoverflow" => ResumeWeb.ResumeTemplates.Stackoverflow,
-    "academic" => ResumeWeb.ResumeTemplates.Academic,
-    "minimalist" => ResumeWeb.ResumeTemplates.Minimalist,
-    "macchiato" => ResumeWeb.ResumeTemplates.Macchiato
-  }
+  alias ResumeWeb.ResumeTemplates
 
   @generating_messages [
     "Reviewing your career history...",
@@ -51,29 +28,6 @@ defmodule ResumeWeb.ResumesLive.Show do
     "Focus more on my cloud infrastructure and DevOps experience"
   ]
 
-  @template_options [
-    {"Default", "default"},
-    {"Mono", "mono"},
-    {"Fresh", "fresh"},
-    {"Executive", "executive"},
-    {"Elegant", "elegant"},
-    {"Classic", "classic"},
-    {"Flat", "flat"},
-    {"Kendall", "kendall"},
-    {"Editorial", "editorial"},
-    {"Typewriter", "typewriter"},
-    {"Nordic", "nordic"},
-    {"Berlin", "berlin"},
-    {"Even", "even"},
-    {"Paper", "paper"},
-    {"Consultant", "consultant"},
-    {"Sidebar", "sidebar"},
-    {"Stack Overflow", "stackoverflow"},
-    {"Academic", "academic"},
-    {"Minimalist", "minimalist"},
-    {"Macchiato", "macchiato"}
-  ]
-
   @impl true
   def mount(%{"id" => id}, session, socket) do
     user = get_user(socket, session)
@@ -81,7 +35,7 @@ defmodule ResumeWeb.ResumesLive.Show do
     versions = Resumes.list_versions(resume.id)
     current_version = List.first(versions)
     generating = versions == []
-    template_mod = Map.get(@templates, resume.template, Default)
+    template_mod = ResumeTemplates.get(resume.template)
     current_data = version_data(current_version)
 
     socket =
@@ -92,7 +46,7 @@ defmodule ResumeWeb.ResumesLive.Show do
         current_version: current_version,
         template_mod: template_mod,
         template_css: template_mod.css(),
-        template_options: @template_options,
+        template_options: ResumeTemplates.template_options(),
         template_previews: build_template_previews(current_data),
         feedback_form: to_form(%{"message" => ""}, as: "feedback"),
         preview_data: nil,
@@ -650,7 +604,7 @@ defmodule ResumeWeb.ResumesLive.Show do
   @impl true
   def handle_event("change_template", %{"template" => template}, socket) do
     {:ok, resume} = Resumes.update_resume(socket.assigns.resume, %{template: template})
-    template_mod = Map.get(@templates, template, Default)
+    template_mod = ResumeTemplates.get(template)
 
     {:noreply,
      assign(socket,
@@ -885,7 +839,7 @@ defmodule ResumeWeb.ResumesLive.Show do
         versions = Resumes.list_versions(resume.id)
         current_version = List.first(versions)
         current_data = version_data(current_version)
-        template_mod = Map.get(@templates, resume.template, Default)
+        template_mod = ResumeTemplates.get(resume.template)
 
         {:noreply,
          socket
@@ -949,7 +903,7 @@ defmodule ResumeWeb.ResumesLive.Show do
   defp build_template_previews(nil), do: %{}
 
   defp build_template_previews(data) do
-    Map.new(@templates, fn {key, mod} ->
+    Map.new(ResumeTemplates.templates(), fn {key, mod} ->
       html = render_template(mod, data)
       css = mod.css()
       full_bleed? = key in ~w(executive sidebar)
