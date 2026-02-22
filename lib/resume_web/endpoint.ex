@@ -8,7 +8,8 @@ defmodule ResumeWeb.Endpoint do
     store: :cookie,
     key: "_resume_key",
     signing_salt: "Z+siJNLR",
-    same_site: "Lax"
+    same_site: "Lax",
+    http_only: true
   ]
 
   socket "/live", Phoenix.LiveView.Socket,
