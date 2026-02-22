@@ -183,6 +183,16 @@ defmodule ResumeWeb.ResumesLive.Show do
             </div>
 
             <div class="flex items-center gap-3 text-sm text-base-content/60">
+              <div role="tablist" class="tabs tabs-box tabs-sm">
+                <span role="tab" class="tab tab-active">Resume</span>
+                <.link
+                  navigate={~p"/resumes/#{@resume}/cover-letter"}
+                  role="tab"
+                  class="tab"
+                >
+                  Cover Letter
+                </.link>
+              </div>
               <span
                 :if={@resume.job_posting_text || @resume.job_posting_url}
                 class="badge badge-accent badge-sm cursor-default"

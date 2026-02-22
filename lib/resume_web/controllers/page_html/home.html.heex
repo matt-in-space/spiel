@@ -14,8 +14,8 @@
       </h1>
       <p class="py-6 text-lg text-base-content/70">
         Tell your story once. Spiel learns your experience, then generates a
-        tailored resume for every job you apply to — so each application puts
-        your best foot forward.
+        tailored resume and cover letter for every job you apply to — so each
+        application puts your best foot forward.
       </p>
       <div class="flex flex-wrap gap-4">
         <.link href={~p"/users/register"} class="btn btn-primary btn-lg">
@@ -179,10 +179,20 @@
 
       <div class="card bg-base-100 border border-base-300">
         <div class="card-body">
+          <.icon name="hero-envelope" class="size-8 text-primary" />
+          <h3 class="card-title mt-2">Matching cover letters</h3>
+          <p class="text-base-content/60">
+            Generate a tailored cover letter that complements your resume and speaks directly to the job posting.
+          </p>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body">
           <.icon name="hero-document-duplicate" class="size-8 text-primary" />
           <h3 class="card-title mt-2">Multiple templates</h3>
           <p class="text-base-content/60">
-            Choose from professional resume designs that highlight your strengths.
+            Choose from professional resume and cover letter designs that highlight your strengths.
           </p>
         </div>
       </div>
@@ -192,7 +202,7 @@
           <.icon name="hero-arrow-down-tray" class="size-8 text-primary" />
           <h3 class="card-title mt-2">PDF export</h3>
           <p class="text-base-content/60">
-            Download a polished PDF ready to send to employers or upload to job boards.
+            Download polished PDFs of your resume and cover letter, ready to send to employers.
           </p>
         </div>
       </div>
@@ -205,7 +215,7 @@
   <div class="max-w-2xl mx-auto text-center space-y-6">
     <h2 class="text-4xl font-medium tracking-tight">Ready to give your spiel?</h2>
     <p class="text-lg text-base-content/60">
-      Your next application deserves more than a generic resume. Tell your story once, then tailor it for every role.
+      Your next application deserves more than a generic resume. Tell your story once, then get a tailored resume and cover letter for every role.
     </p>
     <.link href={~p"/users/register"} class="btn btn-primary btn-lg">
       Get Started Free

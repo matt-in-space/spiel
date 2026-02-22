@@ -46,6 +46,13 @@ defmodule Resume.Billing do
   end
 
   @doc """
+  Returns true if the user has access to paid-only features (active pass or unlimited).
+  """
+  def paid_feature?(%User{} = user) do
+    has_unlimited_access?(user) or has_active_pass?(user)
+  end
+
+  @doc """
   Returns true if the user has unlimited access (admin or granted unlimited).
   """
   def has_unlimited_access?(%User{access_level: "unlimited"}), do: true

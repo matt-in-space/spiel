@@ -13,6 +13,7 @@ defmodule Resume.Resumes.Resume do
 
     belongs_to :user, Resume.Accounts.User
     has_many :versions, Version
+    has_one :cover_letter, Resume.CoverLetters.CoverLetter
 
     timestamps(type: :utc_datetime)
   end

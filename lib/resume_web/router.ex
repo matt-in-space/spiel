@@ -71,9 +71,11 @@ defmodule ResumeWeb.Router do
     live "/profile", ProfileSettingsLive
     live "/coach", CoachLive
     live "/resumes/:id", ResumesLive.Show
+    live "/resumes/:id/cover-letter", CoverLetterLive
     live "/billing", BillingLive
 
     get "/resumes/:id/pdf", ResumePDFController, :show
+    get "/resumes/:id/cover-letter/pdf", CoverLetterPDFController, :show
 
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update
