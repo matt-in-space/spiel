@@ -53,10 +53,9 @@ defmodule Resume.Billing do
   end
 
   @doc """
-  Returns true if the user has unlimited access (admin or granted unlimited).
+  Returns true if the user has been granted unlimited access.
   """
   def has_unlimited_access?(%User{access_level: "unlimited"}), do: true
-  def has_unlimited_access?(%User{role: :admin}), do: true
   def has_unlimited_access?(_), do: false
 
   @doc """

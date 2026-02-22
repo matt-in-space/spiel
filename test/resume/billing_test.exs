@@ -15,11 +15,6 @@ defmodule Resume.BillingTest do
       assert :ok = Billing.check_allowance(user, :generation)
     end
 
-    test "allows admin users without limits", %{user: user} do
-      user = %{user | role: :admin}
-      assert :ok = Billing.check_allowance(user, :generation)
-    end
-
     test "allows free users within limit", %{user: user} do
       assert :ok = Billing.check_allowance(user, :generation)
     end
