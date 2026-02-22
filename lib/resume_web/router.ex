@@ -88,6 +88,8 @@ defmodule ResumeWeb.Router do
     live "/", Admin.DashboardLive
     live "/costs", Admin.CostsLive
     live "/billing", Admin.BillingLive
+    live "/users", Admin.UsersLive
+    live "/users/:id", Admin.UserDetailLive
   end
 
   scope "/", ResumeWeb do

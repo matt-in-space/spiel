@@ -49,6 +49,19 @@ defmodule ResumeWeb.Admin.DashboardLive do
 
       <div class="grid gap-4">
         <.link
+          navigate={~p"/admin/users"}
+          class="card bg-base-200 border border-base-300 hover:border-base-content/20 transition-colors"
+        >
+          <div class="card-body">
+            <h2 class="card-title">
+              <.icon name="hero-users" class="size-5" /> Users
+            </h2>
+            <p class="text-base-content/70">
+              Browse users, search by email, and view detailed stats.
+            </p>
+          </div>
+        </.link>
+        <.link
           navigate={~p"/admin/costs"}
           class="card bg-base-200 border border-base-300 hover:border-base-content/20 transition-colors"
         >
