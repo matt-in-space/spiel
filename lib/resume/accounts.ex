@@ -121,6 +121,24 @@ defmodule Resume.Accounts do
   end
 
   @doc """
+  Sets the user's default resume template.
+  """
+  def set_default_resume_template(user, template) when is_binary(template) do
+    user
+    |> User.template_preferences_changeset(%{default_resume_template: template})
+    |> Repo.update()
+  end
+
+  @doc """
+  Sets the user's default cover letter template.
+  """
+  def set_default_cover_letter_template(user, template) when is_binary(template) do
+    user
+    |> User.template_preferences_changeset(%{default_cover_letter_template: template})
+    |> Repo.update()
+  end
+
+  @doc """
   Appends new facts to the user's existing facts list.
   """
   def append_user_facts(user, new_facts) when is_list(new_facts) do

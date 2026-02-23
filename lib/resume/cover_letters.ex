@@ -57,7 +57,7 @@ defmodule Resume.CoverLetters do
     case Generator.generate(user, resume) do
       {:ok, content} ->
         case get_by_resume(resume.id) do
-          nil -> create_cover_letter(resume.id, content)
+          nil -> create_cover_letter(resume.id, content, user.default_cover_letter_template)
           existing -> update_cover_letter(existing, %{content: content})
         end
 

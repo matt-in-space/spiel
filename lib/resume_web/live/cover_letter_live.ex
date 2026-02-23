@@ -292,9 +292,23 @@ defmodule ResumeWeb.CoverLetterLive do
                     )
                   ]}
                 >
-                  <div class="text-sm font-medium">{name}</div>
+                  <div class="text-sm font-medium flex items-center justify-center gap-1">
+                    <span
+                      :if={key == @user.default_cover_letter_template}
+                      class="size-1.5 rounded-full bg-primary shrink-0"
+                    >
+                    </span>
+                    {name}
+                  </div>
                 </button>
               </div>
+              <.link
+                :if={@cover_letter.template != @user.default_cover_letter_template}
+                phx-click="set_default_template"
+                class="text-xs link link-primary"
+              >
+                Set as default
+              </.link>
             </div>
 
             <div :if={@cover_letter} class="space-y-2">
@@ -436,6 +450,22 @@ defmodule ResumeWeb.CoverLetterLive do
        template_mod: template_mod,
        template_css: template_mod.css()
      )}
+  end
+
+  @impl true
+  def handle_event("set_default_template", _params, socket) do
+    template = socket.assigns.cover_letter.template
+
+    case Accounts.set_default_cover_letter_template(socket.assigns.user, template) do
+      {:ok, user} ->
+        {:noreply,
+         socket
+         |> assign(user: user)
+         |> put_flash(:info, "Default cover letter template updated.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to update default template.")}
+    end
   end
 
   @impl true

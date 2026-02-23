@@ -255,6 +255,7 @@ defmodule ResumeWeb.HomeLive do
     case Resumes.create_resume(%{
            title: title,
            user_id: socket.assigns.user.id,
+           template: socket.assigns.user.default_resume_template,
            job_posting_text: job_posting_text,
            job_posting_url: job_posting_url
          }) do

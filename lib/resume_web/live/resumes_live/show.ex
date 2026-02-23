@@ -417,9 +417,23 @@ defmodule ResumeWeb.ResumesLive.Show do
                       tabindex="-1"
                     />
                   </div>
-                  <div class="text-xs text-center py-1.5 bg-base-100">{name}</div>
+                  <div class="text-xs text-center py-1.5 bg-base-100 flex items-center justify-center gap-1">
+                    <span
+                      :if={key == @user.default_resume_template}
+                      class="size-1.5 rounded-full bg-primary shrink-0"
+                    >
+                    </span>
+                    {name}
+                  </div>
                 </button>
               </div>
+              <.link
+                :if={@resume.template != @user.default_resume_template}
+                phx-click="set_default_template"
+                class="text-xs link link-primary"
+              >
+                Set as default
+              </.link>
             </div>
 
             <div class="space-y-2">
@@ -625,6 +639,22 @@ defmodule ResumeWeb.ResumesLive.Show do
        template_mod: template_mod,
        template_css: template_mod.css()
      )}
+  end
+
+  @impl true
+  def handle_event("set_default_template", _params, socket) do
+    template = socket.assigns.resume.template
+
+    case Accounts.set_default_resume_template(socket.assigns.user, template) do
+      {:ok, user} ->
+        {:noreply,
+         socket
+         |> assign(user: user)
+         |> put_flash(:info, "Default resume template updated.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to update default template.")}
+    end
   end
 
   # Feedback events

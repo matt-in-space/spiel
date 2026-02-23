@@ -433,6 +433,38 @@ defmodule Resume.AccountsTest do
     end
   end
 
+  describe "set_default_resume_template/2" do
+    test "updates the default resume template" do
+      user = user_fixture()
+      assert user.default_resume_template == "default"
+      {:ok, user} = Accounts.set_default_resume_template(user, "modern")
+      assert user.default_resume_template == "modern"
+    end
+
+    test "persists the change" do
+      user = user_fixture()
+      {:ok, _user} = Accounts.set_default_resume_template(user, "executive")
+      reloaded = Accounts.get_user!(user.id)
+      assert reloaded.default_resume_template == "executive"
+    end
+  end
+
+  describe "set_default_cover_letter_template/2" do
+    test "updates the default cover letter template" do
+      user = user_fixture()
+      assert user.default_cover_letter_template == "formal"
+      {:ok, user} = Accounts.set_default_cover_letter_template(user, "modern")
+      assert user.default_cover_letter_template == "modern"
+    end
+
+    test "persists the change" do
+      user = user_fixture()
+      {:ok, _user} = Accounts.set_default_cover_letter_template(user, "creative")
+      reloaded = Accounts.get_user!(user.id)
+      assert reloaded.default_cover_letter_template == "creative"
+    end
+  end
+
   describe "inspect/2 for the User module" do
     test "does not include password" do
       refute inspect(%User{password: "123456"}) =~ "password: \"123456\""
