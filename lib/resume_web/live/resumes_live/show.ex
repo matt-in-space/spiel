@@ -828,14 +828,14 @@ defmodule ResumeWeb.ResumesLive.Show do
   @impl true
   def handle_event("save_section_edit", %{"section" => params}, socket) do
     {section, index} = socket.assigns.editing_section
-    resume = socket.assigns.resume
-    data_map = version_data_to_map(socket.assigns.current_version)
+    current_version = socket.assigns.current_version
+    data_map = version_data_to_map(current_version)
     updated_data = apply_section_edit(data_map, section, index, params)
     label = section_label({section, index})
 
-    case Resumes.confirm_direct_edit(resume, updated_data, label) do
+    case Resumes.confirm_direct_edit(current_version, updated_data, label) do
       {:ok, version} ->
-        versions = Resumes.list_versions(resume.id)
+        versions = Resumes.list_versions(socket.assigns.resume.id)
 
         {:noreply,
          socket

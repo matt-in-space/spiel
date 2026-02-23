@@ -281,9 +281,11 @@ defmodule Resume.Resumes do
   end
 
   @doc """
-  Creates a new version from a direct section edit (no LLM call).
+  Updates the current version in-place from a direct section edit (no LLM call).
   """
-  def confirm_direct_edit(%Resume{} = resume, data, section_label) do
-    create_version(resume, "direct_edit", data, "Edited #{section_label}")
+  def confirm_direct_edit(%Version{} = version, data, section_label) do
+    version
+    |> Version.changeset(%{data: data, explanation: "Edited #{section_label}"})
+    |> Repo.update()
   end
 end
