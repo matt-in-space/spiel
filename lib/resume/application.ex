@@ -15,6 +15,8 @@ defmodule Resume.Application do
       # Start a worker by calling: Resume.Worker.start_link(arg)
       # {Resume.Worker, arg},
       {Resume.RateLimiter, []},
+      {Task.Supervisor, name: Resume.TaskSupervisor},
+      Resume.Jobs,
       # Start to serve requests, typically the last entry
       ResumeWeb.Endpoint
     ]

@@ -3,7 +3,7 @@ defmodule ResumeWeb.ResumesLive.Show do
 
   require Logger
 
-  alias Resume.{Accounts, Feedback, Resumes, Retry}
+  alias Resume.{Accounts, Feedback, Jobs, Resumes, Retry}
   alias ResumeWeb.ResumeTemplates
 
   @generating_messages [
@@ -72,14 +72,17 @@ defmodule ResumeWeb.ResumesLive.Show do
 
     socket =
       if generating and connected?(socket) do
-        task =
-          Task.async(fn ->
+        job_key = {:resume_generate, resume.id}
+
+        unless Jobs.running?(job_key) do
+          Jobs.start(job_key, fn ->
             Retry.with_retry(fn -> Resumes.generate_initial_version(resume, user) end)
           end)
+        end
 
+        Jobs.subscribe(job_key)
         Process.send_after(self(), :rotate_generating_message, 3_000)
-
-        update(socket, :task_refs, &Map.put(&1, task.ref, :generate))
+        socket
       else
         socket
       end
@@ -871,13 +874,9 @@ defmodule ResumeWeb.ResumesLive.Show do
   end
 
   @impl true
-  def handle_info({ref, result}, socket) do
-    Process.demonitor(ref, [:flush])
-    {tag, task_refs} = Map.pop(socket.assigns.task_refs, ref)
-    socket = assign(socket, task_refs: task_refs)
-
-    case {tag, result} do
-      {:generate, {:ok, resume}} ->
+  def handle_info({:job_complete, {:resume_generate, _}, result}, socket) do
+    case result do
+      {:ok, resume} ->
         resume = Resumes.get_user_resume!(socket.assigns.user.id, resume.id)
         versions = Resumes.list_versions(resume.id)
         current_version = List.first(versions)
@@ -898,12 +897,21 @@ defmodule ResumeWeb.ResumesLive.Show do
          )
          |> put_flash(:info, "Your resume is ready!")}
 
-      {:generate, {:error, _reason}} ->
+      {:error, _reason} ->
         {:noreply,
          socket
          |> assign(generating: false)
          |> put_flash(:error, "Failed to generate resume. Please try again.")}
+    end
+  end
 
+  @impl true
+  def handle_info({ref, result}, socket) do
+    Process.demonitor(ref, [:flush])
+    {tag, task_refs} = Map.pop(socket.assigns.task_refs, ref)
+    socket = assign(socket, task_refs: task_refs)
+
+    case {tag, result} do
       {:feedback, {:ok, result}} ->
         {:noreply, handle_feedback_result(socket, result)}
 

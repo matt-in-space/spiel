@@ -3,7 +3,7 @@ defmodule ResumeWeb.CoverLetterLive do
 
   require Logger
 
-  alias Resume.{Accounts, Billing, CoverLetters, Resumes, Retry}
+  alias Resume.{Accounts, Billing, CoverLetters, Jobs, Resumes, Retry}
   alias ResumeWeb.CoverLetterTemplates
 
   @generating_messages [
@@ -34,6 +34,9 @@ defmodule ResumeWeb.CoverLetterLive do
     template_key = (cover_letter && cover_letter.template) || "formal"
     template_mod = CoverLetterTemplates.get(template_key)
 
+    job_key = {:cover_letter_generate, resume.id}
+    generating = connected?(socket) and Jobs.running?(job_key)
+
     socket =
       assign(socket,
         user: user,
@@ -53,11 +56,20 @@ defmodule ResumeWeb.CoverLetterLive do
         section_form: nil,
         sidebar_open: false,
         feedback_placeholder: Enum.random(@feedback_placeholders),
-        generating: false,
+        generating: generating,
         generating_messages: @generating_messages,
         generating_message_index: 0,
         task_refs: %{}
       )
+
+    socket =
+      if generating do
+        Jobs.subscribe(job_key)
+        Process.send_after(self(), :rotate_generating_message, 3_000)
+        socket
+      else
+        socket
+      end
 
     {:ok, socket}
   end
@@ -633,13 +645,9 @@ defmodule ResumeWeb.CoverLetterLive do
   end
 
   @impl true
-  def handle_info({ref, result}, socket) do
-    Process.demonitor(ref, [:flush])
-    {tag, task_refs} = Map.pop(socket.assigns.task_refs, ref)
-    socket = assign(socket, task_refs: task_refs)
-
-    case {tag, result} do
-      {:generate, {:ok, cover_letter}} ->
+  def handle_info({:job_complete, {:cover_letter_generate, _}, result}, socket) do
+    case result do
+      {:ok, cover_letter} ->
         template_mod = CoverLetterTemplates.get(cover_letter.template)
 
         {:noreply,
@@ -652,12 +660,21 @@ defmodule ResumeWeb.CoverLetterLive do
          )
          |> put_flash(:info, "Your cover letter is ready!")}
 
-      {:generate, {:error, _reason}} ->
+      {:error, _reason} ->
         {:noreply,
          socket
          |> assign(generating: false)
          |> put_flash(:error, "Failed to generate cover letter. Please try again.")}
+    end
+  end
 
+  @impl true
+  def handle_info({ref, result}, socket) do
+    Process.demonitor(ref, [:flush])
+    {tag, task_refs} = Map.pop(socket.assigns.task_refs, ref)
+    socket = assign(socket, task_refs: task_refs)
+
+    case {tag, result} do
       {:feedback, {:ok, result}} ->
         {:noreply, handle_feedback_result(socket, result)}
 
@@ -697,17 +714,16 @@ defmodule ResumeWeb.CoverLetterLive do
   defp start_generation(socket) do
     resume = socket.assigns.resume
     user = socket.assigns.user
+    job_key = {:cover_letter_generate, resume.id}
 
-    task =
-      Task.async(fn ->
-        Retry.with_retry(fn -> CoverLetters.generate_cover_letter(resume, user) end)
-      end)
+    Jobs.start(job_key, fn ->
+      Retry.with_retry(fn -> CoverLetters.generate_cover_letter(resume, user) end)
+    end)
 
+    Jobs.subscribe(job_key)
     Process.send_after(self(), :rotate_generating_message, 3_000)
 
-    socket
-    |> assign(generating: true, generating_message_index: 0)
-    |> update(:task_refs, &Map.put(&1, task.ref, :generate))
+    assign(socket, generating: true, generating_message_index: 0)
   end
 
   defp cover_letter_data(nil), do: nil
