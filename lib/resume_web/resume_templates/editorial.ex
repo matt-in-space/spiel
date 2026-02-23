@@ -353,6 +353,7 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
       padding-top: 4pt;
       margin: 0 0 8pt 0;
       color: #8B0000 !important;
+      break-after: avoid;
     }
 
     .resume .edit-body {
@@ -364,13 +365,13 @@ defmodule ResumeWeb.ResumeTemplates.Editorial do
     /* Entries */
     .resume .edit-entry {
       margin-bottom: 8pt;
-      break-inside: avoid;
     }
 
     .resume .edit-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .edit-entry-title {

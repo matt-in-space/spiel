@@ -353,6 +353,7 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
       padding-bottom: 1pt;
       margin: 0 0 5pt 0;
       color: #1a1a1a !important;
+      break-after: avoid;
     }
 
     .resume .acad-body {
@@ -364,13 +365,13 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
     /* Entries */
     .resume .acad-entry {
       margin-bottom: 5pt;
-      break-inside: avoid;
     }
 
     .resume .acad-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .acad-entry-title {

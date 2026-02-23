@@ -349,6 +349,7 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
       padding-bottom: 3pt;
       margin: 0 0 8pt 0;
       color: #0066cc !important;
+      break-after: avoid;
     }
 
     .resume .mono-body {
@@ -360,13 +361,13 @@ defmodule ResumeWeb.ResumeTemplates.Mono do
     /* Entries */
     .resume .mono-entry {
       margin-bottom: 8pt;
-      break-inside: avoid;
     }
 
     .resume .mono-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .mono-entry-title {

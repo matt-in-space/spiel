@@ -354,6 +354,7 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
       padding-bottom: 4pt;
       margin: 0 0 10pt 0;
       color: #546E7A !important;
+      break-after: avoid;
     }
 
     .resume .nord-body {
@@ -366,13 +367,13 @@ defmodule ResumeWeb.ResumeTemplates.Nordic do
     /* Entries */
     .resume .nord-entry {
       margin-bottom: 10pt;
-      break-inside: avoid;
     }
 
     .resume .nord-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .nord-entry-title {

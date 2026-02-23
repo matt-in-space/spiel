@@ -352,6 +352,7 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
       padding-bottom: 4pt;
       border-bottom: 0.5pt solid #ddd;
       color: #999 !important;
+      break-after: avoid;
     }
 
     .resume .mini-body {
@@ -363,13 +364,13 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     /* Entries */
     .resume .mini-entry {
       margin-bottom: 8pt;
-      break-inside: avoid;
     }
 
     .resume .mini-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .mini-entry-title {

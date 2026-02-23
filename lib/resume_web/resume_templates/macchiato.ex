@@ -358,6 +358,7 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
       border-bottom: 1.5pt solid #D7CCC8;
       border-radius: 0 0 4pt 4pt;
       color: #5D4037 !important;
+      break-after: avoid;
     }
 
     .resume .macc-body {
@@ -369,13 +370,13 @@ defmodule ResumeWeb.ResumeTemplates.Macchiato do
     /* Entries */
     .resume .macc-entry {
       margin-bottom: 8pt;
-      break-inside: avoid;
     }
 
     .resume .macc-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .macc-entry-title {

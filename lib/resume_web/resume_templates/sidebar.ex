@@ -440,6 +440,7 @@ defmodule ResumeWeb.ResumeTemplates.Sidebar do
       padding-bottom: 2pt;
       margin: 0 0 6pt 0;
       color: #3F51B5 !important;
+      break-after: avoid;
     }
 
     .resume .side-body {
@@ -451,13 +452,13 @@ defmodule ResumeWeb.ResumeTemplates.Sidebar do
     /* Entries */
     .resume .side-entry {
       margin-bottom: 7pt;
-      break-inside: avoid;
     }
 
     .resume .side-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .side-entry-title {

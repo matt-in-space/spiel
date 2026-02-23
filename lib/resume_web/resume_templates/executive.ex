@@ -437,6 +437,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
       padding-bottom: 2pt;
       margin: 0 0 6pt 0;
       color: #334155 !important;
+      break-after: avoid;
     }
 
     .resume .exec-body {
@@ -448,13 +449,13 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
     /* Entries */
     .resume .exec-entry {
       margin-bottom: 8pt;
-      break-inside: avoid;
     }
 
     .resume .exec-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .exec-entry-title {

@@ -360,6 +360,7 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
       border-bottom: 0.5pt solid #d4c5a0;
       padding-bottom: 3pt;
       margin: 0 0 8pt 0;
+      break-after: avoid;
     }
 
     .resume .elegant-body {
@@ -372,13 +373,13 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
     /* Entries */
     .resume .elegant-entry {
       margin-bottom: 8pt;
-      break-inside: avoid;
     }
 
     .resume .elegant-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .elegant-entry-title {

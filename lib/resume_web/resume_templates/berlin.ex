@@ -354,6 +354,7 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
       padding-top: 4pt;
       margin: 0 0 8pt 0;
       color: #000 !important;
+      break-after: avoid;
     }
 
     .resume .bln-body {
@@ -365,13 +366,13 @@ defmodule ResumeWeb.ResumeTemplates.Berlin do
     /* Entries */
     .resume .bln-entry {
       margin-bottom: 8pt;
-      break-inside: avoid;
     }
 
     .resume .bln-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .bln-entry-title {

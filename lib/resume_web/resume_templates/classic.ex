@@ -369,6 +369,7 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
       padding-bottom: 2pt;
       margin: 0 0 6pt 0;
       color: #000 !important;
+      break-after: avoid;
     }
 
     .resume .classic-body {
@@ -380,13 +381,13 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
     /* Entries */
     .resume .classic-entry {
       margin-bottom: 6pt;
-      break-inside: avoid;
     }
 
     .resume .classic-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .classic-entry-title {

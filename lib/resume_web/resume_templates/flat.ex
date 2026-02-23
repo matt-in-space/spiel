@@ -361,6 +361,7 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
       background-color: #00897B !important;
       padding: 3pt 8pt;
       margin: 0 0 8pt 0;
+      break-after: avoid;
     }
 
     .resume .flat-body {
@@ -372,13 +373,13 @@ defmodule ResumeWeb.ResumeTemplates.Flat do
     /* Entries */
     .resume .flat-entry {
       margin-bottom: 8pt;
-      break-inside: avoid;
     }
 
     .resume .flat-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .flat-entry-title {

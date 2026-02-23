@@ -369,6 +369,7 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
       border-bottom: 0.5pt solid #1a237e;
       padding-bottom: 1pt;
       margin: 0 0 3pt 0;
+      break-after: avoid;
     }
 
     .resume .kendall-body {
@@ -380,13 +381,13 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
     /* Entries — minimal spacing */
     .resume .kendall-entry {
       margin-bottom: 4pt;
-      break-inside: avoid;
     }
 
     .resume .kendall-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .kendall-entry-title {

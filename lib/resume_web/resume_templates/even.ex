@@ -353,6 +353,7 @@ defmodule ResumeWeb.ResumeTemplates.Even do
       padding: 3pt 0;
       margin: 0 0 8pt 0;
       color: #607D8B !important;
+      break-after: avoid;
     }
 
     .resume .even-body {
@@ -364,13 +365,13 @@ defmodule ResumeWeb.ResumeTemplates.Even do
     /* Entries */
     .resume .even-entry {
       margin-bottom: 7pt;
-      break-inside: avoid;
     }
 
     .resume .even-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .even-entry-title {

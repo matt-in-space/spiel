@@ -350,6 +350,7 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
       padding-bottom: 2pt;
       margin: 0 0 6pt 0;
       color: #1B3A5C !important;
+      break-after: avoid;
     }
 
     .resume .cons-body {
@@ -361,13 +362,13 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
     /* Entries */
     .resume .cons-entry {
       margin-bottom: 7pt;
-      break-inside: avoid;
     }
 
     .resume .cons-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .cons-entry-title {

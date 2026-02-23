@@ -351,6 +351,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
       padding-bottom: 3pt;
       margin: 0 0 8pt 0;
       color: #0d9488 !important;
+      break-after: avoid;
     }
 
     .resume .fresh-body {
@@ -362,13 +363,13 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     /* Entries */
     .resume .fresh-entry {
       margin-bottom: 8pt;
-      break-inside: avoid;
     }
 
     .resume .fresh-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .fresh-entry-title {

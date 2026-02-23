@@ -344,6 +344,7 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
       border-bottom: 1.5pt dashed #000;
       padding-bottom: 2pt;
       margin: 0 0 8pt 0;
+      break-after: avoid;
     }
 
     .resume .tw-body {
@@ -354,13 +355,13 @@ defmodule ResumeWeb.ResumeTemplates.Typewriter do
     /* Entries */
     .resume .tw-entry {
       margin-bottom: 8pt;
-      break-inside: avoid;
     }
 
     .resume .tw-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .tw-entry-title {

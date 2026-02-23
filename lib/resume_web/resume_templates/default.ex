@@ -352,6 +352,7 @@ defmodule ResumeWeb.ResumeTemplates.Default do
       border-bottom: 0.75pt solid #999;
       padding-bottom: 2pt;
       margin: 0 0 6pt 0;
+      break-after: avoid;
     }
 
     .resume .resume-summary {
@@ -363,13 +364,13 @@ defmodule ResumeWeb.ResumeTemplates.Default do
     /* Entries */
     .resume .resume-entry {
       margin-bottom: 6pt;
-      break-inside: avoid;
     }
 
     .resume .resume-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .resume-entry-title {

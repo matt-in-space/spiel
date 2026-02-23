@@ -349,6 +349,7 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
       padding-bottom: 2pt;
       border-bottom: double 2.5pt #555;
       color: #2a2a2a !important;
+      break-after: avoid;
     }
 
     .resume .paper-summary {
@@ -367,13 +368,13 @@ defmodule ResumeWeb.ResumeTemplates.Paper do
     /* Entries */
     .resume .paper-entry {
       margin-bottom: 7pt;
-      break-inside: avoid;
     }
 
     .resume .paper-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .paper-entry-title {

@@ -353,6 +353,7 @@ defmodule ResumeWeb.ResumeTemplates.Stackoverflow do
       padding-left: 8pt;
       margin: 0 0 8pt 0;
       color: #242729 !important;
+      break-after: avoid;
     }
 
     .resume .stack-body {
@@ -364,13 +365,13 @@ defmodule ResumeWeb.ResumeTemplates.Stackoverflow do
     /* Entries */
     .resume .stack-entry {
       margin-bottom: 8pt;
-      break-inside: avoid;
     }
 
     .resume .stack-entry-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      break-inside: avoid;
     }
 
     .resume .stack-entry-title {
