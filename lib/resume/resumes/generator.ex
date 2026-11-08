@@ -73,7 +73,8 @@ defmodule Resume.Resumes.Generator do
       facts_section(facts),
       directives_section(directives),
       job_posting_section(job_posting_text),
-      schema_instructions()
+      schema_instructions(),
+      formatting_instructions(job_posting_text)
     ]
 
     sections
@@ -254,6 +255,53 @@ defmodule Resume.Resumes.Generator do
     - If the person has no work experience, lean on education, projects, skills, volunteer work, and goals to build a compelling resume
     - Include a "title" field — a short label (max 60 chars) for this resume, such as the target job title or a brief description of the role (e.g. "Senior Backend Engineer", "Marketing Manager at Acme Corp"). Do NOT use generic labels like "About the job" or "Professional Resume".
     - Include an "explanation" field — 2-5 sentences about what makes this resume unique: what was emphasized or tailored, and why, considering the target role or job posting (if provided) and any directives that were followed.\
+    """
+  end
+
+  @doc """
+  Describes the inline emphasis markers the resume templates understand.
+  Shared by the generation and adjustment prompts.
+  """
+  def formatting_syntax do
+    """
+    Resume text fields (summary, accomplishments, project descriptions and highlights, \
+    volunteer descriptions, award summaries) support these inline markers:
+    - **text** for bold
+    - *text* for italic
+    - ==text== for highlight
+    Never use HTML tags or any other Markdown (no headings, links, or nested lists).\
+    """
+  end
+
+  @doc """
+  Formatting instructions for generation. Without a job posting the LLM must
+  write plain text; with one it may sparingly bold terms that match the posting.
+  User directives can always override.
+  """
+  def formatting_instructions(job_posting_text) do
+    """
+    ## Text Formatting
+    #{formatting_syntax()}
+
+    #{formatting_policy(job_posting_text)}
+    - If a directive asks for specific formatting (e.g. "bold the technologies I used"), follow it; directives override the rules above.\
+    """
+  end
+
+  defp formatting_policy(job_posting_text) when job_posting_text in [nil, ""] do
+    """
+    Formatting rules:
+    - Do NOT add any bold, italic, or highlight markers. Write plain text.\
+    """
+  end
+
+  defp formatting_policy(_job_posting_text) do
+    """
+    Formatting rules:
+    - You MAY bold the specific skills, technologies, or qualifications that directly match the target job posting, so they stand out to a reviewer skimming the resume.
+    - Be sparing: bold at most one short phrase per bullet, leave most bullets unbolded, and use roughly 3-6 bolded phrases across the whole resume.
+    - Bold only the term itself (e.g. "**Kubernetes**"), never whole sentences, metrics padding, or generic words.
+    - Do not use italic or highlight markers.\
     """
   end
 

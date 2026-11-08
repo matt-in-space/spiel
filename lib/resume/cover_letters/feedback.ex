@@ -131,7 +131,9 @@ defmodule Resume.CoverLetters.Feedback do
     - Only modify sections that the feedback applies to
     - Keep unchanged sections exactly as they were
     - The explanation should describe what was changed and why
-    - Maintain professional tone and appropriate length\
+    - Maintain professional tone and appropriate length
+    - The opening, body paragraphs, and closing support inline markers: **text** for bold, *text* for italic, ==text== for highlight. Never use HTML or other Markdown.
+    - Only add, remove, or change those markers when the feedback asks for it; otherwise preserve any that already exist\
     """
   end
 

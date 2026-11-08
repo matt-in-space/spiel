@@ -72,4 +72,19 @@ defmodule Resume.Resumes.GeneratorTest do
       assert is_map(data)
     end
   end
+
+  describe "formatting_instructions/1" do
+    test "without a job posting, forbids emphasis markers" do
+      text = Generator.formatting_instructions(nil)
+      assert text =~ "Do NOT add any bold"
+      assert text =~ "directives override"
+    end
+
+    test "with a job posting, allows sparing bold of matching skills" do
+      text = Generator.formatting_instructions("Senior Elixir developer")
+      assert text =~ "MAY bold"
+      assert text =~ "at most one short phrase per bullet"
+      refute text =~ "Do NOT add any bold"
+    end
+  end
 end

@@ -56,7 +56,7 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
     ~H"""
     <section data-section="summary" class="cons-section">
       <h2 class="cons-section-title">Professional Summary</h2>
-      <p class="cons-body">{@summary}</p>
+      <p class="cons-body">{inline_format(@summary)}</p>
     </section>
     """
   end
@@ -81,7 +81,7 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
         </div>
         <div class="cons-entry-subtitle">{exp.company}</div>
         <ul :if={exp.accomplishments != []} class="cons-list">
-          <li :for={item <- exp.accomplishments}>{item}</li>
+          <li :for={item <- exp.accomplishments}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -175,9 +175,9 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
             <a :if={proj.url} href={proj.url} class="cons-link">{proj.url}</a>
           </span>
         </div>
-        <p :if={proj.description} class="cons-body">{proj.description}</p>
+        <p :if={proj.description} class="cons-body">{inline_format(proj.description)}</p>
         <ul :if={proj.highlights != []} class="cons-list">
-          <li :for={item <- proj.highlights}>{item}</li>
+          <li :for={item <- proj.highlights}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -228,7 +228,7 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
           </span>
         </div>
         <div class="cons-entry-subtitle">{vol.organization}</div>
-        <p :if={vol.description} class="cons-body">{vol.description}</p>
+        <p :if={vol.description} class="cons-body">{inline_format(vol.description)}</p>
       </div>
     </section>
     """
@@ -273,7 +273,7 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
           </span>
           <span :if={award.date} class="cons-entry-date">{format_flex_date(award.date)}</span>
         </div>
-        <p :if={award.summary} class="cons-body">{award.summary}</p>
+        <p :if={award.summary} class="cons-body">{inline_format(award.summary)}</p>
       </div>
     </section>
     """
@@ -281,6 +281,7 @@ defmodule ResumeWeb.ResumeTemplates.Consultant do
 
   def css do
     """
+    #{inline_format_css()}
     @page {
       size: letter;
       margin: 0.75in 0.85in;

@@ -243,7 +243,13 @@ defmodule Resume.Feedback do
     Rules:
     - Only include operations for what actually changes — do NOT return unchanged data
     - Do not touch the contact_info section
-    - Prefer replace_item with field over replacing whole items when only one field changes\
+    - Prefer replace_item with field over replacing whole items when only one field changes
+
+    ### Text formatting
+    #{Generator.formatting_syntax()}
+    - Preserve existing markers in text you rewrite unless the feedback asks to change them
+    - Only add, remove, or change bold/italic/highlight when the feedback (or a standing directive) asks for it
+    - When the feedback asks to emphasize something (e.g. "bold React and Rails"), apply the markers to exactly those terms\
     """
   end
 

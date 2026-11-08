@@ -56,7 +56,7 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
     ~H"""
     <section data-section="summary" class="kendall-section">
       <h2 class="kendall-section-title">Summary</h2>
-      <p class="kendall-body">{@summary}</p>
+      <p class="kendall-body">{inline_format(@summary)}</p>
     </section>
     """
   end
@@ -85,7 +85,7 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
           </span>
         </div>
         <ul :if={exp.accomplishments != []} class="kendall-list">
-          <li :for={item <- exp.accomplishments}>{item}</li>
+          <li :for={item <- exp.accomplishments}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -183,9 +183,9 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
             <a :if={proj.url} href={proj.url} class="kendall-link">{proj.url}</a>
           </span>
         </div>
-        <p :if={proj.description} class="kendall-body">{proj.description}</p>
+        <p :if={proj.description} class="kendall-body">{inline_format(proj.description)}</p>
         <ul :if={proj.highlights != []} class="kendall-list">
-          <li :for={item <- proj.highlights}>{item}</li>
+          <li :for={item <- proj.highlights}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -242,7 +242,7 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
             {format_date_range(vol.start_date, vol.end_date, false)}
           </span>
         </div>
-        <p :if={vol.description} class="kendall-body">{vol.description}</p>
+        <p :if={vol.description} class="kendall-body">{inline_format(vol.description)}</p>
       </div>
     </section>
     """
@@ -287,7 +287,7 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
           </span>
           <span :if={award.date} class="kendall-entry-date">{format_flex_date(award.date)}</span>
         </div>
-        <p :if={award.summary} class="kendall-body">{award.summary}</p>
+        <p :if={award.summary} class="kendall-body">{inline_format(award.summary)}</p>
       </div>
     </section>
     """
@@ -300,6 +300,7 @@ defmodule ResumeWeb.ResumeTemplates.Kendall do
   """
   def css do
     """
+    #{inline_format_css()}
     @page {
       size: letter;
       margin: 0.5in 0.6in;

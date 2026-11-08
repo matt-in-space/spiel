@@ -55,7 +55,7 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
     ~H"""
     <section class="acad-section" data-section="summary">
       <h2 class="acad-section-title">Summary</h2>
-      <p class="acad-body">{@summary}</p>
+      <p class="acad-body">{inline_format(@summary)}</p>
     </section>
     """
   end
@@ -80,7 +80,7 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
         </div>
         <div class="acad-entry-subtitle">{exp.company}</div>
         <ul :if={exp.accomplishments != []} class="acad-list">
-          <li :for={item <- exp.accomplishments}>{item}</li>
+          <li :for={item <- exp.accomplishments}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -174,9 +174,9 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
             <a :if={proj.url} href={proj.url} class="acad-link">{proj.url}</a>
           </span>
         </div>
-        <p :if={proj.description} class="acad-body">{proj.description}</p>
+        <p :if={proj.description} class="acad-body">{inline_format(proj.description)}</p>
         <ul :if={proj.highlights != []} class="acad-list">
-          <li :for={item <- proj.highlights}>{item}</li>
+          <li :for={item <- proj.highlights}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -227,7 +227,7 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
           </span>
         </div>
         <div class="acad-entry-subtitle">{vol.organization}</div>
-        <p :if={vol.description} class="acad-body">{vol.description}</p>
+        <p :if={vol.description} class="acad-body">{inline_format(vol.description)}</p>
       </div>
     </section>
     """
@@ -272,7 +272,7 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
           </span>
           <span :if={award.date} class="acad-entry-date">{format_flex_date(award.date)}</span>
         </div>
-        <p :if={award.summary} class="acad-body">{award.summary}</p>
+        <p :if={award.summary} class="acad-body">{inline_format(award.summary)}</p>
       </div>
     </section>
     """
@@ -280,6 +280,7 @@ defmodule ResumeWeb.ResumeTemplates.Academic do
 
   def css do
     """
+    #{inline_format_css()}
     @page {
       size: letter;
       margin: 0.6in 0.7in;

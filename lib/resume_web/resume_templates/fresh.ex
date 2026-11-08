@@ -54,7 +54,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
     ~H"""
     <section data-section="summary" class="fresh-section">
       <h2 class="fresh-section-title">Summary</h2>
-      <p class="fresh-body">{@summary}</p>
+      <p class="fresh-body">{inline_format(@summary)}</p>
     </section>
     """
   end
@@ -79,7 +79,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
         </div>
         <div class="fresh-entry-subtitle">{exp.company}</div>
         <ul :if={exp.accomplishments != []} class="fresh-list">
-          <li :for={item <- exp.accomplishments}>{item}</li>
+          <li :for={item <- exp.accomplishments}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -175,9 +175,9 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
             <a :if={proj.url} href={proj.url} class="fresh-link">{proj.url}</a>
           </span>
         </div>
-        <p :if={proj.description} class="fresh-body">{proj.description}</p>
+        <p :if={proj.description} class="fresh-body">{inline_format(proj.description)}</p>
         <ul :if={proj.highlights != []} class="fresh-list">
-          <li :for={item <- proj.highlights}>{item}</li>
+          <li :for={item <- proj.highlights}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -228,7 +228,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
           </span>
         </div>
         <div class="fresh-entry-subtitle">{vol.organization}</div>
-        <p :if={vol.description} class="fresh-body">{vol.description}</p>
+        <p :if={vol.description} class="fresh-body">{inline_format(vol.description)}</p>
       </div>
     </section>
     """
@@ -273,7 +273,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
           </span>
           <span :if={award.date} class="fresh-entry-date">{format_flex_date(award.date)}</span>
         </div>
-        <p :if={award.summary} class="fresh-body">{award.summary}</p>
+        <p :if={award.summary} class="fresh-body">{inline_format(award.summary)}</p>
       </div>
     </section>
     """
@@ -281,6 +281,7 @@ defmodule ResumeWeb.ResumeTemplates.Fresh do
 
   def css do
     """
+    #{inline_format_css()}
     @page {
       size: letter;
       margin: 0.75in 0.85in;

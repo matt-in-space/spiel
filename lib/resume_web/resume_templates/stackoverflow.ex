@@ -55,7 +55,7 @@ defmodule ResumeWeb.ResumeTemplates.Stackoverflow do
     ~H"""
     <section data-section="summary" class="stack-section">
       <h2 class="stack-section-title">Summary</h2>
-      <p class="stack-body">{@summary}</p>
+      <p class="stack-body">{inline_format(@summary)}</p>
     </section>
     """
   end
@@ -80,7 +80,7 @@ defmodule ResumeWeb.ResumeTemplates.Stackoverflow do
         </div>
         <div class="stack-entry-subtitle">{exp.company}</div>
         <ul :if={exp.accomplishments != []} class="stack-list">
-          <li :for={item <- exp.accomplishments}>{item}</li>
+          <li :for={item <- exp.accomplishments}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -176,9 +176,9 @@ defmodule ResumeWeb.ResumeTemplates.Stackoverflow do
             <a :if={proj.url} href={proj.url} class="stack-link">{proj.url}</a>
           </span>
         </div>
-        <p :if={proj.description} class="stack-body">{proj.description}</p>
+        <p :if={proj.description} class="stack-body">{inline_format(proj.description)}</p>
         <ul :if={proj.highlights != []} class="stack-list">
-          <li :for={item <- proj.highlights}>{item}</li>
+          <li :for={item <- proj.highlights}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -229,7 +229,7 @@ defmodule ResumeWeb.ResumeTemplates.Stackoverflow do
           </span>
         </div>
         <div class="stack-entry-subtitle">{vol.organization}</div>
-        <p :if={vol.description} class="stack-body">{vol.description}</p>
+        <p :if={vol.description} class="stack-body">{inline_format(vol.description)}</p>
       </div>
     </section>
     """
@@ -274,7 +274,7 @@ defmodule ResumeWeb.ResumeTemplates.Stackoverflow do
           </span>
           <span :if={award.date} class="stack-entry-date">{format_flex_date(award.date)}</span>
         </div>
-        <p :if={award.summary} class="stack-body">{award.summary}</p>
+        <p :if={award.summary} class="stack-body">{inline_format(award.summary)}</p>
       </div>
     </section>
     """
@@ -282,6 +282,7 @@ defmodule ResumeWeb.ResumeTemplates.Stackoverflow do
 
   def css do
     """
+    #{inline_format_css()}
     @page {
       size: letter;
       margin: 0.75in 0.85in;

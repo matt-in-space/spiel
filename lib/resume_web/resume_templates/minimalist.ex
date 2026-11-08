@@ -55,7 +55,7 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
     ~H"""
     <section class="mini-section" data-section="summary">
       <h2 class="mini-section-title">Summary</h2>
-      <p class="mini-body">{@summary}</p>
+      <p class="mini-body">{inline_format(@summary)}</p>
     </section>
     """
   end
@@ -80,7 +80,7 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
         </div>
         <div class="mini-entry-subtitle">{exp.company}</div>
         <ul :if={exp.accomplishments != []} class="mini-list">
-          <li :for={item <- exp.accomplishments}>{item}</li>
+          <li :for={item <- exp.accomplishments}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -174,9 +174,9 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
             <a :if={proj.url} href={proj.url} class="mini-link">{proj.url}</a>
           </span>
         </div>
-        <p :if={proj.description} class="mini-body">{proj.description}</p>
+        <p :if={proj.description} class="mini-body">{inline_format(proj.description)}</p>
         <ul :if={proj.highlights != []} class="mini-list">
-          <li :for={item <- proj.highlights}>{item}</li>
+          <li :for={item <- proj.highlights}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -227,7 +227,7 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
           </span>
         </div>
         <div class="mini-entry-subtitle">{vol.organization}</div>
-        <p :if={vol.description} class="mini-body">{vol.description}</p>
+        <p :if={vol.description} class="mini-body">{inline_format(vol.description)}</p>
       </div>
     </section>
     """
@@ -272,7 +272,7 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
           </span>
           <span :if={award.date} class="mini-entry-date">{format_flex_date(award.date)}</span>
         </div>
-        <p :if={award.summary} class="mini-body">{award.summary}</p>
+        <p :if={award.summary} class="mini-body">{inline_format(award.summary)}</p>
       </div>
     </section>
     """
@@ -280,6 +280,7 @@ defmodule ResumeWeb.ResumeTemplates.Minimalist do
 
   def css do
     """
+    #{inline_format_css()}
     @page {
       size: letter;
       margin: 1in 1in;

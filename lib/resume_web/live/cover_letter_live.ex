@@ -355,6 +355,12 @@ defmodule ResumeWeb.CoverLetterLive do
           <h3 class="text-lg font-bold mb-4">Edit {section_label(@editing_section)}</h3>
           <.form for={@section_form} phx-submit="save_section_edit" autocomplete="off">
             <.section_editor_fields section={@editing_section} form={@section_form} />
+            <p
+              :if={@editing_section in ~w(opening body closing)}
+              class="text-xs text-base-content/60 mt-1"
+            >
+              Formatting: <code>**bold**</code>, <code>*italic*</code>, <code>==highlight==</code>
+            </p>
             <div class="modal-action">
               <button type="button" phx-click="close_section_editor" class="btn">Cancel</button>
               <button type="submit" class="btn btn-primary">Save</button>

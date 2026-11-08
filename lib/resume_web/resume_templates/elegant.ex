@@ -55,7 +55,7 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
     ~H"""
     <section data-section="summary" class="elegant-section">
       <h2 class="elegant-section-title">Summary</h2>
-      <p class="elegant-body">{@summary}</p>
+      <p class="elegant-body">{inline_format(@summary)}</p>
     </section>
     """
   end
@@ -80,7 +80,7 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
         </div>
         <div class="elegant-entry-subtitle">{exp.company}</div>
         <ul :if={exp.accomplishments != []} class="elegant-list">
-          <li :for={item <- exp.accomplishments}>{item}</li>
+          <li :for={item <- exp.accomplishments}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -174,9 +174,9 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
             <a :if={proj.url} href={proj.url} class="elegant-link">{proj.url}</a>
           </span>
         </div>
-        <p :if={proj.description} class="elegant-body">{proj.description}</p>
+        <p :if={proj.description} class="elegant-body">{inline_format(proj.description)}</p>
         <ul :if={proj.highlights != []} class="elegant-list">
-          <li :for={item <- proj.highlights}>{item}</li>
+          <li :for={item <- proj.highlights}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -229,7 +229,7 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
           </span>
         </div>
         <div class="elegant-entry-subtitle">{vol.organization}</div>
-        <p :if={vol.description} class="elegant-body">{vol.description}</p>
+        <p :if={vol.description} class="elegant-body">{inline_format(vol.description)}</p>
       </div>
     </section>
     """
@@ -274,7 +274,7 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
           </span>
           <span :if={award.date} class="elegant-entry-date">{format_flex_date(award.date)}</span>
         </div>
-        <p :if={award.summary} class="elegant-body">{award.summary}</p>
+        <p :if={award.summary} class="elegant-body">{inline_format(award.summary)}</p>
       </div>
     </section>
     """
@@ -287,6 +287,7 @@ defmodule ResumeWeb.ResumeTemplates.Elegant do
   """
   def css do
     """
+    #{inline_format_css()}
     @page {
       size: letter;
       margin: 0.85in 1in;

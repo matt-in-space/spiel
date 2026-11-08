@@ -56,7 +56,7 @@ defmodule ResumeWeb.ResumeTemplates.Default do
     ~H"""
     <section data-section="summary" class="resume-section">
       <h2 class="resume-section-title">Summary</h2>
-      <p class="resume-summary">{@summary}</p>
+      <p class="resume-summary">{inline_format(@summary)}</p>
     </section>
     """
   end
@@ -81,7 +81,7 @@ defmodule ResumeWeb.ResumeTemplates.Default do
         </div>
         <div class="resume-entry-subtitle">{exp.company}</div>
         <ul :if={exp.accomplishments != []} class="resume-list">
-          <li :for={item <- exp.accomplishments}>{item}</li>
+          <li :for={item <- exp.accomplishments}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -175,9 +175,11 @@ defmodule ResumeWeb.ResumeTemplates.Default do
             <a :if={proj.url} href={proj.url} class="resume-entry-link">{proj.url}</a>
           </span>
         </div>
-        <p :if={proj.description} class="resume-entry-description">{proj.description}</p>
+        <p :if={proj.description} class="resume-entry-description">
+          {inline_format(proj.description)}
+        </p>
         <ul :if={proj.highlights != []} class="resume-list">
-          <li :for={item <- proj.highlights}>{item}</li>
+          <li :for={item <- proj.highlights}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -228,7 +230,7 @@ defmodule ResumeWeb.ResumeTemplates.Default do
           </span>
         </div>
         <div class="resume-entry-subtitle">{vol.organization}</div>
-        <p :if={vol.description} class="resume-entry-description">{vol.description}</p>
+        <p :if={vol.description} class="resume-entry-description">{inline_format(vol.description)}</p>
       </div>
     </section>
     """
@@ -273,7 +275,7 @@ defmodule ResumeWeb.ResumeTemplates.Default do
           </span>
           <span :if={award.date} class="resume-entry-date">{format_flex_date(award.date)}</span>
         </div>
-        <p :if={award.summary} class="resume-entry-description">{award.summary}</p>
+        <p :if={award.summary} class="resume-entry-description">{inline_format(award.summary)}</p>
       </div>
     </section>
     """
@@ -287,6 +289,7 @@ defmodule ResumeWeb.ResumeTemplates.Default do
   """
   def css do
     """
+    #{inline_format_css()}
     @page {
       size: letter;
       margin: 0.75in 0.85in;

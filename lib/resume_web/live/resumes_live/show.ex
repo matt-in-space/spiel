@@ -468,6 +468,14 @@ defmodule ResumeWeb.ResumesLive.Show do
               section={elem(@editing_section, 0)}
               form={@section_form}
             />
+            <p
+              :if={
+                elem(@editing_section, 0) in ~w(summary work_experience projects volunteer_work awards)
+              }
+              class="text-xs text-base-content/60 mt-1"
+            >
+              Formatting: <code>**bold**</code>, <code>*italic*</code>, <code>==highlight==</code>
+            </p>
             <div class="modal-action">
               <button type="button" phx-click="close_section_editor" class="btn">Cancel</button>
               <button type="submit" class="btn btn-primary">Save</button>

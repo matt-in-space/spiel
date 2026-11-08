@@ -5,17 +5,19 @@ defmodule ResumeWeb.CoverLetterTemplates.Modern do
 
   use ResumeWeb, :html
 
+  import ResumeWeb.ResumeTemplates.Helpers, only: [inline_format: 1, inline_format_css: 0]
+
   attr :data, :any, required: true
 
   def render(assigns) do
     ~H"""
     <div class="cover-letter">
       <div class="cl-greeting" data-section="greeting">{@data.greeting}</div>
-      <div class="cl-opening" data-section="opening">{@data.opening}</div>
+      <div class="cl-opening" data-section="opening">{inline_format(@data.opening)}</div>
       <div class="cl-body" data-section="body">
-        <p :for={paragraph <- @data.body || []}>{paragraph}</p>
+        <p :for={paragraph <- @data.body || []}>{inline_format(paragraph)}</p>
       </div>
-      <div class="cl-closing" data-section="closing">{@data.closing}</div>
+      <div class="cl-closing" data-section="closing">{inline_format(@data.closing)}</div>
       <div class="cl-signature" data-section="signature">
         <span :for={line <- String.split(@data.signature || "", "\n")}>{line}<br /></span>
       </div>
@@ -25,6 +27,7 @@ defmodule ResumeWeb.CoverLetterTemplates.Modern do
 
   def css do
     """
+    #{inline_format_css()}
     @page {
       size: letter;
       margin: 1in;

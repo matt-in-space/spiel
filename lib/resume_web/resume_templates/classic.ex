@@ -58,7 +58,7 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
     ~H"""
     <section data-section="summary" class="classic-section">
       <h2 class="classic-section-title">PROFESSIONAL SUMMARY</h2>
-      <p class="classic-body">{@summary}</p>
+      <p class="classic-body">{inline_format(@summary)}</p>
     </section>
     """
   end
@@ -83,7 +83,7 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
         </div>
         <div class="classic-entry-subtitle">{exp.company}</div>
         <ul :if={exp.accomplishments != []} class="classic-list">
-          <li :for={item <- exp.accomplishments}>{item}</li>
+          <li :for={item <- exp.accomplishments}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -177,9 +177,9 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
             <a :if={proj.url} href={proj.url} class="classic-link">{proj.url}</a>
           </span>
         </div>
-        <p :if={proj.description} class="classic-body">{proj.description}</p>
+        <p :if={proj.description} class="classic-body">{inline_format(proj.description)}</p>
         <ul :if={proj.highlights != []} class="classic-list">
-          <li :for={item <- proj.highlights}>{item}</li>
+          <li :for={item <- proj.highlights}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -232,7 +232,7 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
           </span>
         </div>
         <div class="classic-entry-subtitle">{vol.organization}</div>
-        <p :if={vol.description} class="classic-body">{vol.description}</p>
+        <p :if={vol.description} class="classic-body">{inline_format(vol.description)}</p>
       </div>
     </section>
     """
@@ -277,7 +277,7 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
           </span>
           <span :if={award.date} class="classic-entry-date">{format_flex_date(award.date)}</span>
         </div>
-        <p :if={award.summary} class="classic-body">{award.summary}</p>
+        <p :if={award.summary} class="classic-body">{inline_format(award.summary)}</p>
       </div>
     </section>
     """
@@ -291,6 +291,7 @@ defmodule ResumeWeb.ResumeTemplates.Classic do
   """
   def css do
     """
+    #{inline_format_css()}
     @page {
       size: letter;
       margin: 0.75in 0.85in;

@@ -176,7 +176,8 @@ defmodule Resume.CoverLetters.Generator do
     - Keep the tone professional but personable
     - Total length should be appropriate for a one-page cover letter (roughly 250-400 words)
     - If a job posting is provided, tailor every section to that specific role
-    - If no job posting is provided, write a general-purpose cover letter highlighting key strengths\
+    - If no job posting is provided, write a general-purpose cover letter highlighting key strengths
+    - Write plain text: do not use Markdown, HTML, or bold/italic/highlight markers\
     """
   end
 

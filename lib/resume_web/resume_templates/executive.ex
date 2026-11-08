@@ -133,7 +133,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
     ~H"""
     <section class="exec-section" data-section="summary">
       <h2 class="exec-section-title">Professional Summary</h2>
-      <p class="exec-body">{@summary}</p>
+      <p class="exec-body">{inline_format(@summary)}</p>
     </section>
     """
   end
@@ -158,7 +158,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
         </div>
         <div class="exec-entry-subtitle">{exp.company}</div>
         <ul :if={exp.accomplishments != []} class="exec-list">
-          <li :for={item <- exp.accomplishments}>{item}</li>
+          <li :for={item <- exp.accomplishments}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -183,9 +183,9 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
             <a :if={proj.url} href={proj.url} class="exec-link">{proj.url}</a>
           </span>
         </div>
-        <p :if={proj.description} class="exec-body">{proj.description}</p>
+        <p :if={proj.description} class="exec-body">{inline_format(proj.description)}</p>
         <ul :if={proj.highlights != []} class="exec-list">
-          <li :for={item <- proj.highlights}>{item}</li>
+          <li :for={item <- proj.highlights}>{inline_format(item)}</li>
         </ul>
       </div>
     </section>
@@ -235,7 +235,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
           </span>
           <span :if={award.date} class="exec-entry-date">{format_flex_date(award.date)}</span>
         </div>
-        <p :if={award.summary} class="exec-body">{award.summary}</p>
+        <p :if={award.summary} class="exec-body">{inline_format(award.summary)}</p>
       </div>
     </section>
     """
@@ -285,7 +285,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
           </span>
         </div>
         <div class="exec-entry-subtitle">{vol.organization}</div>
-        <p :if={vol.description} class="exec-body">{vol.description}</p>
+        <p :if={vol.description} class="exec-body">{inline_format(vol.description)}</p>
       </div>
     </section>
     """
@@ -293,6 +293,7 @@ defmodule ResumeWeb.ResumeTemplates.Executive do
 
   def css do
     """
+    #{inline_format_css()}
     @page {
       size: letter;
       margin: 0;
